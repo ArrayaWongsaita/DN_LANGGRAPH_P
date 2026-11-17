@@ -3,81 +3,92 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { lintLessons } from "./lint-lessons";
 
-const TODO_TEST = 'test.todo("ข้อ 1");\n';
+interface Opts {
+  readme?: boolean;
+  solution?: boolean;
+  solutionFile?: boolean;
+  starter?: string;
+  checker?: string;
+}
 
 function makeRoot() {
   return mkdtempSync(join(tmpdir(), "lessons-"));
 }
 
-function addLesson(
-  root: string,
-  level: string,
-  name: string,
-  opts: { readme?: boolean; solution?: boolean; exerciseBody?: string } = {},
-) {
-  const { readme = true, solution = true, exerciseBody = TODO_TEST } = opts;
+function addLesson(root: string, level: string, name: string, o: Opts = {}) {
+  const {
+    readme = true,
+    solution = true,
+    solutionFile = true,
+    starter = 'import { todo } from "@src/todo";\nexport const a = () => todo(1);\n',
+    checker = 'test("x", () => {});\n',
+  } = o;
   const dir = join(root, level, name);
   mkdirSync(dir, { recursive: true });
   if (readme) writeFileSync(join(dir, "README.md"), "# บทเรียน");
-  writeFileSync(join(dir, "topic.test.ts"), exerciseBody);
+  writeFileSync(join(dir, "topic.ts"), starter);
+  writeFileSync(join(dir, "topic.test.ts"), checker);
   if (solution) {
     mkdirSync(join(dir, "solution"));
-    writeFileSync(join(dir, "solution", "topic.test.ts"), 'test("x", () => {});\n');
+    if (solutionFile) writeFileSync(join(dir, "solution", "topic.ts"), "export const a = () => 1;\n");
   }
 }
 
 describe("lintLessons", () => {
-  test("a valid lesson produces no problems", () => {
+  test("บทที่ถูกต้องไม่มีปัญหา", () => {
     const root = makeRoot();
-    addLesson(root, "level-1-basics", "01-first-test");
+    addLesson(root, "level-1-basics", "01-first");
     expect(lintLessons(root)).toEqual([]);
   });
 
-  test("a missing solution folder is reported with the lesson folder name", () => {
+  test("ไม่มี README", () => {
     const root = makeRoot();
-    addLesson(root, "level-1-basics", "01-first-test", { solution: false });
-    const problems = lintLessons(root);
-    expect(problems).toHaveLength(1);
-    expect(problems[0]).toContain("01-first-test");
-  });
-
-  test("a missing README is reported", () => {
-    const root = makeRoot();
-    addLesson(root, "level-1-basics", "01-first-test", { readme: false });
+    addLesson(root, "level-1-basics", "01-first", { readme: false });
     expect(lintLessons(root).join("\n")).toContain("README");
   });
 
-  test("an exercise file with an active test() call is flagged", () => {
+  test("ไม่มี solution/ ถูกรายงานพร้อมชื่อโฟลเดอร์", () => {
     const root = makeRoot();
-    addLesson(root, "level-1-basics", "01-first-test", {
-      exerciseBody: 'test("x", () => { expect(1).toBe(1); });\n',
-    });
-    expect(lintLessons(root).join("\n")).toMatch(/active test/);
+    addLesson(root, "level-1-basics", "01-first", { solution: false });
+    const problems = lintLessons(root);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("01-first");
   });
 
-  test("a commented-out worked example is not flagged", () => {
+  test("solution/ ขาดไฟล์ starter", () => {
     const root = makeRoot();
-    addLesson(root, "level-1-basics", "01-first-test", {
-      exerciseBody: '// test("x", () => {});\n/* it("y", () => {}); */\ntest.todo("ข้อ 1");\n',
-    });
-    expect(lintLessons(root)).toEqual([]);
+    addLesson(root, "level-1-basics", "01-first", { solutionFile: false });
+    expect(lintLessons(root).join("\n")).toMatch(/solution.*topic\.ts/);
   });
 
-  test("duplicate lesson numbers are flagged", () => {
+  test("starter ที่ไม่มี todo( ถูกรายงาน", () => {
     const root = makeRoot();
-    addLesson(root, "level-1-basics", "01-first-test");
+    addLesson(root, "level-1-basics", "01-first", { starter: "export const a = () => 1;\n" });
+    expect(lintLessons(root).join("\n")).toMatch(/todo\(/);
+  });
+
+  test("checker ที่ใช้ getLLM หรือมี todo( ถูกรายงาน", () => {
+    const root = makeRoot();
+    addLesson(root, "level-1-basics", "01-first", { checker: 'import { getLLM } from "@src/llm";\n' });
+    expect(lintLessons(root).join("\n")).toMatch(/getLLM/);
+  });
+
+  test("เลขบทซ้ำถูกรายงานเสมอ", () => {
+    const root = makeRoot();
+    addLesson(root, "level-1-basics", "01-first");
     addLesson(root, "level-1-basics", "01-other");
     expect(lintLessons(root).join("\n")).toMatch(/duplicate/i);
   });
 
-  test("a gap in numbering across levels is flagged", () => {
+  test("เลขบทข้าม: ผ่านเมื่อไม่ strict แต่ถูกรายงานเมื่อ strict", () => {
     const root = makeRoot();
-    addLesson(root, "level-1-basics", "01-first-test");
-    addLesson(root, "level-2-practical", "03-later");
-    expect(lintLessons(root).join("\n")).toMatch(/contiguous|missing number 02/i);
+    addLesson(root, "level-1-basics", "01-first");
+    addLesson(root, "level-1-basics", "03-later");
+    expect(lintLessons(root)).toEqual([]);
+    expect(lintLessons(root, { strict: true }).join("\n")).toMatch(/missing number 02/);
   });
 
-  test("a badly named folder is flagged", () => {
+  test("ชื่อโฟลเดอร์ผิดรูปแบบ", () => {
     const root = makeRoot();
     addLesson(root, "level-1-basics", "First_Test");
     expect(lintLessons(root).join("\n")).toContain("First_Test");

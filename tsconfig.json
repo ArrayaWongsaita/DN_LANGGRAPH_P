@@ -7,8 +7,26 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vitest/globals", "node"]
+    "types": [
+      "vitest/globals",
+      "node"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": [
+        "src/*"
+      ]
+    }
   },
-  "include": ["src", "scripts", "lessons"],
-  "exclude": ["scripts/lesson-template"]
+  "include": [
+    "src",
+    "scripts",
+    "lessons"
+  ],
+  "exclude": [
+    "scripts/lesson-template",
+    "legacy",
+    ".tmp-check",
+    "scripts/fixtures/.tmp-check"
+  ]
 }

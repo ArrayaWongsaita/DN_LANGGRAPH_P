@@ -1,3 +1,5 @@
 node_modules
 .env
 .superpowers
+.tmp-check
+.tmp-check-result.json

@@ -1,25 +1,21 @@
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { findLesson } from "./find-lesson";
 
-const num = (process.argv[2] ?? "").padStart(2, "0");
-if (!/^\d{2}$/.test(num)) {
-  console.error("วิธีใช้: npm run lesson <เลขบท>  เช่น npm run lesson 03");
+const num = process.argv[2] ?? "";
+if (!/^\d{1,2}$/.test(num)) {
+  console.error("วิธีใช้: npm run lesson <เลขบท>  เช่น npm run lesson 08");
   process.exit(1);
 }
 
-const root = "lessons";
-let found: string | undefined;
-for (const level of readdirSync(root)) {
-  const levelDir = join(root, level);
-  if (!statSync(levelDir).isDirectory()) continue;
-  for (const name of readdirSync(levelDir)) {
-    if (name.startsWith(`${num}-`)) found = join(levelDir, name);
-  }
+const found = findLesson(process.env.LESSONS_ROOT ?? "lessons", num);
+if (!found) {
+  console.error(`ไม่พบบทที่ ${num}`);
+  process.exit(1);
 }
-
-if (!found || !existsSync(join(found, "run.ts"))) {
-  console.error(`บท ${num} ไม่มีไฟล์ run.ts ให้รัน (บทนี้ใช้ npm test อย่างเดียว)`);
+if (!existsSync(join(found, "run.ts"))) {
+  console.error(`บทที่ ${num} ไม่มีไฟล์ run.ts ให้รัน (ใช้ npm run test:lesson ${num} แทน)`);
   process.exit(1);
 }
 
