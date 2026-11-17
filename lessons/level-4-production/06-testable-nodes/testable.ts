@@ -10,15 +10,15 @@ const State = new StateSchema({
 
 // ตรรกะล้วน ๆ (ไม่เรียกโมเดล): ตัดช่องว่างหัวท้าย และยุบช่องว่างซ้อนให้เหลือช่องเดียว
 export function cleanText(text: string): string {
-  // 👉 ข้อ 2: คืน text.trim().replace(/\s+/g, " ")
-  return todo(2);
+  // 👉 ข้อ 1: คืน text.trim().replace(/\s+/g, " ")
+  return todo(1);
 }
 
 // node ที่รับโมเดลเข้ามา (ไม่ import โมเดลตายตัว)
 export function makeSummarizeNode(llm: BaseChatModel) {
   return async (state: { text: string }) => {
-    // 👉 ข้อ 1: เรียก llm.invoke(`สรุปสั้น ๆ: ${state.text}`) แล้วคืน { summary: ผล.text }
-    return todo(1);
+    // 👉 ข้อ 2: เรียก llm.invoke(`สรุปสั้น ๆ: ${state.text}`) แล้วคืน { summary: ผล.text }
+    return todo(2);
   };
 }
 

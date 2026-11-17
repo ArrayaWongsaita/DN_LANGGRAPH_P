@@ -7,7 +7,17 @@ import { todo } from "@src/todo";
 export const BANNED = ["สร้างอาวุธ", "เจาะระบบ"];
 export const SECRET = "รหัสลับ-777";
 
-type State = { messages: { text: string; id?: string }[] };
+type State = { messages: { text: string; id?: string; type?: string }[] };
+
+// ข้อความที่ผู้ใช้ส่งมาและโมเดลยังไม่ได้ตอบ (ทุกข้อความหลัง AI ตัวล่าสุด) ตัดอักขระความกว้างศูนย์ที่ใช้พรางคำต้องห้ามออก
+function pendingUserText(state: State): string {
+  const lastAi = state.messages.map((m) => m.type).lastIndexOf("ai");
+  return state.messages
+    .slice(lastAi + 1)
+    .map((m) => m.text)
+    .join("\n")
+    .replace(/[\u200b-\u200d\u2060\ufeff]/g, "");
+}
 
 export function makeInputGuard() {
   return createMiddleware({
@@ -15,7 +25,7 @@ export function makeInputGuard() {
     beforeModel: {
       canJumpTo: ["end"],
       hook: async (state: State) => {
-        const last = state.messages[state.messages.length - 1]?.text ?? "";
+        const last = pendingUserText(state);
         // 👉 ข้อ 1: ถ้า last มีคำใดใน BANNED คืน { messages: [new AIMessage("ขออภัย ช่วยเรื่องนี้ไม่ได้")], jumpTo: "end" }
         //          ไม่เช่นนั้นคืน undefined
         return todo(1);

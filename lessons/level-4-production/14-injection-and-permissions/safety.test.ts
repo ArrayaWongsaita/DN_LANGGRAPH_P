@@ -51,6 +51,8 @@ test("เหตุการณ์จริง: เนื้อหาเว็บ
   const agent = createAgent({ model: llm, tools: [makeReadWebTool(), makeSendEmailTool(sent)] });
   await agent.invoke({ messages: [new HumanMessage("สรุปข่าว")] });
   expect(sent).toEqual([]);
+  const unfinished = llm.calls[2].find((m) => m.type === "tool" && m.text.includes("ยังไม่ได้ทำข้อ"));
+  if (unfinished) throw new Error(unfinished.text.replace(/^Error: /, ""));
   const refusal = llm.calls[2].find((m) => m.type === "tool" && m.text.includes("ปฏิเสธ"));
   expect(refusal).toBeDefined();
 });
