@@ -1,0 +1,24 @@
+import { getLLM } from "@src/llm";
+import { env } from "@src/env";
+import { buildChatApp, makePostgresSaver, safeThreadId } from "./persist";
+
+// รันกับ Postgres จริง: ตั้ง DATABASE_URL ใน .env ก่อน (เช่น postgresql://user:pass@localhost:5432/mydb)
+// ไม่ได้ใช้ LLM ในบทนี้ (getLLM ถูก import ไว้ให้เห็นรูปแบบเท่านั้น จึงไม่ถูกเรียก)
+void getLLM;
+if (!env.DATABASE_URL) {
+  console.log("ยังไม่ได้ตั้ง DATABASE_URL ใน .env (ตัวอย่าง: postgresql://user:pass@localhost:5432/mydb)");
+  process.exit(0);
+}
+
+const saver = makePostgresSaver(env.DATABASE_URL);
+try {
+  await saver.setup(); // สร้างตาราง checkpoint ถ้ายังไม่มี
+  const app = buildChatApp(saver);
+  const cfg = { configurable: { thread_id: safeThreadId("course-4-24") } };
+  const first = await app.invoke({ messages: [{ role: "user", content: "สวัสดี" }] }, cfg);
+  console.log(first.messages.at(-1)?.text);
+  const second = await app.invoke({ messages: [{ role: "user", content: "จำได้ไหม" }] }, cfg);
+  console.log(second.messages.at(-1)?.text, "(รันซ้ำอีกครั้ง ตัวเลขจะเพิ่มขึ้น เพราะความจำอยู่ในฐานข้อมูล)");
+} finally {
+  await saver.end();
+}

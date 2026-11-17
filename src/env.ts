@@ -43,6 +43,7 @@ const envSchema = z
     GROQ_API_KEY: z.string().trim().default(""),
     OLLAMA_API_KEY: z.string().trim().default(""),
     OPENCODE_GO_KEY: z.string().trim().default(""),
+    DATABASE_URL: z.string().trim().default(""), // ใช้เฉพาะบท Postgres (4-24)
     OLLAMA_BASE_URL: z
       .string()
       .optional()
