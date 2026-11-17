@@ -1,0 +1,34 @@
+# บทที่ 3-29: human-in-the-loop middleware
+
+## แนวคิด
+ในบท 2-21 คุณใส่ `interrupt` ไว้ใน tool แต่ละตัว ถ้ามีหลาย tool ที่ต้องขออนุมัติ จะซ้ำซ้อน **`humanInTheLoopMiddleware`** ดักการเรียก tool ที่ระบุไว้ให้ agent หยุดรออนุมัติเอง โดยไม่ต้องแก้ตัว tool:
+
+```ts
+humanInTheLoopMiddleware({ interruptOn: { sendEmail: true } }) // เฉพาะ tool ที่ระบุ
+```
+agent หยุดพร้อมรายการ `actionRequests` (tool + args ที่ขอเรียก) ผู้ตัดสินตอบด้วย `Command({ resume: { decisions: [...] } })` โดยหนึ่งการตัดสินต่อหนึ่งคำขอตามลำดับ:
+
+```ts
+{ type: "approve" }                                  // อนุมัติ รัน tool ตามที่ขอ
+{ type: "reject", message: "ไม่ได้ครับ" }           // ปฏิเสธ แจ้งเหตุผลให้โมเดล
+// มีแบบ "edit" (แก้ args) และ "respond" ด้วย
+```
+ต้องมี checkpointer เหมือน interrupt ทุกแบบ
+
+## ดูตัวอย่าง
+`hitl.ts` มี tool `sendEmail` (ไม่มี interrupt ในตัว) ขาดการติด middleware และการส่งคำตัดสิน
+
+## โจทย์
+เติม 2 ข้อ แล้วรัน:
+
+    pnpm test:lesson 3-29
+
+## คุณทำได้แล้ว
+- กั้น tool อันตรายด้วย middleware โดยไม่แก้ตัว tool
+
+## ข้อควรจำ
+- tool ที่ไม่อยู่ใน `interruptOn` รันได้เลยไม่ต้องรอ
+- จำนวนคำตัดสินต้องเท่าจำนวนคำขอที่หยุดรอ
+
+## บทถัดไป
+บท 3-30: retry, fallback และ middleware ที่เขียนเอง
