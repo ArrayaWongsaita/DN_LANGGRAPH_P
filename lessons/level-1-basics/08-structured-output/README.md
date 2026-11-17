@@ -35,6 +35,9 @@ const personSchema = z.object({ name: z.string(), age: z.number() });
 
     pnpm lesson 08
 
+## เทียบกับตอนใช้ fetch (บท 0-04)
+ใน 0-04 คุณต้องขอ JSON ในคำสั่ง ลอกรั้วโค้ด `JSON.parse` และตรวจด้วย zod เอง 3 ขั้น ตอนนี้ `.withStructuredOutput(personSchema)` ทำให้ทั้งหมดในบรรทัดเดียว (และใช้กลไกที่เหมาะกับโมเดลแต่ละตัวให้ เช่น tool calling) แต่หลักการยังเหมือนเดิม: ข้อมูลจาก LLM ควรผ่าน schema เสมอ
+
 ## คุณทำได้แล้ว
 - ทำให้ LLM ตอบเป็น object ที่มีรูปร่างตามที่กำหนดด้วย `withStructuredOutput`
 - อ่าน schema ของ zod ออกว่าข้อมูลควรหน้าตาแบบไหน

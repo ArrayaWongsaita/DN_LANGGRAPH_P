@@ -30,6 +30,9 @@ const prompt = ChatPromptTemplate.fromMessages([
 
 ข้อ 1 ให้แทน `return todo(1);` ด้วย `return ChatPromptTemplate.fromMessages([...]);` ลองเปลี่ยนภาษาปลายทางด้วย `pnpm lesson 06`
 
+## เทียบกับตอนใช้ fetch
+ตอน `fetch` เราต่อสตริงเอง (`` `แปลเป็น${language}: ${text}` ``) ซึ่งพลาดง่ายเมื่อข้อความยาวขึ้น (ลืมช่อง สะกดชื่อตัวแปรผิด) `ChatPromptTemplate` ตรวจให้ว่าส่งค่าครบทุกช่อง และต่อกับ LLM ด้วย `.pipe` ได้ทันที
+
 ## คุณทำได้แล้ว
 - สร้างแม่แบบข้อความที่เติมค่าได้ด้วย `ChatPromptTemplate`
 - ต่อแม่แบบเข้ากับ LLM ด้วย `.pipe`

@@ -2,7 +2,7 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is in pilot: only 0-01 exists so far. Levels 2-3 are planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
+**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is drafted in order; its real-LLM `run.ts` files have not all been run live yet. Levels 2-3 are planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
 
 **Reading order:** want to see what an LLM call really is? Start at Level 0 (`0-01`). Want to go straight to LangChain/LangGraph? Start at Level 1 (`01`; lesson 02 covers `.env` setup).
 

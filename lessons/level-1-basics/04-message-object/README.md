@@ -30,6 +30,9 @@ await llm.invoke([new HumanMessage("สวัสดี")]);
 
 จากนั้นรัน `pnpm lesson 04` แล้วอ่านผลที่พิมพ์ออกมา สังเกตว่า `content`, `text` และ `usage_metadata` หน้าตาต่างกันอย่างไรกับโมเดลที่คุณใช้
 
+## เทียบกับตอนใช้ fetch (บท 0-03)
+ตอน `fetch` คำตอบคือ JSON ธรรมดา และ message คือ object `{ role, content }` ที่เราเขียนเอง ตอนนี้ LangChain มีคลาส `HumanMessage` / `AIMessage` / `SystemMessage` ที่รู้จักชนิดของตัวเอง (`.type`) และมี `.text` ที่ดึงข้อความให้ แม้โมเดลจะส่ง `content` เป็นหลายก้อน รวมถึงเก็บ `usage_metadata` ไว้ให้
+
 ## คุณทำได้แล้ว
 - บอกได้ว่า message มีชนิดอะไรบ้างและต่างกันอย่างไร
 - ส่งข้อความเข้า LLM ในรูป array ของ message
