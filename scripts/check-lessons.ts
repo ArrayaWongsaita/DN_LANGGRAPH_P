@@ -8,7 +8,7 @@ const VITEST = join(process.cwd(), "node_modules", "vitest", "vitest.mjs");
 
 interface Summary {
   total: number;
-  failed: number;
+  failed: number; // failed tests + failed suites (a file that throws on import counts)
 }
 
 function runVitest(target: string): Summary {
@@ -20,9 +20,9 @@ function runVitest(target: string): Summary {
     { encoding: "utf8" },
   );
   if (!existsSync(out)) return { total: 0, failed: 0 };
-  const json = JSON.parse(readFileSync(out, "utf8")) as { numTotalTests: number; numFailedTests: number };
+  const json = JSON.parse(readFileSync(out, "utf8")) as { numTotalTests: number; numFailedTests: number; numFailedTestSuites: number };
   rmSync(out, { force: true });
-  return { total: json.numTotalTests, failed: json.numFailedTests };
+  return { total: json.numTotalTests + json.numFailedTestSuites, failed: json.numFailedTests + json.numFailedTestSuites };
 }
 
 /**

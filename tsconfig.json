@@ -21,7 +21,7 @@
   "include": [
     "src",
     "scripts",
-    "lessons"
+    "lessons/**/solution/**/*.ts"
   ],
   "exclude": [
     "scripts/lesson-template",
