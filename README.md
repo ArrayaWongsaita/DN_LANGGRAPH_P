@@ -2,7 +2,7 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** pilot. Three lessons exist (01, 08, 14) so the format can be reviewed. The rest of Level 1 and Levels 2-3 are planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
+**Status:** Level 1 draft (lessons 01-19, in order) is ready for review; the real-LLM `run.ts` files have not all been run live yet. Levels 2-3 are planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
 
 ## Quick start
 
@@ -59,7 +59,7 @@ After changing provider or model, run `pnpm check:llm`. It makes 4 live calls an
 pnpm test                  # src + scripts tests (green on a fresh checkout)
 pnpm check:solutions   # every solution/ must pass its checker
 pnpm check:starters    # every starter must FAIL its checker (no lesson is solved already)
-pnpm lint:lessons      # structure rules; add :strict to require contiguous numbering
+pnpm lint:lessons      # structure rules; pnpm lint:lessons:strict also requires contiguous numbering
 pnpm typecheck
 ```
 
