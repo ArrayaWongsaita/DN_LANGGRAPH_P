@@ -52,6 +52,8 @@ pnpm test:lesson 0-01  # Level 0 lessons use a 0- prefix
 
 After changing provider or model, run `pnpm check:llm`. It makes 4 live calls and reports whether basic calls, streaming, tool calling and structured output work. Findings for tested models are in `docs/notes/provider-findings.md`.
 
+TypeScript syntax that may look odd (`!`, `as`, `??`): see `docs/typescript-notes.md`.
+
 ## Troubleshooting
 
 - **401**: wrong or missing key for the provider in `LLM_PROVIDER` (no quotes or extra spaces in `.env`).

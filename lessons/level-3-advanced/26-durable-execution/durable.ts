@@ -44,7 +44,9 @@ export async function runJob(job: Job, threadId: string): Promise<boolean> {
     // 👉 ข้อ 1: await job.invoke({}, { ...cfg(threadId), durability: "sync" })
     todo(1);
     return true;
-  } catch {
+  } catch (e) {
+    // ล่มจากเครือข่ายจริงเท่านั้นถึงนับว่า "ล่ม" ส่วน error อื่น (เช่นยังไม่ได้เติมช่อง) ให้โยนต่อ
+    if ((e as Error).message !== "เครือข่ายล่ม") throw e;
     return false;
   }
 }
