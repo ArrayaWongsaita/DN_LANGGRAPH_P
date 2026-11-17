@@ -108,6 +108,16 @@ langgraph-course/
 
 Coverage was checked against the official LangGraph JS docs (overview, Graph API, streaming, interrupts, memory, persistence, time travel, subgraphs, functional API, multi-agent, `createAgent`). Each level is a natural stopping point: a learner who finishes a level has a working, useful skill and a reason to continue. `lessons/` is grouped as `level-1-basics/`, `level-2-practical/`, `level-3-advanced/`, with `NN-topic` inside (numbering continuous across the repo).
 
+**Level 0 — Raw HTTP (~6, additive, added after the Level 1 draft): what an LLM call really is**
+Purpose: show that an LLM call is an HTTP request, feel the pain a framework removes, and motivate LangChain and LangGraph. Deliberate, labelled exception to the "teach the real tools" principle ("ทำเองก่อน เพื่อเห็นว่า framework ช่วยอะไร"); each lesson stays shorter than Level 1 lesson 03. Level 1 is untouched except for comparison boxes ("เทียบกับตอน fetch") in lessons 03-08 and the root README's reading order. Lessons take `fetchFn: typeof fetch` so checkers pass a fake and never touch the network.
+- **0-01** set up `.env`, explain the red->green loop briefly, first `fetch` POST to the chat endpoint, read `choices[0].message.content`.
+- **0-02** read errors: `res.ok`, 401/404/429 -> Thai messages.
+- **0-03** messages array and history by hand (the model is stateless).
+- **0-04** ask for JSON, `JSON.parse`, validate with zod; meet the real problems (JSON inside a code fence, wrong types).
+- **0-05 (optional)** streaming: read SSE `data:` lines. Hardest of the group, may be skipped.
+- **0-06** the assistant as plain `if`/`while` (classify, then choose a path), then add a loop until the code tangles; Level 1 lesson 19 rebuilds the same assistant as a graph for comparison.
+Numbering: lessons are numbered per level. Lesson ids are `<level>-<NN>` (`0-03`, `1-03`); a bare `NN` still means Level 1 so existing commands and README references keep working (`pnpm test:lesson 0-03`, `pnpm lesson 0-01`). Duplicate-number and contiguity rules apply within a level. Provider-neutral lesson text: the provider table in `src/llm.ts` gains a `chatUrl` (OpenAI-compatible chat completions endpoint), so `.env` switching still works.
+
 **Level 1 — Basics (~19): from zero to a first working graph**
 - **Part 0 Setup (3):** run your first lesson (learn the red->green loop on a tiny gap; includes "how to read a failing checker"); set up `.env` and the provider key; first real LLM call via `getLLM()`. TypeScript prerequisites (`async/await`, zod basics) and troubleshooting (401 / 404 / 429 / `fetch failed`) are short **call-out boxes inside the lessons that first need them**, not lessons of their own.
 - **Part 1 Talking to an LLM (5):** `invoke` and the message object (content, message types, `.text`); system prompt + conversation history as messages; prompt templates; streaming tokens; structured output with `.withStructuredOutput(zodSchema)` (fallback if the verified provider/model cannot do it: `JsonOutputParser` / `parseJsonMarkdown`). Note for builders: some models (e.g. reasoning models) return `content` as several blocks, so lessons read text with `.text`.
