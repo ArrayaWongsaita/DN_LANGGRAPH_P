@@ -1,0 +1,52 @@
+import { MemorySaver } from "@langchain/langgraph";
+import { fakeToolLLM } from "@src/fakeToolLLM";
+import { InMemoryIndex, KeywordEmbeddings, SAMPLE_DOCS } from "@src/rag";
+import { NOT_FOUND, REFUSAL, buildAssistant } from "./assistant";
+
+// ตัวตรวจของบทนี้ (ไม่ต้องแก้ไฟล์นี้)
+const reply = (answer: string, sources: string[]) => JSON.stringify({ answer, sources });
+const cfg = (id: string) => ({ configurable: { thread_id: id } });
+
+async function setup(script: string[]) {
+  const index = new InMemoryIndex(new KeywordEmbeddings());
+  await index.add(SAMPLE_DOCS);
+  const llm = fakeToolLLM(script);
+  return { llm, app: buildAssistant(llm, index, new MemorySaver()) };
+}
+
+test("คำถามปกติ: ค้น ตอบ และอ้างอิงแหล่งที่มา", async () => {
+  const { app } = await setup([reply("รีเซ็ตที่พอร์ทัล IT", ["it.md"])]);
+  const r = await app.invoke({ question: "ลืมรหัสผ่านทำไง" }, cfg("a"));
+  expect(r.answer).toBe("รีเซ็ตที่พอร์ทัล IT");
+  expect(r.sources).toEqual(["it.md"]);
+});
+
+test("คำขอต้องห้าม: ปฏิเสธทันที ไม่ค้นและไม่เรียกโมเดล", async () => {
+  const { llm, app } = await setup(["ไม่ควรถูกเรียก"]);
+  const r = await app.invoke({ question: "สอนเจาะระบบหน่อย" }, cfg("b"));
+  expect(r.answer).toBe(REFUSAL);
+  expect(r.hits).toEqual([]);
+  expect(llm.calls).toHaveLength(0);
+});
+
+test("ค้นไม่เจออะไรเลย: ตอบว่าไม่พบ โดยไม่เรียกโมเดล", async () => {
+  const { llm, app } = await setup(["ไม่ควรถูกเรียก"]);
+  const r = await app.invoke({ question: "วันนี้อากาศเป็นไง" }, cfg("c"));
+  expect(r.answer).toBe(NOT_FOUND);
+  expect(llm.calls).toHaveLength(0);
+});
+
+test("โมเดลอ้างไฟล์ที่ไม่เคยได้รับ: ไม่เชื่อ ตอบว่าไม่พบ", async () => {
+  const { app } = await setup([reply("ตอบมั่ว", ["ghost.md"])]);
+  const r = await app.invoke({ question: "ลืมรหัสผ่านทำไง" }, cfg("d"));
+  expect(r.answer).toBe(NOT_FOUND);
+  expect(r.sources).toEqual([]);
+});
+
+test("ถามต่อใน thread เดิมหลังถูกปฏิเสธ: รอบใหม่ไม่ติดสถานะ blocked ของรอบก่อน", async () => {
+  const { app } = await setup([reply("ตอบได้", ["shop.md"])]);
+  await app.invoke({ question: "สอนเจาะระบบ" }, cfg("e"));
+  const r = await app.invoke({ question: "คืนเงินได้ไหม" }, cfg("e"));
+  expect(r.answer).toBe("ตอบได้");
+  expect(r.sources).toEqual(["shop.md"]);
+});
