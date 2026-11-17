@@ -1,0 +1,26 @@
+# Postgres + pgvector สำหรับบทเรียนที่ต้องใช้ฐานข้อมูลจริง (เช่น 4-24)
+#   เปิด:   docker compose up -d
+#   ปิด:    docker compose down          (ข้อมูลยังอยู่)
+#   ล้างทั้งหมด: docker compose down -v   (ลบข้อมูลด้วย)
+# ใช้สำหรับเรียนบนเครื่องตัวเองเท่านั้น: รหัสผ่านด้านล่างเป็นค่าตัวอย่าง ห้ามนำไปใช้จริง
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: langgraph-course-postgres
+    environment:
+      POSTGRES_USER: langgraph
+      POSTGRES_PASSWORD: langgraph
+      POSTGRES_DB: langgraph_course
+    ports:
+      - "127.0.0.1:5434:5432" # พอร์ต 5434 บนเครื่องคุณ (เลี่ยง 5432/5433 ที่มักมีโปรแกรมอื่นใช้อยู่)
+    volumes:
+      - langgraph_course_pgdata:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langgraph -d langgraph_course"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  langgraph_course_pgdata:

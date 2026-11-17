@@ -68,6 +68,18 @@ After changing provider or model, run `pnpm check:llm`. It makes 4 live calls an
 
 TypeScript syntax that may look odd (`!`, `as`, `??`): see `docs/typescript-notes.md`.
 
+## Database for real-Postgres lessons (Docker)
+
+Lessons that need a real database (4-24, later vector search) use the Postgres + pgvector container in `docker-compose.yml`:
+
+```bash
+docker compose up -d --wait   # start (port 5434)
+docker compose down           # stop, data kept
+docker compose down -v        # stop and delete data
+```
+
+`.env.example` already has the matching `DATABASE_URL`. The credentials are for local study only. Lesson checkers never need the database.
+
 ## Troubleshooting
 
 - **401**: wrong or missing key for the provider in `LLM_PROVIDER` (no quotes or extra spaces in `.env`).

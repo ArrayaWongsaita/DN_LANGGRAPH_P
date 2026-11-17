@@ -11,7 +11,7 @@ const graph = builder.compile({ checkpointer: saver });
 - สลับ checkpointer ได้โดยไม่แก้ตัว graph เพราะทุกตัวใช้อินเทอร์เฟซเดียวกัน จึงเขียนฟังก์ชันสร้าง graph ให้ **รับ checkpointer เป็นพารามิเตอร์** แล้วตอนทดสอบส่ง `MemorySaver` ตอนใช้จริงส่ง `PostgresSaver`
 - `thread_id` ไม่ควรยาวเกินไป (ที่ตั้งไว้ในบทนี้คือเพดาน 255 ตัวอักษรตามธรรมเนียมของคอร์ส ไม่ใช่ข้อจำกัดของ Postgres) ถ้าอาจยาวกว่านั้น (เช่นต่อจากหลายส่วน) ให้ย่อด้วย hash
 - เปิดการเชื่อมต่อแล้วต้องปิดเมื่อจบโปรแกรม (`await saver.end()`)
-- สร้าง `PostgresSaver` ยัง **ไม่เชื่อมต่อ** จนกว่าจะใช้งานจริง ตัวตรวจของบทนี้จึงไม่ต้องมีฐานข้อมูล ส่วน `run.ts` ใช้ฐานข้อมูลจริงจาก `DATABASE_URL` ใน `.env` (ฐานข้อมูล Postgres ในเครื่องของคุณ)
+- สร้าง `PostgresSaver` ยัง **ไม่เชื่อมต่อ** จนกว่าจะใช้งานจริง ตัวตรวจของบทนี้จึงไม่ต้องมีฐานข้อมูล ส่วน `run.ts` ใช้ฐานข้อมูลจริงจาก `DATABASE_URL` ใน `.env` ซึ่งชี้ไปที่ Postgres ใน Docker ของคอร์ส (ไฟล์ `docker-compose.yml` ที่รากโปรเจกต์ มี pgvector ติดมาด้วยสำหรับบทต่อ ๆ ไป)
 
 ## ดูตัวอย่าง
 `persist.ts` มีแอปแชตง่าย ๆ ขาด 3 จุด: ฟังก์ชันสร้าง saver จากลิงก์เชื่อมต่อ, การรับ checkpointer เข้า graph, และการย่อ `thread_id` ที่ยาวเกิน
@@ -21,9 +21,12 @@ const graph = builder.compile({ checkpointer: saver });
 
     pnpm test:lesson 4-24
 
-จากนั้นลองกับ Postgres จริง (ตั้ง `DATABASE_URL` ใน `.env` ก่อน เช่น `postgresql://user:pass@localhost:5432/mydb`):
+จากนั้นลองกับ Postgres จริง (ต้องมี Docker): เปิดฐานข้อมูลก่อน แล้วรันบท
 
+    docker compose up -d --wait
     pnpm lesson 4-24
+
+(`DATABASE_URL` ใน `.env.example` ตั้งไว้ให้ตรงกับ `docker-compose.yml` แล้ว แค่คัดลอกเป็น `.env` รันซ้ำหลายครั้งตัวเลขจะเพิ่มขึ้นเพราะความจำอยู่ในฐานข้อมูล ล้างด้วย `docker compose down -v`)
 
 ## คุณทำได้แล้ว
 - ทำให้ความจำของ agent รอดจากการรีสตาร์ตและใช้ร่วมกันหลายเซิร์ฟเวอร์ได้

@@ -1,6 +1,6 @@
 import { buildChatApp, makePostgresSaver, safeThreadId } from "./persist";
 
-// รันกับ Postgres จริง: ตั้ง DATABASE_URL ใน .env ก่อน (เช่น postgresql://user:pass@localhost:5432/mydb)
+// รันกับ Postgres จริง: เปิดด้วย `docker compose up -d --wait` และตั้ง DATABASE_URL ใน .env (ดู .env.example)
 // บทนี้ไม่ใช้ LLM จึงอ่านแค่ DATABASE_URL จาก .env โดยตรง (ไม่ต้องมี API key)
 try {
   process.loadEnvFile();
@@ -9,7 +9,7 @@ try {
 }
 const url = process.env.DATABASE_URL;
 if (!url) {
-  console.log("ยังไม่ได้ตั้ง DATABASE_URL ใน .env (ตัวอย่าง: postgresql://user:pass@localhost:5432/mydb)");
+  console.log("ยังไม่ได้ตั้ง DATABASE_URL ใน .env (คัดลอกค่าจาก .env.example แล้วเปิดฐานข้อมูลด้วย docker compose up -d --wait)");
   process.exit(0);
 }
 
