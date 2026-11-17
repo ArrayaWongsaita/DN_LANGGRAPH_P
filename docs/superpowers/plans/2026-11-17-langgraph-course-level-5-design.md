@@ -31,7 +31,7 @@ Source for scope: `docs/notes/coverage-audit-2026-11-17.md`.
 **Part 19: Event streaming**
 - 5-07 `streamEvents` v3 event model (needs a spike to learn the real shapes).
 - 5-08 Turn events into progress for a UI: which node started, which tool ran, token text.
-- 5-09 Serve a stream over HTTP (server-sent events) with plain `node:http`; checker feeds recorded events.
+- 5-09 Serve a stream over HTTP with Express (server-sent events): learners fill the pure part (format events as SSE text, write to a sink, stop when the client disconnects); the Express route wiring is given and used by `run.ts` with `curl`. Checker feeds recorded events and a fake sink, no port opened. Confirm the Express version and SSE details in the spike.
 
 **Part 20: Serving**
 - 5-10 `langgraph dev` and `langgraph.json` hands-on: run the local server and call its API (no LangSmith account needed; Studio is optional and only described).
