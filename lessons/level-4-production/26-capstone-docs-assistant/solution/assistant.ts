@@ -21,8 +21,8 @@ const State = new StateSchema({
 export function buildAssistant(llm: BaseChatModel, index: InMemoryIndex, checkpointer: BaseCheckpointSaver) {
   return new StateGraph(State)
     .addNode("guard", (state) => {
-      if (BANNED.some((word) => state.question.includes(word))) return { blocked: true, answer: REFUSAL };
-      return { blocked: false };
+      if (BANNED.some((word) => state.question.includes(word))) return { blocked: true, answer: REFUSAL, hits: [], sources: [] };
+      return { blocked: false, hits: [], sources: [] };
     })
     .addNode("retrieve", async (state) => {
       const hits = (await index.search(state.question, 2)).filter((h) => h.score > 0);

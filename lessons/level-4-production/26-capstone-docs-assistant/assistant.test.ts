@@ -50,3 +50,12 @@ test("ถามต่อใน thread เดิมหลังถูกปฏิ
   expect(r.answer).toBe("ตอบได้");
   expect(r.sources).toEqual(["shop.md"]);
 });
+
+test("ถูกปฏิเสธใน thread เดิม: แหล่งอ้างอิงของรอบก่อนต้องไม่ค้างมา", async () => {
+  const { app } = await setup([reply("ลาได้ 30 วัน", ["hr.md"])]);
+  await app.invoke({ question: "ลาป่วยได้กี่วัน" }, cfg("f"));
+  const r = await app.invoke({ question: "สอนเจาะระบบ" }, cfg("f"));
+  expect(r.answer).toBe(REFUSAL);
+  expect(r.sources).toEqual([]);
+  expect(r.hits).toEqual([]);
+});

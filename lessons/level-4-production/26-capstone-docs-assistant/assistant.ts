@@ -22,7 +22,8 @@ const State = new StateSchema({
 export function buildAssistant(llm: BaseChatModel, index: InMemoryIndex, checkpointer: BaseCheckpointSaver) {
   return new StateGraph(State)
     .addNode("guard", (state) => {
-      // 👉 ข้อ 1: ถ้า state.question มีคำใดใน BANNED คืน { blocked: true, answer: REFUSAL } ไม่เช่นนั้นคืน { blocked: false }
+      // 👉 ข้อ 1: ถ้า state.question มีคำใดใน BANNED คืน { blocked: true, answer: REFUSAL, hits: [], sources: [] } ไม่เช่นนั้นคืน { blocked: false, hits: [], sources: [] }
+      //          (ล้าง hits/sources ทุกรอบ เพราะ checkpointer จำค่าของรอบก่อนไว้)
       return todo(1);
     })
     .addNode("retrieve", async (state) => {
