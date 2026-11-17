@@ -18,6 +18,7 @@ import { ChatOllama } from "@langchain/ollama";
 //        openai: {
 //          keyVar: "OPENAI_API_KEY",
 //          defaultModel: "<ชื่อโมเดล>",
+//          chatUrl: () => "https://api.openai.com/v1/chat/completions",
 //          create: ({ model, apiKey, temperature }) =>
 //            new ChatOpenAI({ model, apiKey, ...(temperature !== undefined ? { temperature } : {}) }),
 //        },
@@ -39,6 +40,8 @@ interface CreateArgs {
 interface Provider {
   keyVar: string;
   defaultModel: string;
+  // URL ของ chat completions (รูปแบบ OpenAI-compatible) ใช้ในบท Level 0 ที่เรียกด้วย fetch ตรง ๆ
+  chatUrl: () => string;
   create: (args: CreateArgs) => BaseChatModel;
 }
 
@@ -63,12 +66,14 @@ const PROVIDERS = {
   groq: {
     keyVar: "GROQ_API_KEY",
     defaultModel: "openai/gpt-oss-120b",
+    chatUrl: () => "https://api.groq.com/openai/v1/chat/completions",
     create: ({ model, apiKey, temperature }) =>
       new ChatGroq({ model, apiKey, ...withTemperature(temperature) }),
   },
   ollama: {
     keyVar: "OLLAMA_API_KEY",
     defaultModel: "gpt-oss:120b",
+    chatUrl: () => `${ollamaBaseUrl()}/v1/chat/completions`,
     create: ({ model, apiKey, temperature }) =>
       new ChatOllama({
         model,
@@ -109,12 +114,13 @@ export function describeProvider(options: LLMOptions = {}): {
   provider: ProviderName;
   model: string;
   keyVar: string;
+  chatUrl: string;
 } {
   loadDotEnv();
   const provider = resolveProvider();
   const spec: Provider = PROVIDERS[provider];
   const model = options.model ?? ((process.env.LLM_MODEL ?? "").trim() || spec.defaultModel);
-  return { provider, model, keyVar: spec.keyVar };
+  return { provider, model, keyVar: spec.keyVar, chatUrl: spec.chatUrl() };
 }
 
 export function getLLM(options: LLMOptions = {}): BaseChatModel {

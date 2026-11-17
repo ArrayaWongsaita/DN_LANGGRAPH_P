@@ -81,4 +81,25 @@ describe("describeProvider", () => {
     vi.stubEnv("LLM_MODEL", "from-env");
     expect(describeProvider({ model: "from-option" }).model).toBe("from-option");
   });
+
+  test("chatUrl ค่าเริ่มต้นคือ endpoint ของ groq", () => {
+    expect(describeProvider().chatUrl).toBe("https://api.groq.com/openai/v1/chat/completions");
+  });
+
+  test("chatUrl ของ ollama ใช้ /v1/chat/completions ต่อจากโดเมนเริ่มต้น", () => {
+    vi.stubEnv("LLM_PROVIDER", "ollama");
+    expect(describeProvider().chatUrl).toBe("https://ollama.com/v1/chat/completions");
+  });
+
+  test("chatUrl ของ ollama ใช้ OLLAMA_BASE_URL และตัด / ท้ายออก", () => {
+    vi.stubEnv("LLM_PROVIDER", "ollama");
+    vi.stubEnv("OLLAMA_BASE_URL", "https://example.test/");
+    expect(describeProvider().chatUrl).toBe("https://example.test/v1/chat/completions");
+  });
+
+  test("chatUrl ของ ollama ปฏิเสธ OLLAMA_BASE_URL ที่ลงท้ายด้วย /api", () => {
+    vi.stubEnv("LLM_PROVIDER", "ollama");
+    vi.stubEnv("OLLAMA_BASE_URL", "https://ollama.com/api");
+    expect(() => describeProvider()).toThrow(/\/api/);
+  });
 });
