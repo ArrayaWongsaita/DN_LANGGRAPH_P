@@ -73,6 +73,10 @@ describe("describeProvider", () => {
     expect(info.model.length).toBeGreaterThan(0);
   });
 
+  test("โมเดลเริ่มต้นของ groq คือ openai/gpt-oss-20b", () => {
+    expect(describeProvider().model).toBe("openai/gpt-oss-20b");
+  });
+
   test("LLM_MODEL เปลี่ยนชื่อโมเดล", () => {
     vi.stubEnv("LLM_MODEL", "my-model");
     resetEnv();

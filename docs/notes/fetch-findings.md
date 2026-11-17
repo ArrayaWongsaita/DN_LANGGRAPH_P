@@ -1,6 +1,6 @@
 # Raw fetch findings (chat completions endpoint)
 
-Verified live on 2026-11-17 with the author's own key, model `openai/gpt-oss-120b`, endpoint `https://api.groq.com/openai/v1/chat/completions` (the `chatUrl` of the groq provider). 9 requests total.
+Verified live on 2026-11-17 with the author's own key, model `openai/gpt-oss-120b` (the default at the time; the default is now `openai/gpt-oss-20b`, same API shape expected but not re-recorded), endpoint `https://api.groq.com/openai/v1/chat/completions` (the `chatUrl` of the groq provider). 9 requests total.
 
 ## Request that works
 - `POST <chatUrl>`

@@ -53,7 +53,7 @@ const withTemperature = (temperature?: number) =>
 // Record<ProviderName, ...> บังคับให้มีแถวครบทุก provider ที่ประกาศไว้ใน src/env.ts
 const PROVIDERS: Record<ProviderName, Provider> = {
   groq: {
-    defaultModel: "openai/gpt-oss-120b",
+    defaultModel: "openai/gpt-oss-20b",
     chatUrl: () => "https://api.groq.com/openai/v1/chat/completions",
     create: ({ model, apiKey, temperature }) =>
       new ChatGroq({ model, apiKey, ...withTemperature(temperature) }),
