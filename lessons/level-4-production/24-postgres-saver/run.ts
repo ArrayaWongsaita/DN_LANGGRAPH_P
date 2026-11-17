@@ -1,16 +1,19 @@
-import { getLLM } from "@src/llm";
-import { env } from "@src/env";
 import { buildChatApp, makePostgresSaver, safeThreadId } from "./persist";
 
 // รันกับ Postgres จริง: ตั้ง DATABASE_URL ใน .env ก่อน (เช่น postgresql://user:pass@localhost:5432/mydb)
-// ไม่ได้ใช้ LLM ในบทนี้ (getLLM ถูก import ไว้ให้เห็นรูปแบบเท่านั้น จึงไม่ถูกเรียก)
-void getLLM;
-if (!env.DATABASE_URL) {
+// บทนี้ไม่ใช้ LLM จึงอ่านแค่ DATABASE_URL จาก .env โดยตรง (ไม่ต้องมี API key)
+try {
+  process.loadEnvFile();
+} catch {
+  // ไม่มีไฟล์ .env ก็ไม่เป็นไร
+}
+const url = process.env.DATABASE_URL;
+if (!url) {
   console.log("ยังไม่ได้ตั้ง DATABASE_URL ใน .env (ตัวอย่าง: postgresql://user:pass@localhost:5432/mydb)");
   process.exit(0);
 }
 
-const saver = makePostgresSaver(env.DATABASE_URL);
+const saver = makePostgresSaver(url);
 try {
   await saver.setup(); // สร้างตาราง checkpoint ถ้ายังไม่มี
   const app = buildChatApp(saver);

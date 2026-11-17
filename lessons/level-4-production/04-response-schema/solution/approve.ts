@@ -8,7 +8,7 @@ const State = new StateSchema({ result: z.string().default("") });
 export function buildApprovalApp() {
   return new StateGraph(State)
     .addNode("decide", () => {
-      const answer = interrupt({ question: "อนุมัติไหม?" }, { responseSchema: Decision } as never);
+      const answer = interrupt({ question: "อนุมัติไหม?" }, { responseSchema: Decision });
       return { result: JSON.stringify(answer) };
     })
     .addEdge(START, "decide")

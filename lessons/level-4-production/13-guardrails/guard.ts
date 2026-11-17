@@ -6,7 +6,7 @@ import { todo } from "@src/todo";
 export const BANNED = ["สร้างอาวุธ", "เจาะระบบ"];
 export const SECRET = "รหัสลับ-777";
 
-type State = { messages: { text: string }[] };
+type State = { messages: { text: string; id?: string }[] };
 
 export function makeInputGuard() {
   return createMiddleware({
@@ -30,7 +30,8 @@ export function makeOutputGuard() {
       canJumpTo: ["end"],
       hook: async (state: State) => {
         const last = state.messages[state.messages.length - 1]?.text ?? "";
-        // 👉 ข้อ 2: ถ้า last มี SECRET คืน { messages: [new AIMessage("[ข้อมูลถูกปิดบัง]")], jumpTo: "end" } ไม่เช่นนั้นคืน undefined
+        // 👉 ข้อ 2: ถ้า last มี SECRET คืน { messages: [new AIMessage({ content: "[ข้อมูลถูกปิดบัง]", id: <id ของข้อความสุดท้าย> })], jumpTo: "end" }
+        //          (ใช้ id เดิมเพื่อเขียนทับข้อความที่รั่ว) ไม่เช่นนั้นคืน undefined
         return todo(2);
       },
     },

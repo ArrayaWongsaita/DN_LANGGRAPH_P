@@ -42,3 +42,11 @@ test("ลองใหม่แล้วยังไม่เกี่ยว: ย
   expect(r.answer).toBe("ไม่พบข้อมูลในเอกสาร");
   expect(llm.calls).toHaveLength(3);
 });
+
+test("ผู้ให้คะแนนเห็นทั้งคำถามและเอกสารที่ค้นได้", async () => {
+  const llm = fakeToolLLM([verdict(true), "ตอบ"]);
+  await buildAgenticRag(llm, await makeIndex()).invoke({ question: "ลืมรหัสผ่านทำไง" });
+  const gradePrompt = llm.calls[0][0].text;
+  expect(gradePrompt).toContain("ลืมรหัสผ่านทำไง");
+  expect(gradePrompt).toContain("[it.md]");
+});

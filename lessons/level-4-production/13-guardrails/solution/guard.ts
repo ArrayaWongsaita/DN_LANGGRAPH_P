@@ -5,7 +5,7 @@ import { createAgent, createMiddleware } from "langchain";
 export const BANNED = ["สร้างอาวุธ", "เจาะระบบ"];
 export const SECRET = "รหัสลับ-777";
 
-type State = { messages: { text: string }[] };
+type State = { messages: { text: string; id?: string }[] };
 
 export function makeInputGuard() {
   return createMiddleware({
@@ -29,8 +29,10 @@ export function makeOutputGuard() {
     afterModel: {
       canJumpTo: ["end"],
       hook: async (state: State) => {
-        const last = state.messages[state.messages.length - 1]?.text ?? "";
-        if (last.includes(SECRET)) return { messages: [new AIMessage("[ข้อมูลถูกปิดบัง]")], jumpTo: "end" };
+        const leaked = state.messages[state.messages.length - 1];
+        if (leaked?.text.includes(SECRET)) {
+          return { messages: [new AIMessage({ content: "[ข้อมูลถูกปิดบัง]", id: leaked.id })], jumpTo: "end" };
+        }
         return undefined;
       },
     },

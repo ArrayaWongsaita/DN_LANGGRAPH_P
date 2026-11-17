@@ -38,3 +38,9 @@ test("โมเดลเห็นที่มาของทุกชิ้น�
   expect(prompt).toContain("[hr.md]");
   expect(prompt).toContain("คำถามของฉัน");
 });
+
+test("ชื่อไฟล์ที่ลงท้ายคล้ายกันไม่นับ (edit.md ไม่ใช่ it.md)", async () => {
+  const r = await answerWithCitations(fakeToolLLM([reply("ตอบ", ["edit.md"])]), "q", hits);
+  expect(r.sources).toEqual([]);
+  expect(r.grounded).toBe(false);
+});

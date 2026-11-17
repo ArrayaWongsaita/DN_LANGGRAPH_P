@@ -21,5 +21,5 @@ test("คำขอปกติ: ผ่านและได้คำตอบข
 test("โมเดลเผยความลับ: ถูกแทนที่ก่อนถึงผู้ใช้", async () => {
   const r = await run(fakeToolLLM([`รหัสคือ ${SECRET}`]), "ขอรหัสหน่อย");
   expect(r.messages.at(-1)?.text).toBe("[ข้อมูลถูกปิดบัง]");
-  expect(r.messages.some((m) => m.text.includes(SECRET) && m.type === "ai" && m.text !== "[ข้อมูลถูกปิดบัง]")).toBe(true);
+  expect(r.messages.some((m) => m.text.includes(SECRET))).toBe(false); // ความลับต้องไม่เหลือในประวัติ
 });

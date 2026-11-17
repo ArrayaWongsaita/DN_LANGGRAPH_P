@@ -15,7 +15,7 @@ export function wrapUntrusted(text: string): string {
 export function makeSendEmailTool(sent: string[]) {
   return tool(
     ({ to }: { to: string }) => {
-      if (!to.endsWith(`@${ALLOWED_DOMAIN}`)) return `ปฏิเสธ: ส่งได้เฉพาะ @${ALLOWED_DOMAIN}`;
+      if (!/^[^@\s,;<>]+@company\.com$/i.test(to)) return `ปฏิเสธ: ส่งได้เฉพาะ @${ALLOWED_DOMAIN}`;
       sent.push(to);
       return `ส่งถึง ${to} แล้ว`;
     },

@@ -1,3 +1,5 @@
+import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
+import { z } from "zod";
 import { buildJob, runJob } from "./timeout";
 
 // ตัวตรวจของบทนี้ (ไม่ต้องแก้ไฟล์นี้)
@@ -13,4 +15,15 @@ test("หมดเวลาแล้วกลับมาเร็ว ไม่�
   const start = Date.now();
   await runJob(buildJob(2000, 50));
   expect(Date.now() - start).toBeLessThan(1000);
+});
+
+test("error ชนิดอื่นต้องไม่ถูกแปลงเป็น \"หมดเวลา\" (โยนต่อให้ผู้เรียก)", async () => {
+  const broken = new StateGraph(new StateSchema({ log: z.string().default("") }))
+    .addNode("boom", () => {
+      throw new Error("db down");
+    })
+    .addEdge(START, "boom")
+    .addEdge("boom", END)
+    .compile();
+  await expect(runJob(broken as never)).rejects.toThrow("db down");
 });

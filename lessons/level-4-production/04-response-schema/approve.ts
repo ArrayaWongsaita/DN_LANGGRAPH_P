@@ -9,8 +9,8 @@ const State = new StateSchema({ result: z.string().default("") });
 export function buildApprovalApp() {
   return new StateGraph(State)
     .addNode("decide", () => {
-      // 👉 ข้อ 1: const answer = interrupt({ question: "อนุมัติไหม?" }, { responseSchema: Decision } as never);
-      //          (บางเวอร์ชันของ type ยังไม่มี option นี้ จึงใส่ as never) แล้วคืน { result: JSON.stringify(answer) }
+      // 👉 ข้อ 1: const answer = interrupt({ question: "อนุมัติไหม?" }, { responseSchema: Decision });
+      //          แล้วคืน { result: JSON.stringify(answer) }
       return todo(1);
     })
     .addEdge(START, "decide")

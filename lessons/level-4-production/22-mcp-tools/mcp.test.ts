@@ -1,4 +1,5 @@
 import { fakeToolLLM } from "@src/fakeToolLLM";
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 import { askWithMcp } from "./mcp";
 
 // ตัวตรวจของบทนี้ (ไม่ต้องแก้ไฟล์นี้) เปิด MCP server จำลองในเครื่องจริง ๆ (ใช้เวลาสักครู่)
@@ -22,4 +23,11 @@ test("เรียกซ้ำสองรอบติดกันได้ (cli
   await askWithMcp(fakeToolLLM(["a"]), "x");
   const r = await askWithMcp(fakeToolLLM(["b"]), "y");
   expect(r.answer).toBe("b");
+});
+
+test("ปิด client ทุกครั้งที่ใช้เสร็จ", async () => {
+  const spy = vi.spyOn(MultiServerMCPClient.prototype, "close");
+  await askWithMcp(fakeToolLLM(["ok"]), "x");
+  expect(spy).toHaveBeenCalledTimes(1);
+  spy.mockRestore();
 });

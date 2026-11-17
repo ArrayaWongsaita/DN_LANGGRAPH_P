@@ -59,3 +59,10 @@ test("ถูกปฏิเสธใน thread เดิม: แหล่งอ�
   expect(r.sources).toEqual([]);
   expect(r.hits).toEqual([]);
 });
+
+test("อ้างไฟล์ที่มีในระบบแต่ไม่ได้ถูกค้นมาในรอบนี้: ไม่นับเป็นหลักฐาน", async () => {
+  const { app } = await setup([reply("ตอบ", ["hr.md"])]);
+  const r = await app.invoke({ question: "ลืมรหัสผ่านทำไง" }, cfg("g"));
+  expect(r.answer).toBe(NOT_FOUND);
+  expect(r.sources).toEqual([]);
+});

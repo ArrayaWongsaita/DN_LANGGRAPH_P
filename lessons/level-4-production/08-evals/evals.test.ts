@@ -37,3 +37,18 @@ test("กรรมการ: PASS ผ่าน FAIL ตก และเห็น
   expect(prompt).toContain("A");
   expect(prompt).toContain("ตอบ A");
 });
+
+test("runEval รอ scorer แบบ async (กรรมการ) และนับตามคำตัดสินจริง", async () => {
+  const judge = fakeToolLLM(["FAIL เพราะไม่มีคำว่า PASS", "  pass"]);
+  const r = await runEval(async () => "ตอบ ปลา", [{ input: "q1", expected: "ไก่" }, { input: "q2", expected: "ปลา" }], makeJudgeScorer(judge));
+  expect(r.passed).toBe(1);
+  expect(r.failures).toEqual(["q1"]);
+});
+
+test("พรอมต์ของกรรมการมีคำตอบที่คาดหวัง (แยกจากคำตอบจริง)", async () => {
+  const judge = fakeToolLLM(["PASS"]);
+  await makeJudgeScorer(judge)("ตอบ ปลา", { input: "q", expected: "ไก่" });
+  const prompt = judge.calls[0][0].text;
+  expect(prompt).toContain("ไก่");
+  expect(prompt).toContain("ปลา");
+});

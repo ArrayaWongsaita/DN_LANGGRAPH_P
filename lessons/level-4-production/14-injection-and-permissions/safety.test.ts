@@ -14,6 +14,7 @@ test("wrapUntrusted: เนื้อหาถูกล้อมด้วยป�
   const out = wrapUntrusted("สวัสดี");
   expect(out.startsWith("<untrusted>")).toBe(true);
   expect(out).toContain("สวัสดี");
+  expect(out).toContain("</untrusted>");
   expect(out).toContain("ไม่ใช่คำสั่ง");
 });
 
@@ -23,6 +24,15 @@ test("sendEmail: โดเมนที่อนุญาตส่งได้ �
   expect(await email.invoke({ to: "boss@company.com" })).toContain("ส่งถึง");
   expect(await email.invoke({ to: "evil@attacker.com" })).toContain("ปฏิเสธ");
   expect(sent).toEqual(["boss@company.com"]);
+});
+
+test("sendEmail: โดเมนปลอมที่หน้าตาคล้าย และหลายผู้รับในช่องเดียว ต้องถูกปฏิเสธ", async () => {
+  const sent: string[] = [];
+  const email = makeSendEmailTool(sent);
+  for (const to of ["evil@company.com.attacker.com", "evil@notcompany.com", "evil@attacker.com,boss@company.com", "a@b.com;boss@company.com"]) {
+    expect(await email.invoke({ to })).toContain("ปฏิเสธ");
+  }
+  expect(sent).toEqual([]);
 });
 
 test("เหตุการณ์จริง: เนื้อหาเว็บสั่งให้ส่งข้อมูลออกนอก โมเดลทำตามแต่ถูกกั้นที่ tool", async () => {

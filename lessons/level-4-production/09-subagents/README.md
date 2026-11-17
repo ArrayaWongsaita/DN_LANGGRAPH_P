@@ -11,7 +11,10 @@
 
 วิธีทำ: ห่อ agent ย่อยด้วย `tool(...)`:
 ```ts
-tool(async ({ request }) => lastText(await sub.invoke({ messages: [new HumanMessage(request)] })),
+tool(async ({ request }) => {
+       const r = await sub.invoke({ messages: [new HumanMessage(request)] });
+       return r.messages[r.messages.length - 1].text;   // ข้อความสุดท้ายของ agent ย่อย
+     },
      { name: "ask_math", description: "...", schema: z.object({ request: z.string() }) })
 ```
 ใช้เมื่องานแยกเป็นโดเมนชัดเจน หรืออยากให้ทีมต่างคนต่างพัฒนา agent ย่อย ข้อเสียคือผู้ใช้คุยกับ agent ย่อยโดยตรงไม่ได้ (ถ้าต้องการให้ดู handoff บท 3-23)
