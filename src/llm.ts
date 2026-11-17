@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatGroq } from "@langchain/groq";
 import { ChatOllama } from "@langchain/ollama";
+import { ChatOpenAI } from "@langchain/openai";
 import { PROVIDER_KEY_VARS, type ProviderName, env } from "./env";
 
 // ================================================================
@@ -47,6 +49,10 @@ interface Provider {
   create: (args: CreateArgs) => BaseChatModel;
 }
 
+const OPENCODE_BASE_URL = "https://opencode.ai/zen/go/v1";
+// OpenCode Go ต้องการ header นี้ (รหัส session ต่อหนึ่งโปรเซส) ไม่งั้นตอบ 400
+const OPENCODE_HEADERS = { "x-opencode-session": randomUUID() };
+
 const withTemperature = (temperature?: number) =>
   temperature !== undefined ? { temperature } : {};
 
@@ -57,6 +63,17 @@ const PROVIDERS: Record<ProviderName, Provider> = {
     chatUrl: () => "https://api.groq.com/openai/v1/chat/completions",
     create: ({ model, apiKey, temperature }) =>
       new ChatGroq({ model, apiKey, ...withTemperature(temperature) }),
+  },
+  opencode: {
+    defaultModel: "deepseek-v4.1-flash",
+    chatUrl: () => `${OPENCODE_BASE_URL}/chat/completions`,
+    create: ({ model, apiKey, temperature }) =>
+      new ChatOpenAI({
+        model,
+        apiKey,
+        configuration: { baseURL: OPENCODE_BASE_URL, defaultHeaders: OPENCODE_HEADERS },
+        ...withTemperature(temperature),
+      }),
   },
   ollama: {
     defaultModel: "gpt-oss:120b",

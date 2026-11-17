@@ -19,6 +19,7 @@ import { z } from "zod";
 export const PROVIDER_KEY_VARS = {
   groq: "GROQ_API_KEY",
   ollama: "OLLAMA_API_KEY",
+  opencode: "OPENCODE_GO_KEY",
 } as const;
 
 export type ProviderName = keyof typeof PROVIDER_KEY_VARS;
@@ -41,6 +42,7 @@ const envSchema = z
     LLM_MODEL: z.preprocess(blankToUndefined, z.string().trim().default("")),
     GROQ_API_KEY: z.string().trim().default(""),
     OLLAMA_API_KEY: z.string().trim().default(""),
+    OPENCODE_GO_KEY: z.string().trim().default(""),
     OLLAMA_BASE_URL: z
       .string()
       .optional()

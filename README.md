@@ -45,10 +45,13 @@ pnpm test:lesson 0-01  # Level 0 lessons use a 0- prefix
 
 | Variable | Meaning |
 |---|---|
-| `LLM_PROVIDER` | `groq` (default) or `ollama`. Add another with one table row in `src/llm.ts` |
+| `LLM_PROVIDER` | `groq` (default), `opencode` or `ollama`. Add another with one table row in `src/llm.ts` |
 | `LLM_MODEL` | model name; empty = the provider's default |
 | `GROQ_API_KEY` | key for the `groq` provider (each learner uses their own; at least 10 characters; only the selected provider's key is required) |
+| `OPENCODE_GO_KEY` | key for the `opencode` provider (OpenCode Go, default model `deepseek-v4.1-flash`) |
 | `OLLAMA_API_KEY`, `OLLAMA_BASE_URL` | for the `ollama` provider (base URL has **no** `/api` suffix) |
+
+Note: Level 0 lessons (raw `fetch`) send only `Authorization` and `Content-Type`, so they work with `groq` and `ollama`; the `opencode` provider additionally needs an `x-opencode-session` header that only `getLLM()` adds (Levels 1-3).
 
 After changing provider or model, run `pnpm check:llm`. It makes 4 live calls and reports whether basic calls, streaming, tool calling and structured output work. Findings for tested models are in `docs/notes/provider-findings.md`.
 
