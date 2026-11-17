@@ -39,13 +39,13 @@ pnpm test:lesson 0-01  # Level 0 lessons use a 0- prefix
 
 ## Switching LLM provider or model
 
-Every lesson gets its model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`). Change provider or model in `.env` only:
+`src/env.ts` reads and validates `.env` once with zod (`import { env } from "@src/env"`; a wrong value gives one Thai message listing every problem). Every lesson gets its model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`, built from that validated env). Change provider or model in `.env` only:
 
 | Variable | Meaning |
 |---|---|
 | `LLM_PROVIDER` | `groq` (default) or `ollama`. Add another with one table row in `src/llm.ts` |
 | `LLM_MODEL` | model name; empty = the provider's default |
-| `GROQ_API_KEY` | key for the `groq` provider (each learner uses their own) |
+| `GROQ_API_KEY` | key for the `groq` provider (each learner uses their own; at least 10 characters; only the selected provider's key is required) |
 | `OLLAMA_API_KEY`, `OLLAMA_BASE_URL` | for the `ollama` provider (base URL has **no** `/api` suffix) |
 
 After changing provider or model, run `pnpm check:llm`. It makes 4 live calls and reports whether basic calls, streaming, tool calling and structured output work. Findings for tested models are in `docs/notes/provider-findings.md`.

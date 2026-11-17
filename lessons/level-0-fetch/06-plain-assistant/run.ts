@@ -4,8 +4,7 @@ import { type Ask, runAssistant } from "./assistant";
 
 // รันกับ LLM จริง: pnpm lesson 0-06  (พิมพ์ exit เพื่อออก)
 // สร้าง ask จาก fetch (หน้าตาเหมือนบท 0-01 ย่อให้เหลือเท่าที่ใช้)
-const { model, keyVar, chatUrl } = describeProvider();
-const apiKey = (process.env[keyVar] ?? "").trim();
+const { model, chatUrl, apiKey } = describeProvider();
 
 const ask: Ask = async (prompt) => {
   const res = await fetch(chatUrl, {

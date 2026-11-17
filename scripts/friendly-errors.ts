@@ -17,7 +17,7 @@ function hint(e: unknown): string {
   if (status === 404) return "ไม่พบปลายทาง: ตรวจชื่อโมเดล (LLM_MODEL) และ URL ของ provider ใน .env";
   if (status === 429) return "เรียกถี่เกินไป: รอแล้วลองใหม่";
   if (code === "ENOTFOUND" || code === "ECONNREFUSED") return "ต่อเครือข่ายไม่ได้: ตรวจอินเทอร์เน็ต";
-  return "ดูวิธีแก้ใน README หรือบทที่ 06";
+  return "ดูวิธีแก้ใน README หรือบทที่ 0-02";
 }
 
 function friendly(e: unknown): never {
