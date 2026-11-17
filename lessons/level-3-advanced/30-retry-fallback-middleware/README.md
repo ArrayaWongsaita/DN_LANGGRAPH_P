@@ -4,7 +4,7 @@
 บท 2-27 ทำ retry/fallback ที่ตัวโมเดล ใน `createAgent` มี middleware สำเร็จรูปให้ทำเรื่องเดียวกัน (และมีตัวเลือกเรื่องรอระหว่างลองให้ละเอียดกว่า):
 
 ```ts
-modelRetryMiddleware({ maxRetries: 3, initialDelayMs: 1, onFailure: "error" }) // ลองใหม่เมื่อโมเดล error
+modelRetryMiddleware({ maxRetries: 3, /* ลองใหม่ 3 ครั้ง = เรียกรวม 4 ครั้ง */ initialDelayMs: 1, onFailure: "error" }) // ลองใหม่เมื่อโมเดล error
 modelFallbackMiddleware(backupModel)                          // ยังล้ม ให้ตัวสำรองตอบ
 ```
 และเมื่อไม่มีตัวสำเร็จรูปที่ต้องการ **เขียนเองได้ง่าย** ด้วย `createMiddleware` โดยเลือกจุดแทรก `beforeModel` / `afterModel` ฯลฯ:

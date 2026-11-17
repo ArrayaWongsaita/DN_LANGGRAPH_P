@@ -12,7 +12,7 @@ const items = await store.search(["memories", "u1"]); // ทุกชิ้น�
 items.map((i) => i.value.text);
 ```
 - namespace เป็นลำดับชั้น: `["memories", "u1"]` อยู่ใต้ `["memories"]`
-- `search(prefix)` คืนทุกรายการที่ namespace ขึ้นต้นด้วย prefix (รวมที่ซ้อนอยู่ข้างใน)
+- `search(prefix)` คืนรายการที่ namespace ขึ้นต้นด้วย prefix (รวมที่ซ้อนอยู่ข้างใน) ค่าเริ่มต้นคืนสูงสุด 10 รายการ ใส่ `{ limit }` ถ้าต้องการมากกว่านั้น
 - ใส่ **รหัสผู้ใช้ใน namespace** คือวิธีกันความจำของคนหนึ่งไปปนอีกคน
 
 ## ดูตัวอย่าง

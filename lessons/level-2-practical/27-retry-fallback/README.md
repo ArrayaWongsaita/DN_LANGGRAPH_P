@@ -5,7 +5,7 @@
 
 ```ts
 const sturdy = llm
-  .withRetry({ stopAfterAttempt: 3 })              // ล้มเหลว ลองใหม่ได้สูงสุด 3 ครั้ง
+  .withRetry({ stopAfterAttempt: 3 })              // ล้มเหลว ลองรวมสูงสุด 3 ครั้ง (นับครั้งแรกด้วย)
   .withFallbacks({ fallbacks: [backupLlm] });       // ยังล้มอีก ให้ตัวสำรองตอบแทน
 ```
 ใช้แทน LLM เดิมได้เลย (`await sturdy.invoke(...)`) ส่วนนี้ยังสอนเรื่อง **การสลับโมเดล** ด้วย: ตัวสำรองมักเป็นโมเดลอื่นหรือ provider อื่นที่เราตั้งไว้ใน `src/llm.ts` ทำให้แอปไม่ผูกกับเจ้าเดียว

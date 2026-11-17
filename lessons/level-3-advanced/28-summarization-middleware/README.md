@@ -6,7 +6,7 @@
 ```ts
 summarizationMiddleware({
   model: summaryLlm,                // โมเดลที่ใช้สรุป
-  trigger: { messages: 4 },         // เริ่มสรุปเมื่อมีข้อความเกิน 4
+  trigger: { messages: 4 },         // เริ่มสรุปเมื่อมีข้อความถึง 4
   keep: { messages: 2 },            // เก็บข้อความล่าสุดไว้ 2 ข้อความ
 })
 ```
