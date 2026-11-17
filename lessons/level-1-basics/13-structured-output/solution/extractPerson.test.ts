@@ -1,0 +1,16 @@
+import { fakeLLM } from "../../../../src/fakeLLM";
+import { extractPerson } from "./extractPerson";
+
+test("คำตอบ JSON ที่ถูกต้องได้ Person", async () => {
+  const llm = fakeLLM(['{"name":"มาลี","age":25}']);
+  expect(await extractPerson(llm, "มาลี อายุ 25")).toEqual({ name: "มาลี", age: 25 });
+});
+
+test("คำตอบที่ไม่ใช่ JSON ต้อง throw ข้อความที่พูดถึง JSON", async () => {
+  await expect(extractPerson(fakeLLM(["ไม่ใช่ json"]), "x")).rejects.toThrow(/JSON/);
+});
+
+test("JSON ที่รูปร่างไม่ตรง schema ต้อง throw ข้อความที่พูดถึงรูปแบบ", async () => {
+  const llm = fakeLLM(['{"name":"มาลี","age":"ยี่สิบ"}']);
+  await expect(extractPerson(llm, "x")).rejects.toThrow(/รูปแบบ/);
+});
