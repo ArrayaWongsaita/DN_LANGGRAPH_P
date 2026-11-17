@@ -2,7 +2,7 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is drafted in order; its real-LLM `run.ts` files have not all been run live yet. **Level 2** (2-01..2-27: memory, tools/agents, human-in-the-loop, streaming, reliability) is drafted; the rest is planned in `docs/superpowers/plans/2026-11-17-langgraph-course-level-2.md`. Level 3 is planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
+**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is drafted in order; its real-LLM `run.ts` files have not all been run live yet. **Level 2** (2-01..2-27: memory, tools/agents, human-in-the-loop, streaming, reliability) is drafted; the rest is planned in `docs/superpowers/plans/2026-11-17-langgraph-course-level-2.md`. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is drafted; plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; none of its lessons has been run against a real LLM yet. `legacy/` holds an earlier build kept only for reuse.
 
 **Reading order:** want to see what an LLM call really is? Start at Level 0 (`0-01`). Want to go straight to LangChain/LangGraph? Start at Level 1 (`01`; lesson 02 covers `.env` setup).
 
@@ -16,6 +16,7 @@ cp .env.example .env      # then put your GROQ_API_KEY in .env
 pnpm test:lesson 01    # Level 1, lesson 01 (red at first, that is normal)
 pnpm test:lesson 0-01  # Level 0, lesson 01 (raw fetch)
 pnpm test:lesson 2-01  # Level 2, lesson 01 (chat memory)
+pnpm test:lesson 3-01  # Level 3, lesson 01 (input/output schemas)
 ```
 
 Lesson checkers use a fake model, so they need **no key**. Only `pnpm lesson NN` (real LLM calls) does.
