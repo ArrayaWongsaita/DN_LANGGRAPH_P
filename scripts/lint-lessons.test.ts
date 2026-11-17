@@ -88,6 +88,24 @@ describe("lintLessons", () => {
     expect(lintLessons(root, { strict: true }).join("\n")).toMatch(/missing number 02/);
   });
 
+  test("เลขบทเดียวกันใน level ต่างกันไม่ใช่ซ้ำ", () => {
+    const root = makeRoot();
+    addLesson(root, "level-0-fetch", "01-zero");
+    addLesson(root, "level-1-basics", "01-one");
+    expect(lintLessons(root, { strict: true })).toEqual([]);
+  });
+
+  test("strict ตรวจเลขต่อเนื่องแยกตาม level", () => {
+    const root = makeRoot();
+    addLesson(root, "level-0-fetch", "01-a");
+    addLesson(root, "level-0-fetch", "03-c");
+    addLesson(root, "level-1-basics", "01-x");
+    addLesson(root, "level-1-basics", "02-y");
+    const problems = lintLessons(root, { strict: true }).join("\n");
+    expect(problems).toMatch(/level-0-fetch.*missing number 02/);
+    expect(problems).not.toMatch(/level-1-basics/);
+  });
+
   test("ชื่อโฟลเดอร์ผิดรูปแบบ", () => {
     const root = makeRoot();
     addLesson(root, "level-1-basics", "First_Test");

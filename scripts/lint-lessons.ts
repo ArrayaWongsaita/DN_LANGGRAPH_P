@@ -11,10 +11,10 @@ const isStarter = (f: string) => f.endsWith(".ts") && !f.endsWith(".test.ts") &&
 /** คืนรายการปัญหา (ภาษาอ่านง่าย) ถ้าว่างแปลว่าผ่าน. strict = ตรวจว่าเลขบทต่อเนื่องไม่ข้าม */
 export function lintLessons(root: string, opts: { strict?: boolean } = {}): string[] {
   const problems: string[] = [];
-  const numbers: number[] = [];
   if (!existsSync(root)) return [`lessons root not found: ${root}`];
 
   for (const level of dirs(root).filter((n) => n.startsWith("level-")).sort()) {
+    const numbers: number[] = [];
     for (const name of dirs(join(root, level)).sort()) {
       const dir = join(root, level, name);
       const m = NAME_RE.exec(name);
@@ -55,18 +55,18 @@ export function lintLessons(root: string, opts: { strict?: boolean } = {}): stri
         if (code.includes("todo(")) problems.push(`${name}: checker ${c} must not contain todo(`);
       }
     }
-  }
-
-  const seen = new Set<number>();
-  for (const n of numbers) {
-    if (seen.has(n)) problems.push(`duplicate lesson number ${String(n).padStart(2, "0")}`);
-    seen.add(n);
-  }
-  if (opts.strict) {
-    const max = Math.max(0, ...numbers);
-    for (let i = 1; i <= max; i++) {
-      if (!seen.has(i)) problems.push(`numbering must be contiguous: missing number ${String(i).padStart(2, "0")}`);
+    const seen = new Set<number>();
+    for (const n of numbers) {
+      if (seen.has(n)) problems.push(`duplicate lesson number ${String(n).padStart(2, "0")} in ${level}`);
+      seen.add(n);
+    }
+    if (opts.strict) {
+      const max = Math.max(0, ...numbers);
+      for (let i = 1; i <= max; i++) {
+        if (!seen.has(i)) problems.push(`numbering must be contiguous in ${level}: missing number ${String(i).padStart(2, "0")}`);
+      }
     }
   }
+
   return problems;
 }

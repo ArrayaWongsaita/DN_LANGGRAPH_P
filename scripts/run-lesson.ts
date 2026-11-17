@@ -1,11 +1,11 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { findLesson } from "./find-lesson";
+import { findLesson, parseLessonId } from "./find-lesson";
 
 const num = process.argv[2] ?? "";
-if (!/^\d{1,2}$/.test(num)) {
-  console.error("วิธีใช้: pnpm lesson <เลขบท>  เช่น pnpm lesson 08");
+if (!parseLessonId(num)) {
+  console.error("วิธีใช้: pnpm lesson <เลขบท>  เช่น pnpm lesson 08 (Level 1) หรือ pnpm lesson 0-01 (Level 0)");
   process.exit(1);
 }
 

@@ -1,12 +1,39 @@
-import { findLesson } from "./find-lesson";
+import { findLesson, parseLessonId } from "./find-lesson";
 
 const ROOT = "scripts/fixtures/lessons";
 
-test("หาโฟลเดอร์บทจากเลขบท", () => {
-  expect(findLesson(ROOT, "01")).toMatch(/01-good$/);
-  expect(findLesson(ROOT, "3")).toMatch(/03-solution-fails$/);
+describe("parseLessonId", () => {
+  test("เลขเปล่าคือ Level 1", () => {
+    expect(parseLessonId("3")).toEqual({ level: 1, num: "03" });
+    expect(parseLessonId("03")).toEqual({ level: 1, num: "03" });
+  });
+
+  test("รูปแบบ <level>-<เลข> ระบุระดับ", () => {
+    expect(parseLessonId("0-03")).toEqual({ level: 0, num: "03" });
+    expect(parseLessonId("1-3")).toEqual({ level: 1, num: "03" });
+  });
+
+  test("รูปแบบผิดได้ undefined", () => {
+    expect(parseLessonId("x")).toBeUndefined();
+    expect(parseLessonId("0-")).toBeUndefined();
+    expect(parseLessonId("")).toBeUndefined();
+    expect(parseLessonId("1-2-3")).toBeUndefined();
+  });
 });
 
-test("เลขบทที่ไม่มีได้ undefined", () => {
-  expect(findLesson(ROOT, "99")).toBeUndefined();
+describe("findLesson", () => {
+  test("เลขเปล่าหาใน Level 1", () => {
+    expect(findLesson(ROOT, "01")).toMatch(/level-1-fixture\/01-good$/);
+    expect(findLesson(ROOT, "3")).toMatch(/03-solution-fails$/);
+  });
+
+  test("0-NN หาใน Level 0 แม้เลขซ้ำกับ Level 1", () => {
+    expect(findLesson(ROOT, "0-01")).toMatch(/level-0-fixture\/01-zero-good$/);
+  });
+
+  test("บทหรือระดับที่ไม่มีได้ undefined", () => {
+    expect(findLesson(ROOT, "99")).toBeUndefined();
+    expect(findLesson(ROOT, "0-99")).toBeUndefined();
+    expect(findLesson(ROOT, "7-01")).toBeUndefined();
+  });
 });
