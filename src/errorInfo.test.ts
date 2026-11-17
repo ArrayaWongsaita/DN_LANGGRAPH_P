@@ -24,3 +24,11 @@ describe("errorCode", () => {
     expect(errorCode({ code: "ECONNREFUSED" })).toBe("ECONNREFUSED");
   });
 });
+
+describe("รูปแบบ error จริงของ Groq (บันทึกจาก spike)", () => {
+  test("AuthenticationError / NotFoundError ของ SDK มี status ตรง ๆ", () => {
+    const groq401 = { status: 401, headers: {}, error: { error: { code: "invalid_api_key" } } };
+    expect(errorStatus(groq401)).toBe(401);
+    expect(errorStatus({ status: 404, headers: {} })).toBe(404);
+  });
+});
