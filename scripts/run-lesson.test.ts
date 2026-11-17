@@ -15,3 +15,14 @@ test("pnpm lesson โดยไม่มี key พิมพ์ข้อควา
   expect(result.stderr).toMatch(/GROQ_API_KEY/);
   expect(result.stderr).not.toMatch(/\n\s+at /);
 }, 30_000);
+
+// บทของ Level 0 ก็ต้องไม่โชว์ stack trace เมื่อยังไม่ได้ตั้ง key
+test("pnpm lesson 0-01 โดยไม่มี key พิมพ์ข้อความไทยที่บอกชื่อตัวแปร และไม่มี stack trace", () => {
+  const result = spawnSync(process.execPath, ["--import", "tsx", "scripts/run-lesson.ts", "0-01"], {
+    encoding: "utf8",
+    env: { ...process.env, LLM_PROVIDER: "", GROQ_API_KEY: "" },
+  });
+  expect(result.status).not.toBe(0);
+  expect(result.stderr).toMatch(/GROQ_API_KEY/);
+  expect(result.stderr).not.toMatch(/\n\s+at /);
+}, 30_000);

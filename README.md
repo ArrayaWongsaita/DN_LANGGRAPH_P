@@ -2,7 +2,9 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** Level 1 draft (lessons 01-19, in order) is ready for review; the real-LLM `run.ts` files have not all been run live yet. Levels 2-3 are planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
+**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is in pilot: only 0-01 exists so far. Levels 2-3 are planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
+
+**Reading order:** want to see what an LLM call really is? Start at Level 0 (`0-01`). Want to go straight to LangChain/LangGraph? Start at Level 1 (`01`; lesson 02 covers `.env` setup).
 
 ## Quick start
 
@@ -11,7 +13,8 @@ Requirements: Node.js 22.12+ (developed on Node 26).
 ```bash
 pnpm install
 cp .env.example .env      # then put your GROQ_API_KEY in .env
-pnpm test:lesson 01    # start with lesson 01 (red at first, that is normal)
+pnpm test:lesson 01    # Level 1, lesson 01 (red at first, that is normal)
+pnpm test:lesson 0-01  # Level 0, lesson 01 (raw fetch)
 ```
 
 Lesson checkers use a fake model, so they need **no key**. Only `pnpm lesson NN` (real LLM calls) does.
@@ -29,8 +32,9 @@ You write the code; the test file is only the checker.
 | `solution/` | the finished version, peek only when stuck |
 
 ```bash
-pnpm test:lesson 08    # check one lesson
+pnpm test:lesson 08    # check one lesson (a bare number means Level 1)
 pnpm lesson 08         # run it against the real LLM
+pnpm test:lesson 0-01  # Level 0 lessons use a 0- prefix
 ```
 
 ## Switching LLM provider or model

@@ -31,3 +31,6 @@ Asked 3 times for JSON only (`{"name": string, "age": number}`); all 3 replies w
 - 0-01 field path: `choices[0].message.content`.
 - 0-02 error body: `body.error.message`; teach 401 and 404 from real findings, 429 from docs (and the `x-ratelimit-*` headers).
 - 0-05 (streaming) stays optional; it is hard because of partial-line buffering, but doable in ~20 lines.
+
+## Pilot 0-01 live run (2026-11-17)
+`callLLM` (solution) with real `fetch`, the groq `chatUrl` and the default model returned a Thai one-sentence greeting; request body and response path match the findings above.
