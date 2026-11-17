@@ -1,0 +1,34 @@
+# บทที่ 4-05: หลาย interrupt พร้อมกัน
+
+## แนวคิด
+เมื่อ node สองตัวที่ทำงานขนานกัน **ต่างก็เรียก `interrupt()`** graph จะหยุดพร้อมกับ **หลายคำถามค้างอยู่** แต่ละคำถามมี `id` ของตัวเอง เมื่อ resume ให้ส่ง **map จาก id ไปเป็นคำตอบ** ทีเดียว:
+
+```ts
+const result = await app.invoke(input, cfg);
+if (isInterrupted(result)) {
+  const answers: Record<string, string> = {};
+  for (const i of result[INTERRUPT]) answers[i.id!] = ตอบ(i.value);
+  await app.invoke(new Command({ resume: answers }), cfg);
+}
+```
+- `result[INTERRUPT]` (หรือ `result.__interrupt__`) คืนรายการ interrupt ที่ค้าง แต่ละอันมี `value` (คำถาม) และ `id`
+- ต้อง resume ครบทุกอันในครั้งเดียว
+- ถ้าตอบทีละอันโดยไม่ใช้ map ผลจะไม่เป็นไปตามคาด ให้ใช้ map เสมอเมื่อมีหลายคำถาม
+
+## ดูตัวอย่าง
+`parallel.ts` มี node `askName` กับ `askCity` ที่รันขนานและถามคนละข้อ ขาดการรวบรวมคำถามและการ resume
+
+## โจทย์
+เติม 2 ข้อ แล้วรัน:
+
+    pnpm test:lesson 4-05
+
+## คุณทำได้แล้ว
+- จัดการหลายคำถามที่ค้างพร้อมกันในครั้งเดียว
+
+## ข้อควรจำ
+- ลำดับของ `interrupt()` ใน node เดียวต้องคงที่ทุกครั้งที่ node ทำงานซ้ำ
+- อย่าวน `interrupt()` ใน `while` ข้างใน node เดียว ใช้ edge วนกลับแทน
+
+## บทถัดไป
+บท 4-06: ทดสอบ node และ graph ด้วยของปลอม

@@ -1,0 +1,32 @@
+import { END, START, StateGraph, StateSchema, isNodeTimeoutError } from "@langchain/langgraph";
+import { z } from "zod";
+
+const State = new StateSchema({ log: z.string().default("") });
+
+export function buildJob(workMs: number, timeoutMs: number) {
+  const options = { timeout: timeoutMs };
+  return new StateGraph(State)
+    .addNode(
+      "slow",
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, workMs));
+        return { log: "เสร็จ" };
+      },
+      options,
+    )
+    .addEdge(START, "slow")
+    .addEdge("slow", END)
+    .compile();
+}
+
+export type RunResult = { ok: true; log: string } | { ok: false; node: string };
+
+export async function runJob(job: ReturnType<typeof buildJob>): Promise<RunResult> {
+  try {
+    const result = await job.invoke({});
+    return { ok: true, log: result.log };
+  } catch (error) {
+    if (isNodeTimeoutError(error)) return { ok: false, node: error.node };
+    throw error;
+  }
+}
