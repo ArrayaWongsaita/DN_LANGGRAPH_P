@@ -12,7 +12,7 @@ type StateType = typeof State.State;
 export function makeAnswerNode(llm: BaseChatModel) {
   return async (state: StateType): Promise<Partial<StateType>> => {
     const response = await llm.invoke(state.question);
-    return { answer: String(response.content) };
+    return { answer: response.text };
   };
 }
 

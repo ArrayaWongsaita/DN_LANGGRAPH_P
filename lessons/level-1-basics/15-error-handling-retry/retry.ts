@@ -1,3 +1,5 @@
+import { errorStatus } from "../../../src/errorInfo";
+
 export interface RetryOptions {
   retries: number;
   delayMs: number;
@@ -12,8 +14,7 @@ export async function withRetry<T>(fn: () => Promise<T>, opts: RetryOptions): Pr
     try {
       return await fn();
     } catch (e) {
-      const status = (e as { status?: number }).status;
-      if (status === 401 || attempt >= opts.retries) throw e;
+      if (errorStatus(e) === 401 || attempt >= opts.retries) throw e;
       attempt++;
       await sleep(opts.delayMs);
     }

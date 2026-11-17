@@ -13,10 +13,10 @@ const State = new StateSchema({
 export function buildDraftRefineGraph(llm: BaseChatModel) {
   return new StateGraph(State)
     .addNode("writeDraft", async (s) => ({
-      draft: String((await llm.invoke(`เขียนประโยคสั้น ๆ เกี่ยวกับ ${s.topic}`)).content),
+      draft: (await llm.invoke(`เขียนประโยคสั้น ๆ เกี่ยวกับ ${s.topic}`)).text,
     }))
     .addNode("improve", async (s) => ({
-      final: String((await llm.invoke(`ปรับประโยคนี้ให้ดีขึ้น: ${s.draft}`)).content),
+      final: (await llm.invoke(`ปรับประโยคนี้ให้ดีขึ้น: ${s.draft}`)).text,
     }))
     .addEdge(START, "writeDraft")
     .addEdge("writeDraft", "improve")

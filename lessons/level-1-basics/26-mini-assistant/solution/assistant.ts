@@ -22,7 +22,7 @@ export function buildAssistantGraph(llm: BaseChatModel) {
     .addNode("respond", async (s) => {
       const persona = PERSONA[s.kind as keyof typeof PERSONA];
       const res = await llm.invoke([new SystemMessage(persona), new HumanMessage(s.question)]);
-      return { answer: String(res.content) };
+      return { answer: res.text };
     })
     .addNode("format", (s) => ({ answer: `${s.answer}\n— ตอบโดยผู้ช่วย LangGraph` }))
     .addEdge(START, "classify")

@@ -8,5 +8,5 @@ export async function askWithPersona(
   question: string,
 ): Promise<string> {
   const response = await llm.invoke([new SystemMessage(persona), new HumanMessage(question)]);
-  return String(response.content);
+  return response.text;
 }

@@ -6,7 +6,7 @@ A hands-on course for people who have **never built an LLM app**. Each lesson is
 
 ## Quick start
 
-Requirements: Node.js 22+ (developed on Node 26).
+Requirements: Node.js 22.12+ (developed on Node 26). Windows is expected to work but has not been tested.
 
 ```bash
 npm install
@@ -50,6 +50,7 @@ Environment variables (`.env`):
 - **401**: wrong or missing `OLLAMA_API_KEY` (no quotes or extra spaces in `.env`).
 - **404**: `OLLAMA_BASE_URL` ends with `/api`, or the model name does not exist.
 - **429**: rate limit; wait and retry.
+- **`fetch failed`**: network problem (no internet, wrong host, or proxy). Check `OLLAMA_BASE_URL` and your connection.
 - Lesson 06 explains how to read these errors.
 
 ## For maintainers

@@ -11,7 +11,7 @@ const State = new StateSchema({
 export function buildRefineLoop(llm: BaseChatModel, maxRounds: number) {
   return new StateGraph(State)
     .addNode("refine", async (s) => ({
-      last: String((await llm.invoke("ปรับปรุงงานให้ดีขึ้น ถ้าดีแล้วตอบ OK")).content),
+      last: (await llm.invoke("ปรับปรุงงานให้ดีขึ้น ถ้าดีแล้วตอบ OK")).text,
       rounds: s.rounds + 1,
     }))
     .addEdge(START, "refine")

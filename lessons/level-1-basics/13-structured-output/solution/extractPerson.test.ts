@@ -14,3 +14,8 @@ test("JSON ที่รูปร่างไม่ตรง schema ต้อง 
   const llm = fakeLLM(['{"name":"มาลี","age":"ยี่สิบ"}']);
   await expect(extractPerson(llm, "x")).rejects.toThrow(/รูปแบบ/);
 });
+
+test("โมเดลห่อ JSON ด้วย code fence และมีข้อความนำหน้าก็อ่านได้", async () => {
+  const llm = fakeLLM(['นี่คือผลลัพธ์:\n```json\n{"name":"มาลี","age":25}\n```']);
+  expect(await extractPerson(llm, "x")).toEqual({ name: "มาลี", age: 25 });
+});

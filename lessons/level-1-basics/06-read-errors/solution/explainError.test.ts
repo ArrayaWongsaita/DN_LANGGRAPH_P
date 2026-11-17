@@ -22,3 +22,13 @@ test("ENOTFOUND และ ECONNREFUSED อธิบายเรื่องเ�
 test("error อื่นคืนข้อความเดิม", () => {
   expect(explainError(new Error("boom"))).toContain("boom");
 });
+
+// error จริงจาก provider หน้าตาไม่เหมือน object ที่แต่งเอง
+test("ollama ResponseError ใช้ status_code", () => {
+  expect(explainError({ name: "ResponseError", message: "unauthorized", status_code: 401 })).toMatch(/OLLAMA_API_KEY/);
+});
+
+test("TypeError('fetch failed') ที่มี cause.code เป็นเรื่องเครือข่าย", () => {
+  const e = new TypeError("fetch failed", { cause: { code: "ENOTFOUND" } });
+  expect(explainError(e)).toMatch(/เครือข่าย|อินเทอร์เน็ต/);
+});
