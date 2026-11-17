@@ -1,64 +1,66 @@
 # LangGraph Practice Course (TypeScript)
 
-A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 2-5 exercises) so you finish it, feel the win, and move on. Lesson text is in Thai.
+A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** Level 1 (lessons 01-26) is available. Levels 2 and 3 are planned (see `docs/superpowers/specs/`).
+**Status:** pilot. Three lessons exist (01, 08, 14) so the format can be reviewed. The rest of Level 1 and Levels 2-3 are planned (see `docs/superpowers/specs/`). `legacy/` holds an earlier build kept only for reuse.
 
 ## Quick start
 
-Requirements: Node.js 22.12+ (developed on Node 26). Windows is expected to work but has not been tested.
+Requirements: Node.js 22.12+ (developed on Node 26).
 
 ```bash
 npm install
-cp .env.example .env      # then put your OLLAMA_API_KEY in .env
-npm test                  # your exercises (shown as "todo" until you write them)
+cp .env.example .env      # then put your GROQ_API_KEY in .env
+npm run test:lesson 01    # start with lesson 01 (red at first, that is normal)
 ```
 
-Get an API key at https://ollama.com/settings/keys. Lessons that only use the fake model (`fakeLLM`) work **without** a key.
+Lesson checkers use a fake model, so they need **no key**. Only `npm run lesson NN` (real LLM calls) does.
 
 ## How a lesson works
 
-Each lesson lives in `lessons/level-N-*/NN-slug/`:
+You write the code; the test file is only the checker.
 
 | File | What it is |
 |---|---|
-| `README.md` | what you learn (Thai) |
-| `<topic>.ts` | the worked example code |
-| `<topic>.test.ts` | your exercises: turn each `test.todo` into a real `test` |
-| `run.ts` | (some lessons) run against the real LLM with `npm run lesson NN` |
+| `README.md` | teaches the concept (Thai) |
+| `<topic>.ts` | almost-complete code with gaps marked `// 👉 ข้อ N` (stubbed with `todo(N)`) |
+| `<topic>.test.ts` | the checker: red until your gaps are filled, then green. Do not edit |
+| `run.ts` | (some lessons) run against the real LLM: `npm run lesson NN` |
 | `solution/` | the finished version, peek only when stuck |
 
 ```bash
-npm test -- lessons/level-1-basics/03-first-llm-call   # one lesson
-npm run lesson 03                                      # run a lesson with the real LLM
+npm run test:lesson 08    # check one lesson
+npm run lesson 08         # run it against the real LLM
 ```
 
-## One place to change the LLM provider
+## Switching LLM provider or model
 
-Every lesson gets its model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`). To switch from Ollama Cloud to another provider, edit that one file; no lesson changes. Tests use `src/fakeLLM.ts` so they are deterministic and need no network.
-
-Environment variables (`.env`):
+Every lesson gets its model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`). Change provider or model in `.env` only:
 
 | Variable | Meaning |
 |---|---|
-| `OLLAMA_API_KEY` | required for real LLM calls |
-| `OLLAMA_MODEL` | model name (default `gpt-oss:120b`; cloud models can be retired, change here if needed) |
-| `OLLAMA_BASE_URL` | default `https://ollama.com` (**no `/api` suffix**) |
+| `LLM_PROVIDER` | `groq` (default) or `ollama`. Add another with one table row in `src/llm.ts` |
+| `LLM_MODEL` | model name; empty = the provider's default |
+| `GROQ_API_KEY` | key for the `groq` provider (each learner uses their own) |
+| `OLLAMA_API_KEY`, `OLLAMA_BASE_URL` | for the `ollama` provider (base URL has **no** `/api` suffix) |
+
+After changing provider or model, run `npm run check:llm`. It makes 4 live calls and reports whether basic calls, streaming, tool calling and structured output work. Findings for tested models are in `docs/notes/provider-findings.md`.
 
 ## Troubleshooting
 
-- **401**: wrong or missing `OLLAMA_API_KEY` (no quotes or extra spaces in `.env`).
-- **404**: `OLLAMA_BASE_URL` ends with `/api`, or the model name does not exist.
+- **401**: wrong or missing key for the provider in `LLM_PROVIDER` (no quotes or extra spaces in `.env`).
+- **404 / model_not_found**: the model name does not exist or your account has no access; change `LLM_MODEL`.
 - **429**: rate limit; wait and retry.
-- **`fetch failed`**: network problem (no internet, wrong host, or proxy). Check `OLLAMA_BASE_URL` and your connection.
-- Lesson 06 explains how to read these errors.
+- **`fetch failed`**: network problem.
 
 ## For maintainers
 
 ```bash
-npm run check:solutions   # every solution/ must pass
-npm run lint:lessons      # structure rules (README, solution/, todo-only exercises, numbering)
+npm test                  # src + scripts tests (green on a fresh checkout)
+npm run check:solutions   # every solution/ must pass its checker
+npm run check:starters    # every starter must FAIL its checker (no lesson is solved already)
+npm run lint:lessons      # structure rules; add :strict to require contiguous numbering
 npm run typecheck
 ```
 
-Tested with: `@langchain/langgraph` 1.7.5, `@langchain/core` 1.4.1, `@langchain/ollama` 1.3.0, `zod` 4.6.7, `vitest` 4.1.12, TypeScript 5.9.3, Node 26.
+New lessons start from `scripts/lesson-template/`.
