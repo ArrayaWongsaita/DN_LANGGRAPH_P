@@ -50,3 +50,7 @@ await graph.invoke({ question: "hello" });   // -> { question, answer: "hello!?"
 ## Decisions
 - State style: `StateSchema` + zod. Lesson 16 teaches it; later lessons reuse.
 - Lesson 16's "extra key" exercise: see behaviour in lesson implementation (verify while writing).
+
+## Gotchas found while writing Part 2 (verified by tests)
+- A node name must not equal a state field name (`answer is already being used as a state attribute...`). Lessons name nodes `ask`, `writeDraft`, `improve`.
+- A graph whose nodes write nothing returns `undefined` from `invoke`, so defaults tests make a node echo a field.
