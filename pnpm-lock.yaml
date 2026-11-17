@@ -29,6 +29,9 @@ importers:
       '@langchain/openai':
         specifier: 1.8.4
         version: 1.8.4(@langchain/core@1.4.1(openai@7.57.0(zod@4.6.7)))
+      '@langchain/textsplitters':
+        specifier: 1.0.2
+        version: 1.0.2(@langchain/core@1.4.1(openai@7.57.0(zod@4.6.7)))
       langchain:
         specifier: 1.6.6
         version: 1.6.6(@langchain/core@1.4.1(openai@7.57.0(zod@4.6.7)))(openai@7.57.0(zod@4.6.7))
@@ -278,6 +281,12 @@ packages:
 
   '@langchain/protocol@0.0.21':
     resolution: {integrity: sha512-HJS8Cd5GJ437MIrCnbrPHx0FJcluyOk5HdZzD081ap4SBzfWpAj/6AtI7fqpNSMo6VZEoEdaN9fIts8R0XR1AQ==}
+
+  '@langchain/textsplitters@1.0.2':
+    resolution: {integrity: sha512-UNCmlyFIRlRfVxqpmcRsp1jQrscnIVVqRKrrjFF2wHHq+VGTv+VDkGZLyEVUopJfHIdaiXfOKlSrROQui7VLFA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': ^1.0.0
 
   '@napi-rs/wasm-runtime@1.2.6':
     resolution: {integrity: sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw==}
@@ -1129,6 +1138,11 @@ snapshots:
       - ws
 
   '@langchain/protocol@0.0.21': {}
+
+  '@langchain/textsplitters@1.0.2(@langchain/core@1.4.1(openai@7.57.0(zod@4.6.7)))':
+    dependencies:
+      '@langchain/core': 1.4.1(openai@7.57.0(zod@4.6.7))
+      js-tiktoken: 1.0.21
 
   '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@2.0.0-beta.2)(@emnapi/runtime@2.0.0-beta.2)':
     dependencies:
