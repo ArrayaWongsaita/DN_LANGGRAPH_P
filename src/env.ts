@@ -43,7 +43,11 @@ const envSchema = z
     GROQ_API_KEY: z.string().trim().default(""),
     OLLAMA_API_KEY: z.string().trim().default(""),
     OPENCODE_GO_KEY: z.string().trim().default(""),
-    DATABASE_URL: z.string().trim().default(""), // ใช้เฉพาะบท Postgres (4-24)
+    DATABASE_URL: z.string().trim().default(""), // ใช้เฉพาะบทที่ต้องมีฐานข้อมูลจริง (4-24 และ Level 5)
+    // embedding (Level 5): key ตรวจตอนเรียก getEmbeddings() เท่านั้น บทอื่นไม่ต้องมี
+    GOOGLE_API_KEY: z.string().trim().default(""),
+    EMBEDDING_MODEL: z.preprocess(blankToUndefined, z.string().trim().default("gemini-embedding-001")),
+    EMBEDDING_DIMENSIONS: z.preprocess(blankToUndefined, z.coerce.number().int().positive().default(768)),
     OLLAMA_BASE_URL: z
       .string()
       .optional()
