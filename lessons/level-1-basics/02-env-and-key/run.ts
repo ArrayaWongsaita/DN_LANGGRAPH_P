@@ -1,15 +1,24 @@
-import { describeProvider } from "@src/llm";
-import { maskKey, readKey } from "./readKey";
+import { checkKey, checkSettings, maskKey } from "./envCheck";
 
 // รัน: pnpm lesson 02  (ไม่เรียก LLM แค่ตรวจว่าตั้งค่าครบ)
-// describeProvider() โหลดไฟล์ .env ให้ แล้วบอกว่าตอนนี้ใช้ provider/โมเดล/ตัวแปร key ไหน
-const { provider, model, keyVar } = describeProvider();
-console.log(`provider: ${provider}`);
-console.log(`model:    ${model}`);
-
-const key = readKey(process.env, keyVar);
-if (key) {
-  console.log(`${keyVar}: พบแล้ว (${maskKey(key)})`);
-} else {
-  console.log(`${keyVar}: ยังไม่ได้ตั้ง  -> เปิดไฟล์ .env แล้วใส่ key (ดูตัวอย่างใน .env.example)`);
+// โหลดไฟล์ .env เข้า process.env (ถ้าไม่มีไฟล์ก็ข้ามไป)
+try {
+  process.loadEnvFile();
+} catch {
+  console.log("ไม่พบไฟล์ .env  -> ทำตามขั้น 'ตั้งค่าก่อนเริ่ม' ใน README");
 }
+
+const settings = checkSettings(process.env);
+if (!settings.ok) {
+  console.log("ค่าตั้งต้นใน .env ไม่ถูกต้อง:");
+  for (const p of settings.problems) console.log(`  - ${p}`);
+  process.exit(1);
+}
+
+const { LLM_PROVIDER, LLM_MODEL } = settings.value;
+console.log(`provider: ${LLM_PROVIDER}`);
+console.log(`model:    ${LLM_MODEL || "(ใช้ค่าเริ่มต้นของ provider)"}`);
+
+const keyVar = LLM_PROVIDER === "groq" ? "GROQ_API_KEY" : "OLLAMA_API_KEY";
+const key = checkKey(process.env, keyVar);
+console.log(key.ok ? `${keyVar}: พบแล้ว (${maskKey(key.key)})` : key.problem);
