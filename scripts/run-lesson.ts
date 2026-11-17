@@ -23,5 +23,5 @@ if (!found || !existsSync(join(found, "run.ts"))) {
   process.exit(1);
 }
 
-const result = spawnSync("npx", ["tsx", join(found, "run.ts")], { stdio: "inherit" });
+const result = spawnSync("npx", ["tsx", "--import", "./scripts/friendly-errors.ts", join(found, "run.ts")], { stdio: "inherit" });
 process.exit(result.status ?? 1);
