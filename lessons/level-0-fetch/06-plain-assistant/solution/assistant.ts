@@ -23,7 +23,7 @@ export async function runAssistant(
 
   while (rounds < maxRounds) {
     rounds++;
-    const improved = await ask(`ปรับปรุงคำตอบนี้ให้ดีขึ้น ถ้าดีแล้วตอบว่า OK เท่านั้น:\n${answer}`);
+    const improved = await ask(`ปรับปรุงคำตอบนี้ให้ดีขึ้น ตอบด้วยคำตอบที่ปรับปรุงแล้วเท่านั้น แต่ถ้าดีอยู่แล้วให้ตอบคำว่า OK คำเดียว ห้ามใส่ OK ปนในคำตอบ:\n${answer}`);
     if (improved.trim() === "OK") break;
     answer = improved;
   }

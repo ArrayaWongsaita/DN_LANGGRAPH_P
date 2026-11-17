@@ -21,3 +21,10 @@ Default model: `openai/gpt-oss-20b` (changed from 120b at the author's request o
 
 ## Fake model
 `fakeLLM` (`FakeListChatModel`) supports `.withStructuredOutput(zod)` (the scripted reply is parsed as the structured result) and `bindTools` (returns an AIMessage with empty `tool_calls`; scripted tool calls need an extension, deferred to the Level 2 plan).
+
+## Live lesson run (2026-11-17, default model `openai/gpt-oss-20b`)
+Every `run.ts` was run against the lesson's `solution/` with the real provider: Level 0 (0-01..0-06) and Level 1 (02-08, 11-19 where a run.ts exists). All exited 0 except the two interactive REPLs (0-06 and 1-19), which only handled the first line because stdin was piped (`readline was closed` at EOF); their question paths were exercised separately by calling `runAssistant` / `buildAssistantGraph` directly, and the greeting path went through both. Interactive terminal use of those two REPLs was not tested.
+Findings that changed lessons:
+- 1-15 loop: the first prompt had no text to improve, so the model asked for content and looped to the maximum. The node now improves a seed text ("แมวกินปลา") and the model answers `OK` after 2 rounds.
+- 0-06 / 1-15: with "ถ้าดีแล้วตอบ OK" the model sometimes returned the improved text followed by `OK`, so the stop condition failed and `OK` leaked into the answer. Prompts now say to answer only the improved text, or `OK` alone. After the change, two live runs of 0-06 did not leak `OK`. 0-06's README records this as a lesson about unreliable LLM output.
+- Reasoning chunks (`delta.reasoning`) were skipped correctly by the 0-05 SSE reader; partial-line buffering worked.

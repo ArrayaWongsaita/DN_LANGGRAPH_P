@@ -20,7 +20,7 @@ export function shouldContinue(state: Pick<LoopState, "last" | "rounds">, maxRou
 export function buildRefineLoop(llm: BaseChatModel, maxRounds: number) {
   const graph = new StateGraph(State)
     .addNode("refine", async (state) => {
-      const reply = await llm.invoke("ปรับปรุงงานให้ดีขึ้น ถ้าดีแล้วตอบว่า OK");
+      const reply = await llm.invoke(`ปรับปรุงข้อความนี้ให้ดีขึ้น ตอบด้วยข้อความที่ปรับปรุงแล้วเท่านั้น แต่ถ้าดีอยู่แล้วให้ตอบคำว่า OK คำเดียว:\n${state.last || "แมวกินปลา"}`);
       return { last: reply.text, rounds: state.rounds + 1 };
     })
     .addEdge(START, "refine");
