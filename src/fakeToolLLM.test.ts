@@ -25,6 +25,11 @@ describe("fakeToolLLM", () => {
     expect(typeof reply.tool_calls?.[0].id).toBe("string");
   });
 
+  test("คำตอบมี usage_metadata ที่นับจากข้อความ (ไว้สอนการอ่าน token)", async () => {
+    const reply = await fakeToolLLM(["สวัสดี"]).invoke("ทัก");
+    expect(reply.usage_metadata).toEqual({ input_tokens: 1, output_tokens: 6, total_tokens: 7 });
+  });
+
   test("เรียกเกินจำนวนขั้นในสคริปต์: throw ข้อความชัดเจน (ไม่วนซ้ำ)", async () => {
     const llm = fakeToolLLM(["x"]);
     await llm.invoke("a");

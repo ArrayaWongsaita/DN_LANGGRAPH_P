@@ -11,6 +11,6 @@
 - **Part 4 Tools and agents (2-08..2-16):** define tool; bindTools; ToolNode; hand-built ReAct loop; recursion limit; tool errors; structured final answer; dynamic model/tools; createAgent. **Done.**
 - **Mini project (2-17):** notes assistant with memory, tools, createAgent, SqliteSaver. **Done.**
   - Ruling: the spec put the mini project before Part 4, but it needs tools, so it moved after Part 4 (cross-lesson imports break the per-lesson check copy, so shared sample tools live in `src/sampleTools.ts` and the agent helper is inlined where needed).
-- **Part 5 Human-in-the-loop (2-18..2-21)**, **Part 6 Streaming (2-22..2-24)**, **Part 6b Reliability (2-25..2-27).**
+- **Part 5 Human-in-the-loop (2-18..2-21)**, **Part 6 Streaming (2-22..2-24)**, **Part 6b Reliability (2-25..2-27).** **Done.** (Note: `usage_metadata` added to `fakeToolLLM`; real `createAgent` needs a system prompt telling the model it may call the tool, found live.)
 
 Each part ends with `pnpm test`, `check:solutions`, `check:starters`, `lint:lessons:strict`, `typecheck`, a commit, and a live check of any `run.ts`.

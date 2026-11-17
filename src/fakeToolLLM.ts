@@ -46,6 +46,12 @@ export class FakeToolLLM extends BaseChatModel {
               type: "tool_call" as const,
             })),
           });
+    // usage ปลอม: 1 token ต่อข้อความที่ส่งเข้า, 1 token ต่อตัวอักษรที่ตอบ (ไว้ทดสอบการอ่าน usage_metadata)
+    message.usage_metadata = {
+      input_tokens: messages.length,
+      output_tokens: message.text.length,
+      total_tokens: messages.length + message.text.length,
+    };
     return { generations: [{ text: message.text, message }] };
   }
 
