@@ -14,3 +14,4 @@ Status: **PROVISIONAL — not yet verified against the real API** (needs the aut
 
 ## Ruling (provisional)
 Until verified, lessons are written and tested against `fakeLLM`; real-LLM `run.ts` files are written but unexecuted.
+- fake-model testing confirmed working with @langchain/core 1.4.1 (FakeListChatModel cycles, streams multi-chunk, usable inside a StateGraph node).
