@@ -1,7 +1,6 @@
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { Command, END, START, StateGraph, StateSchema, interrupt, isInterrupted } from "@langchain/langgraph";
+import { Command, END, START, StateGraph, StateSchema, interrupt } from "@langchain/langgraph";
 import type { BaseCheckpointSaver, BaseStore } from "@langchain/langgraph";
-import { todo } from "@src/todo";
 import { z } from "zod";
 
 const State = new StateSchema({
@@ -15,10 +14,10 @@ const State = new StateSchema({
 export function buildApp(llm: BaseChatModel, saver: BaseCheckpointSaver, store: BaseStore) {
   return new StateGraph(State, { context: z.object({ userId: z.string() }) })
     .addNode("prepare", async (_state, runtime) => {
-      // 👉 ข้อ 1: อ่านภาษาที่ชอบ: const item = await runtime.store!.get(["prefs", runtime.context!.userId], "lang");
-      //          lang = item?.value.lang ถ้าไม่มีใช้ "th" แล้วคืน { lang }
-      // 👉 ข้อ 2: ก่อน return ส่งความคืบหน้า: runtime.writer?.({ stage: "prepare" })
-      return todo(1);
+      const item = await runtime.store!.get(["prefs", runtime.context!.userId], "lang");
+      const lang = (item?.value.lang as string | undefined) ?? "th";
+      runtime.writer?.({ stage: "prepare" });
+      return { lang };
     })
     .addNode("draft", async (state, runtime) => {
       runtime.writer?.({ stage: "draft" });
@@ -26,8 +25,8 @@ export function buildApp(llm: BaseChatModel, saver: BaseCheckpointSaver, store: 
       return { report: reply.text };
     })
     .addNode("approve", (state) => {
-      // 👉 ข้อ 3: const ok = interrupt({ report: state.report }); คืน { approved: ok === true }
-      return todo(3);
+      const ok = interrupt({ report: state.report });
+      return { approved: ok === true };
     })
     .addNode("publish", (state) => ({
       result: state.approved ? `เผยแพร่แล้ว: ${state.report}` : "ไม่เผยแพร่",
@@ -37,14 +36,12 @@ export function buildApp(llm: BaseChatModel, saver: BaseCheckpointSaver, store: 
     .addEdge("draft", "approve")
     .addEdge("approve", "publish")
     .addEdge("publish", END)
-    // 👉 ข้อ 4: compile พร้อม { checkpointer: saver, store }
-    .compile();
+    .compile({ checkpointer: saver, store });
 }
 
 export type App = ReturnType<typeof buildApp>;
 const cfg = (threadId: string, userId: string) => ({ configurable: { thread_id: threadId }, context: { userId } });
 
-// เริ่มงาน: คืนรายงานที่รออนุมัติ (ถ้าหยุดรอ) พร้อมรายชื่อ stage ที่ส่งความคืบหน้า
 export async function start(app: App, threadId: string, userId: string, question: string) {
   const stages: string[] = [];
   let report = "";
@@ -59,7 +56,6 @@ export async function start(app: App, threadId: string, userId: string, question
   return { stages, report, waiting: state.next.includes("approve") };
 }
 
-// ตัดสินใจอนุมัติ/ไม่ แล้วคืนผลสุดท้าย
 export async function decide(app: App, threadId: string, userId: string, approve: boolean): Promise<string> {
   const r = await app.invoke(new Command({ resume: approve }), cfg(threadId, userId));
   return r.result;

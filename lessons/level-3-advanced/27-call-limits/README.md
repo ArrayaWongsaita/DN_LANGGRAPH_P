@@ -10,8 +10,8 @@ createAgent({
 })
 ```
 สองตัวที่กันงบบานปลาย:
-- **`modelCallLimitMiddleware`** จำกัดจำนวนครั้งที่เรียกโมเดลต่อการรัน 1 ครั้ง (`exitBehavior: "end"` = จบอย่างนุ่มนวลพร้อมข้อความแจ้ง, `"error"` = โยน error)
-- **`toolCallLimitMiddleware`** จำกัดจำนวนครั้งที่เรียก tool เมื่อเกินจะตอบ ToolMessage บอกโมเดลว่าเรียกอีกไม่ได้แล้ว
+- **`modelCallLimitMiddleware`** จำกัดจำนวนครั้งที่เรียกโมเดลต่อการรัน 1 ครั้ง (`exitBehavior: "end"` เป็นค่าเริ่มต้น = จบอย่างนุ่มนวลพร้อมข้อความแจ้ง, `"error"` = โยน error)
+- **`toolCallLimitMiddleware`** จำกัดจำนวนครั้งที่เรียก tool ค่าเริ่มต้น (`exitBehavior: "continue"`) เมื่อเกินจะตอบ ToolMessage บอกโมเดลว่าเรียกอีกไม่ได้แล้ว ทั้งสองตัวมี `threadLimit` (นับข้ามการรันของ thread เดียวกัน ต้องมี checkpointer) นอกเหนือจาก `runLimit`
 
 เทียบกับ `recursionLimit` (บท 2-12): อันนั้นนับ step ของ graph แล้วโยน error ส่วนนี้นับสิ่งที่มีความหมายต่อค่าใช้จ่ายโดยตรง และเลือกวิธีจบได้
 
