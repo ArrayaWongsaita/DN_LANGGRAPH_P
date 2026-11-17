@@ -9,7 +9,7 @@ g.drawMermaid()                    // ข้อความ Mermaid
 Object.keys(g.nodes)               // ชื่อ node (รวม __start__ และ __end__)
 ```
 - เส้นทึบ = edge ปกติ เส้นประ = เส้นทางแบบมีเงื่อนไข
-- `getGraphAsync({ xray: true })` แล้วเรียก `drawMermaid()`: เปิดดูข้างในของ subgraph
+- subgraph ที่ใส่เป็น node แสดงเป็น node เดียวในภาพของแม่ ถ้าอยากดูข้างใน ให้เรียก `getGraphAsync()` ของ subgraph นั้นเอง
 
 ใช้เป็นเอกสารของระบบ ตรวจว่าเส้นทางเป็นอย่างที่ตั้งใจ และอธิบายให้เพื่อนร่วมทีมฟัง
 

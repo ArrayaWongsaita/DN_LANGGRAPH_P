@@ -8,7 +8,7 @@ new StateGraph(Parent).addNode("sub", subgraph)   // subgraph เป็น node 
 ```
 - field ที่ชื่อตรงกันไหลเข้าไปให้ subgraph และผลไหลกลับออกมาเอง
 - field ที่มีเฉพาะฝั่งใดฝั่งหนึ่งไม่ถูกส่งข้าม
-- ภาพกราฟเปิดดูข้างใน subgraph ได้ด้วย `getGraphAsync({ xray: true })` (บท 3-32)
+- ในภาพกราฟของแม่ (บท 3-32) subgraph แสดงเป็น node เดียว
 
 ใช้กับทีมงานที่แบ่งกัน: แต่ละทีมทำ subgraph ของตัวเอง แล้วแม่แค่ต่อสาย
 
