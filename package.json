@@ -9,7 +9,8 @@
     "check:solutions": "vitest run --config vitest.solutions.config.ts",
     "lint:lessons": "tsx scripts/lint-lessons-cli.ts",
     "lesson": "tsx scripts/run-lesson.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:llm": "tsx scripts/check-llm.ts"
   },
   "dependencies": {
     "@langchain/core": "1.4.1",
