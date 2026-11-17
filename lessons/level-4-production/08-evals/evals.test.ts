@@ -52,3 +52,22 @@ test("พรอมต์ของกรรมการมีคำตอบท�
   expect(prompt).toContain("ไก่");
   expect(prompt).toContain("ปลา");
 });
+
+test("หลายข้อตก: นับครบทุกข้อและเรียงตามลำดับชุดทดสอบ", async () => {
+  const r = await runEval(async () => "ok", [{ input: "a", expected: "x" }, { input: "b", expected: "y" }, { input: "c", expected: "ok" }], containsScorer);
+  expect(r.passed).toBe(1);
+  expect(r.failures).toEqual(["a", "b"]);
+});
+
+test("กรรมการ: คำตัดสินว่างหรือไม่ชัดเจนถือว่าตก ส่วน PASS ที่มีจุดตามหลังถือว่าผ่าน", async () => {
+  const judge = fakeToolLLM(["", "ไม่แน่ใจ", "PASS."]);
+  const scorer = makeJudgeScorer(judge);
+  const c = { input: "q", expected: "a" };
+  expect(await scorer("a", c)).toBe(false);
+  expect(await scorer("a", c)).toBe(false);
+  expect(await scorer("a", c)).toBe(true);
+});
+
+test("containsScorer ไม่สนตัวพิมพ์ทั้งสองฝั่ง", () => {
+  expect(containsScorer("hello world", { input: "", expected: "World" })).toBe(true);
+});

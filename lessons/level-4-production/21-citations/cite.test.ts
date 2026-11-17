@@ -44,3 +44,9 @@ test("ชื่อไฟล์ที่ลงท้ายคล้ายกั�
   expect(r.sources).toEqual([]);
   expect(r.grounded).toBe(false);
 });
+
+test("ชื่อที่เป็นแค่ส่วนหนึ่งของชื่อไฟล์หรือว่างเปล่าไม่นับเป็นแหล่งอ้างอิง", async () => {
+  for (const cited of [["it"], ["md"], [".md"], [""]]) {
+    expect((await answerWithCitations(fakeToolLLM([reply("ตอบ", cited)]), "q", hits)).grounded).toBe(false);
+  }
+});

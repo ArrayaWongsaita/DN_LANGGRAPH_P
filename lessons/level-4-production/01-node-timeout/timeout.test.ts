@@ -27,3 +27,23 @@ test("error ชนิดอื่นต้องไม่ถูกแปลง�
     .compile();
   await expect(runJob(broken as never)).rejects.toThrow("db down");
 });
+
+function buildNamed(name: string, run: () => Promise<{ log: string }>, timeoutMs: number) {
+  return new StateGraph(new StateSchema({ log: z.string().default("") }))
+    .addNode(name, run, { timeout: timeoutMs } as never)
+    .addEdge(START, name as never)
+    .addEdge(name as never, END)
+    .compile();
+}
+
+test("ชื่อ node ในผลหมดเวลามาจาก error จริง (node ชื่ออื่นก็ได้ชื่อของมัน)", async () => {
+  const job = buildNamed("fetchData", () => new Promise((r) => setTimeout(() => r({ log: "x" }), 400)), 50);
+  expect(await runJob(job as never)).toEqual({ ok: false, node: "fetchData" });
+});
+
+test("error ที่แค่มีข้อความว่า timed out ไม่ใช่ timeout ของ node: ต้องโยนต่อ", async () => {
+  const job = buildNamed("api", async () => {
+    throw new Error("upstream request timed out");
+  }, 1000);
+  await expect(runJob(job as never)).rejects.toThrow("upstream request timed out");
+});

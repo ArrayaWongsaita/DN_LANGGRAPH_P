@@ -31,3 +31,10 @@ test("ปิด client ทุกครั้งที่ใช้เสร็จ
   expect(spy).toHaveBeenCalledTimes(1);
   spy.mockRestore();
 });
+
+test("ปิด client แม้โมเดลล้มเหลวกลางทาง (ไม่ทิ้งโปรเซสลูกค้าง)", async () => {
+  const spy = vi.spyOn(MultiServerMCPClient.prototype, "close");
+  await expect(askWithMcp(fakeToolLLM([]), "x")).rejects.toThrow();
+  expect(spy).toHaveBeenCalledTimes(1);
+  spy.mockRestore();
+});

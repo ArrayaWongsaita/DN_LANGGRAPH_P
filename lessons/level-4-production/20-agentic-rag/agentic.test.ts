@@ -50,3 +50,10 @@ test("ผู้ให้คะแนนเห็นทั้งคำถาม�
   expect(gradePrompt).toContain("ลืมรหัสผ่านทำไง");
   expect(gradePrompt).toContain("[it.md]");
 });
+
+test("หลังเขียนคำค้นใหม่ ขั้นให้คะแนนและขั้นตอบยังเห็นคำถามเดิมของผู้ใช้ (ไม่ใช่แค่คำค้นใหม่)", async () => {
+  const llm = fakeToolLLM([verdict(false), "รีเซ็ตรหัสผ่าน", verdict(true), "ตอบแล้ว"]);
+  await buildAgenticRag(llm, await makeIndex()).invoke({ question: "ทำไงดี" });
+  expect(llm.calls[2][0].text).toContain("ทำไงดี");
+  expect(llm.calls[3][0].text).toContain("ทำไงดี");
+});

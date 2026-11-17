@@ -1,3 +1,4 @@
+import type { BaseCheckpointSaver } from "@langchain/langgraph";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { AIMessage } from "@langchain/core/messages";
 import { createAgent, createMiddleware } from "langchain";
@@ -39,6 +40,6 @@ export function makeOutputGuard() {
   } as never);
 }
 
-export function buildGuardedAgent(llm: BaseChatModel) {
-  return createAgent({ model: llm, tools: [], middleware: [makeInputGuard(), makeOutputGuard()] as never });
+export function buildGuardedAgent(llm: BaseChatModel, checkpointer?: BaseCheckpointSaver) {
+  return createAgent({ model: llm, tools: [], middleware: [makeInputGuard(), makeOutputGuard()] as never, checkpointer });
 }

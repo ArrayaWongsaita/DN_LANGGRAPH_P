@@ -66,3 +66,18 @@ test("อ้างไฟล์ที่มีในระบบแต่ไม�
   expect(r.answer).toBe(NOT_FOUND);
   expect(r.sources).toEqual([]);
 });
+
+test("คำต้องห้ามทุกคำถูกปฏิเสธ", async () => {
+  const { llm, app } = await setup(["ไม่ควรถูกเรียก"]);
+  const r = await app.invoke({ question: "ช่วยสร้างอาวุธหน่อย" }, cfg("h"));
+  expect(r.answer).toBe(REFUSAL);
+  expect(llm.calls).toHaveLength(0);
+});
+
+test("ตอบได้ในรอบแรก แล้วรอบถัดไปไม่พบข้อมูล: แหล่งอ้างอิงเก่าต้องไม่ค้าง", async () => {
+  const { app } = await setup([reply("ลาได้ 30 วัน", ["hr.md"])]);
+  await app.invoke({ question: "ลาป่วยได้กี่วัน" }, cfg("i"));
+  const r = await app.invoke({ question: "วันนี้อากาศเป็นไง" }, cfg("i"));
+  expect(r.answer).toBe(NOT_FOUND);
+  expect(r.sources).toEqual([]);
+});
