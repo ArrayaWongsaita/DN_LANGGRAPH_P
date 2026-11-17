@@ -9,5 +9,6 @@
     "noEmit": true,
     "types": ["vitest/globals", "node"]
   },
-  "include": ["src", "scripts", "lessons"]
+  "include": ["src", "scripts", "lessons"],
+  "exclude": ["scripts/lesson-template"]
 }
