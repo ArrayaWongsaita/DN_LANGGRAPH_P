@@ -22,7 +22,7 @@ START ──?───┤            ├──► END
 ## โจทย์
 เติม 2 ช่อง `// 👉 ข้อ N` ใน `route.ts` แล้วรัน:
 
-    ppnpm test:lesson 14
+    pnpm test:lesson 14
 
 ถ้าลืมต่อเส้นของ node ใด LangGraph จะฟ้องว่า node นั้น **is not reachable** (เข้าถึงไม่ได้) แปลว่ามี node ที่ไม่มีเส้นไปถึง ให้ตรวจว่าต่อครบแล้วหรือยัง
 

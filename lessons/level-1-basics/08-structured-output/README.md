@@ -27,7 +27,7 @@ const personSchema = z.object({ name: z.string(), age: z.number() });
 ## โจทย์
 เติม 2 ช่อง `// 👉 ข้อ N` ในไฟล์ `extractPerson.ts` แล้วรัน:
 
-    ppnpm test:lesson 08
+    pnpm test:lesson 08
 
 ตอนแรกจะแดง (ปกติ) เติมจนเขียวทั้ง 4 ข้อ ตัวตรวจใช้ LLM ปลอมจึงไม่ต้องมี API key
 

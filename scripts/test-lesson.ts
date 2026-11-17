@@ -5,7 +5,7 @@ import { findLesson } from "./find-lesson";
 const num = process.argv[2] ?? "";
 const dir = /^\d{1,2}$/.test(num) ? findLesson("lessons", num) : undefined;
 if (!dir) {
-  console.error("วิธีใช้: ppnpm test:lesson <เลขบท>  เช่น ppnpm test:lesson 01 (ไม่พบบทนี้)");
+  console.error("วิธีใช้: pnpm test:lesson <เลขบท>  เช่น pnpm test:lesson 01 (ไม่พบบทนี้)");
   process.exit(1);
 }
 

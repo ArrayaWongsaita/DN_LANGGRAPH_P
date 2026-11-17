@@ -11,7 +11,7 @@ Requirements: Node.js 22.12+ (developed on Node 26).
 ```bash
 pnpm install
 cp .env.example .env      # then put your GROQ_API_KEY in .env
-ppnpm test:lesson 01    # start with lesson 01 (red at first, that is normal)
+pnpm test:lesson 01    # start with lesson 01 (red at first, that is normal)
 ```
 
 Lesson checkers use a fake model, so they need **no key**. Only `pnpm lesson NN` (real LLM calls) does.
@@ -29,7 +29,7 @@ You write the code; the test file is only the checker.
 | `solution/` | the finished version, peek only when stuck |
 
 ```bash
-ppnpm test:lesson 08    # check one lesson
+pnpm test:lesson 08    # check one lesson
 pnpm lesson 08         # run it against the real LLM
 ```
 

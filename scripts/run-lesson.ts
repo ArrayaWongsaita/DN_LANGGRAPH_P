@@ -15,7 +15,7 @@ if (!found) {
   process.exit(1);
 }
 if (!existsSync(join(found, "run.ts"))) {
-  console.error(`บทที่ ${num} ไม่มีไฟล์ run.ts ให้รัน (ใช้ ppnpm test:lesson ${num} แทน)`);
+  console.error(`บทที่ ${num} ไม่มีไฟล์ run.ts ให้รัน (ใช้ pnpm test:lesson ${num} แทน)`);
   process.exit(1);
 }
 
