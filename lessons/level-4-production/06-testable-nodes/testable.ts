@@ -23,8 +23,8 @@ export function makeSummarizeNode(llm: BaseChatModel) {
 }
 
 export function buildPipeline(llm: BaseChatModel) {
-  return new StateGraph(State)
-    .addNode("clean", (state) => ({ text: cleanText(state.text) }))
-    // 👉 ข้อ 3: เพิ่ม node "summarize" ด้วย makeSummarizeNode(llm) แล้วต่อ START → clean → summarize → END
-    .compile();
+  const builder = new StateGraph(State).addNode("clean", (state) => ({ text: cleanText(state.text) }));
+  // 👉 ข้อ 3: เพิ่ม node "summarize" ด้วย makeSummarizeNode(llm) แล้วต่อ START → clean → summarize → END
+  //          จากนั้นคืน builder.compile()
+  return todo(3);
 }

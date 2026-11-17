@@ -17,10 +17,12 @@ export function onChargeFailed(_state: unknown, error: NodeError) {
 }
 
 export function buildCheckout() {
+  // 👉 ข้อ 2: errorHandler = onChargeFailed
+  const errorHandler = todo(2);
   const options = {
     retryPolicy: { maxAttempts: 3, initialInterval: 1 },
     ends: ["compensate"],
-    // 👉 ข้อ 2: ใส่ handler ที่นี่: errorHandler: onChargeFailed
+    errorHandler,
   };
   return new StateGraph(State)
     .addNode(
