@@ -40,3 +40,11 @@ test("รอบถัดไป LLM เห็นสรุปเป็น SystemMe
   expect(lastCall[0].text).toContain("สรุป: ผู้ใช้ชื่อมาลี");
   expect(lastCall.slice(1).map((m) => m.text)).toEqual(["3", "r3", "4"]);
 });
+
+test("สรุปรอบที่สองต้องรวมสรุปรอบแรกเข้าไปด้วย (เนื้อหาเก่าไม่หาย)", async () => {
+  const llm = fakeToolLLM(["r1", "r2", "r3", "S1", "r4", "r5", "S2"]);
+  const graph = buildSummarizingChat(llm);
+  for (const t of ["1", "2", "3", "4", "5"]) await chat(graph, t);
+  const secondSummaryCall = llm.calls[6];
+  expect(secondSummaryCall.some((m) => m.text.includes("S1"))).toBe(true);
+});

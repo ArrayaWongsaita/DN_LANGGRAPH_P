@@ -7,7 +7,7 @@ agent ตัดสินใจเองว่าจะเรียก tool อ�
 await graph.invoke(input, { recursionLimit: 10 });
 ```
 - นับเป็น "step" ของ graph (agent 1 step, tools 1 step ฯลฯ) ไม่ใช่จำนวน tool
-- วงวน agent ที่ใช้ tool ครบ N รอบแล้วตอบ ใช้ประมาณ `2N + 1` step
+- วงวน agent ที่ใช้ tool ครบ N รอบแล้วตอบ ใช้ประมาณ `2N + 1` step (ตั้งเพดานเผื่อไว้ `2N + 2`)
 
 โค้ดจริงควรจับ error นี้แล้วบอกผู้ใช้ดี ๆ แทนที่จะปล่อยให้โปรแกรมล่ม
 

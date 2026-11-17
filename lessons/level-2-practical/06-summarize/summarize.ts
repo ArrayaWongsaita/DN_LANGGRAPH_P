@@ -21,7 +21,7 @@ export function buildSummarizingChat(llm: BaseChatModel) {
     })
     .addNode("summarize", async (state) => {
       // 👉 ข้อ 2: ขอให้ llm สรุปบทสนทนาใน state.messages แล้วเก็บ .text ไว้ในตัวแปร summaryText
-      //          แนวทาง: const reply = await llm.invoke([...state.messages, new HumanMessage("สรุปบทสนทนาข้างต้นสั้น ๆ")]);
+      //          แนวทาง: const reply = await llm.invoke([...head, ...state.messages, new HumanMessage("สรุปบทสนทนาข้างต้นสั้น ๆ")]);
       const summaryText: string = todo(2);
       // 👉 ข้อ 3: สร้าง RemoveMessage ให้ทุกข้อความ ยกเว้น KEEP_LAST ข้อความสุดท้าย
       //          แนวทาง: state.messages.slice(0, -KEEP_LAST).map((m) => new RemoveMessage({ id: m.id! }))

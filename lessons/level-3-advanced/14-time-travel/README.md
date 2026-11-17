@@ -29,4 +29,4 @@ await graph.invoke(null, forked);                                      // รั
 - fork สร้างเส้นใหม่ ไม่ทำลายของเดิม
 
 ## บทถัดไป
-Part 9: รูปแบบ workflow (prompt chaining, routing, parallelization, orchestrator-worker, evaluator-optimizer)
+บท 3-15: รูปแบบ workflow (prompt chaining, routing, parallelization, orchestrator-worker, evaluator-optimizer)

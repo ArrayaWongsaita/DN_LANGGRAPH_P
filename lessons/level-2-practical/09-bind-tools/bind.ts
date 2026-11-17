@@ -10,7 +10,7 @@ export async function askWithTools(
 ): Promise<AIMessage> {
   // 👉 ข้อ 1: ผูก tools ให้ llm ด้วย llm.bindTools!(tools)
   const bound = todo(1);
-  // 👉 ข้อ 2: เรียก bound.invoke ด้วยข้อความของผู้ใช้ (new HumanMessage(question)) แล้วคืนผล
+  // 👉 ข้อ 2: เรียก bound.invoke ด้วยข้อความของผู้ใช้ โดยส่งเป็นอาร์เรย์ [new HumanMessage(question)] แล้วคืนผล
   return todo(2);
 }
 

@@ -27,4 +27,4 @@ for await (const [mode, data] of await graph.stream(input, { streamMode: ["updat
 - เลือกโหมดเท่าที่ใช้ เพราะทุกโหมดมีต้นทุน
 
 ## บทถัดไป
-Part 6b: เรียก LLM ให้ได้ผลดีและทนทาน
+บท 2-25: few-shot (เรียก LLM ให้ได้ผลดีและทนทาน)

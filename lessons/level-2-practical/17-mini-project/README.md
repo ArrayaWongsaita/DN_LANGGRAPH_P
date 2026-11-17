@@ -36,4 +36,4 @@
 - ไฟล์ `.db` เก็บบทสนทนาจริง ห้าม commit (ถูกใส่ใน `.gitignore` แล้ว)
 
 ## บทถัดไป
-Part 5: human-in-the-loop ให้มนุษย์อนุมัติก่อน agent ลงมือ
+บท 2-18: human-in-the-loop ให้มนุษย์อนุมัติก่อน agent ลงมือ

@@ -8,6 +8,7 @@ test("วนครบ target แล้วหยุดเอง", async () => {
 test("เพดานพอดีกับจำนวนรอบที่ตั้งใจ (วนได้ 50 รอบโดยไม่ชน)", async () => {
   expect(await runLoop(50)).toEqual({ ok: true, n: 50 });
   expect(limitForRounds(50)).toBeGreaterThanOrEqual(51);
+  expect(limitForRounds(50)).toBeLessThanOrEqual(60); // "พอดี" ไม่ใช่ตั้งไว้สูงลิ่ว
 });
 
 test("เพดานต่ำกว่างาน: ได้ ok:false ไม่ใช่ exception", async () => {

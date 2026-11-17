@@ -19,7 +19,8 @@ export function buildSummarizingChat(llm: BaseChatModel) {
       return { messages: [await llm.invoke([...head, ...state.messages])] };
     })
     .addNode("summarize", async (state) => {
-      const reply = await llm.invoke([...state.messages, new HumanMessage("สรุปบทสนทนาข้างต้นสั้น ๆ")]);
+      const previous = state.summary ? [new SystemMessage(`สรุปก่อนหน้า: ${state.summary}`)] : [];
+      const reply = await llm.invoke([...previous, ...state.messages, new HumanMessage("สรุปบทสนทนาข้างต้นสั้น ๆ")]);
       const summaryText: string = reply.text;
       const removals = state.messages.slice(0, -KEEP_LAST).map((m) => new RemoveMessage({ id: m.id! }));
       return { summary: summaryText, messages: removals };

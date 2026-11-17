@@ -23,7 +23,7 @@ export function buildLoopGraph() {
     .compile();
 }
 
-// เพดาน step ที่พอดีสำหรับวนครบ target รอบ (เผื่อ 2 step)
+// เพดาน step ที่พอดีสำหรับวนครบ target รอบ (เผื่อ step เล็กน้อย)
 export function limitForRounds(target: number): number {
   // 👉 ข้อ 2: คืน target + 2
   return todo(2);

@@ -34,4 +34,4 @@ const logger = createMiddleware({
 - middleware ที่เขียนเองควรเล็ก ทำหน้าที่เดียว
 
 ## บทถัดไป
-Part 11: ส่วนเสริมและ capstone
+บท 3-31: Functional API และส่วนเสริม ก่อนถึง capstone

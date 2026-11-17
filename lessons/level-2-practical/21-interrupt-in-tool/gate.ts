@@ -10,9 +10,9 @@ export function makeSendEmailTool(sent: string[]) {
   return tool(
     ({ to }: { to: string }) => {
       // 👉 ข้อ 1: ขออนุมัติก่อนทำอะไรทั้งนั้น: const ok = interrupt({ action: "sendEmail", to });
-      //          ถ้า ok ไม่ใช่ true คืน "ยกเลิกแล้ว"
+      //          (ข้อนี้เติมแค่ตัวแปร ok; การเช็กว่า ok ไม่ใช่ true แล้วคืน "ยกเลิกแล้ว" เป็นของข้อ 2)
       const ok = todo(1);
-      // 👉 ข้อ 2: ส่งจริง: sent.push(to) แล้วคืน `ส่งอีเมลถึง ${to} แล้ว`
+      // 👉 ข้อ 2: ถ้า ok !== true คืน "ยกเลิกแล้ว" ก่อน แล้วค่อยส่งจริง: sent.push(to) แล้วคืน `ส่งอีเมลถึง ${to} แล้ว`
       return todo(2);
     },
     {
