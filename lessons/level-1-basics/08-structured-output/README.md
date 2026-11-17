@@ -27,13 +27,13 @@ const personSchema = z.object({ name: z.string(), age: z.number() });
 ## โจทย์
 เติม 2 ช่อง `// 👉 ข้อ N` ในไฟล์ `extractPerson.ts` แล้วรัน:
 
-    npm run test:lesson 08
+    ppnpm test:lesson 08
 
 ตอนแรกจะแดง (ปกติ) เติมจนเขียวทั้ง 4 ข้อ ตัวตรวจใช้ LLM ปลอมจึงไม่ต้องมี API key
 
 จากนั้นลองกับ LLM จริง:
 
-    npm run lesson 08
+    pnpm lesson 08
 
 ## คุณทำได้แล้ว
 - ทำให้ LLM ตอบเป็น object ที่มีรูปร่างตามที่กำหนดด้วย `withStructuredOutput`
@@ -42,7 +42,7 @@ const personSchema = z.object({ name: z.string(), age: z.number() });
 ## ข้อควรจำ
 - `withStructuredOutput(schema)` คืนตัวเรียกใหม่ ไม่ได้แก้ LLM เดิม
 - ผลลัพธ์เป็น object ที่ใช้ `.name` `.age` ได้เลย ไม่ต้อง parse เอง
-- ไม่ใช่ทุกโมเดลรองรับ structured output เท่ากัน ถ้าเปลี่ยนโมเดลแล้วพัง ลองรัน `npm run check:llm`
+- ไม่ใช่ทุกโมเดลรองรับ structured output เท่ากัน ถ้าเปลี่ยนโมเดลแล้วพัง ลองรัน `pnpm check:llm`
 
 ## บทถัดไป
 ต่อไปเราจะหยุดคุยกับ LLM ทีละครั้ง และเริ่มต่อขั้นตอนหลายขั้นเข้าด้วยกันเป็น graph

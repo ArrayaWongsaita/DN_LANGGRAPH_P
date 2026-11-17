@@ -3,7 +3,7 @@ import { z } from "zod";
 import { describeProvider, getLLM } from "../src/llm";
 import { formatReport, type CheckResult } from "./check-llm-report";
 
-// รันเอง: npm run check:llm  (ยิง API จริง 4 ครั้ง) ใช้ดูว่า provider/โมเดลที่ตั้งใน .env รองรับอะไรบ้าง
+// รันเอง: pnpm check:llm  (ยิง API จริง 4 ครั้ง) ใช้ดูว่า provider/โมเดลที่ตั้งใน .env รองรับอะไรบ้าง
 async function attempt(name: CheckResult["name"], fn: () => Promise<string>): Promise<CheckResult> {
   try {
     return { name, ok: true, detail: await fn() };

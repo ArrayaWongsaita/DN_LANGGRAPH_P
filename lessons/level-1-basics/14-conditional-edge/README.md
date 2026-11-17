@@ -22,13 +22,13 @@ START ──?───┤            ├──► END
 ## โจทย์
 เติม 2 ช่อง `// 👉 ข้อ N` ใน `route.ts` แล้วรัน:
 
-    npm run test:lesson 14
+    ppnpm test:lesson 14
 
 ถ้าลืมต่อเส้นของ node ใด LangGraph จะฟ้องว่า node นั้น **is not reachable** (เข้าถึงไม่ได้) แปลว่ามี node ที่ไม่มีเส้นไปถึง ให้ตรวจว่าต่อครบแล้วหรือยัง
 
 เมื่อเขียวแล้ว ลองดูการเดินทางจริง (ไม่ใช้ LLM จึงไม่ต้องมี API key):
 
-    npm run lesson 14
+    pnpm lesson 14
 
 ## คุณทำได้แล้ว
 - สร้าง graph ที่ "เลือกทาง" ตามข้อมูลใน state ได้ด้วย `addConditionalEdges`

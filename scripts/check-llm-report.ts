@@ -5,7 +5,7 @@ export interface CheckResult {
 }
 
 const HINTS: Record<CheckResult["name"], string> = {
-  basic: "เรียก LLM พื้นฐานไม่ได้: ตรวจ API key / ชื่อโมเดลใน .env ทุกบทที่ใช้ npm run lesson จะใช้ไม่ได้",
+  basic: "เรียก LLM พื้นฐานไม่ได้: ตรวจ API key / ชื่อโมเดลใน .env ทุกบทที่ใช้ pnpm lesson จะใช้ไม่ได้",
   streaming: "streaming ไม่ทำงาน: บท streaming อาจพังกับโมเดลนี้",
   tools: "tool calling ไม่ทำงาน: บทเรื่อง tools และ agent (Level 2) จะพังกับโมเดลนี้ ลองเปลี่ยน LLM_MODEL",
   structured: "structured output ไม่ทำงาน: บท structured output จะพังกับโมเดลนี้ ลองเปลี่ยน LLM_MODEL",

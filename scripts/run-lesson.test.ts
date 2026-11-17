@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 
 // ผู้เรียนที่ยังไม่ตั้ง key ต้องเห็นข้อความไทยสั้น ๆ ไม่ใช่ stack trace
-test("npm run lesson โดยไม่มี key พิมพ์ข้อความไทยที่พูดถึง key และไม่มี stack trace", () => {
+test("pnpm lesson โดยไม่มี key พิมพ์ข้อความไทยที่พูดถึง key และไม่มี stack trace", () => {
   const result = spawnSync(process.execPath, ["--import", "tsx", "scripts/run-lesson.ts", "01"], {
     encoding: "utf8",
     env: {

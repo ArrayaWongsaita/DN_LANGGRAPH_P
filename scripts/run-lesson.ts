@@ -5,7 +5,7 @@ import { findLesson } from "./find-lesson";
 
 const num = process.argv[2] ?? "";
 if (!/^\d{1,2}$/.test(num)) {
-  console.error("วิธีใช้: npm run lesson <เลขบท>  เช่น npm run lesson 08");
+  console.error("วิธีใช้: pnpm lesson <เลขบท>  เช่น pnpm lesson 08");
   process.exit(1);
 }
 
@@ -15,7 +15,7 @@ if (!found) {
   process.exit(1);
 }
 if (!existsSync(join(found, "run.ts"))) {
-  console.error(`บทที่ ${num} ไม่มีไฟล์ run.ts ให้รัน (ใช้ npm run test:lesson ${num} แทน)`);
+  console.error(`บทที่ ${num} ไม่มีไฟล์ run.ts ให้รัน (ใช้ ppnpm test:lesson ${num} แทน)`);
   process.exit(1);
 }
 

@@ -12,7 +12,7 @@ import { ChatOllama } from "@langchain/ollama";
 //   GROQ_API_KEY=...         (ตัวแปรของ key ขึ้นกับ provider ที่เลือก)
 //
 // เพิ่ม provider ใหม่ (เช่น OpenAI) = เพิ่ม "หนึ่งแถว" ในตาราง PROVIDERS ด้านล่าง:
-//   1. npm install --save-exact @langchain/openai
+//   1. pnpm add --save-exact @langchain/openai
 //   2. import { ChatOpenAI } from "@langchain/openai";
 //   3. เพิ่มแถว:
 //        openai: {
@@ -22,7 +22,7 @@ import { ChatOllama } from "@langchain/ollama";
 //            new ChatOpenAI({ model, apiKey, ...(temperature !== undefined ? { temperature } : {}) }),
 //        },
 // ห้ามเปลี่ยน return type: ต้องคืน BaseChatModel เหมือนเดิม บทเรียนอื่นไม่ต้องแก้เลย
-// หลังเปลี่ยนแล้วรัน `npm run check:llm` เพื่อดูว่า provider ใหม่รองรับอะไรบ้าง
+// หลังเปลี่ยนแล้วรัน `pnpm check:llm` เพื่อดูว่า provider ใหม่รองรับอะไรบ้าง
 // ================================================================
 
 export interface LLMOptions {

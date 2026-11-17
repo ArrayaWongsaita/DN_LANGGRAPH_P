@@ -9,12 +9,12 @@ A hands-on course for people who have **never built an LLM app**. Each lesson is
 Requirements: Node.js 22.12+ (developed on Node 26).
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env      # then put your GROQ_API_KEY in .env
-npm run test:lesson 01    # start with lesson 01 (red at first, that is normal)
+ppnpm test:lesson 01    # start with lesson 01 (red at first, that is normal)
 ```
 
-Lesson checkers use a fake model, so they need **no key**. Only `npm run lesson NN` (real LLM calls) does.
+Lesson checkers use a fake model, so they need **no key**. Only `pnpm lesson NN` (real LLM calls) does.
 
 ## How a lesson works
 
@@ -25,12 +25,12 @@ You write the code; the test file is only the checker.
 | `README.md` | teaches the concept (Thai) |
 | `<topic>.ts` | almost-complete code with gaps marked `// 👉 ข้อ N` (stubbed with `todo(N)`) |
 | `<topic>.test.ts` | the checker: red until your gaps are filled, then green. Do not edit |
-| `run.ts` | (some lessons) run against the real LLM: `npm run lesson NN` |
+| `run.ts` | (some lessons) run against the real LLM: `pnpm lesson NN` |
 | `solution/` | the finished version, peek only when stuck |
 
 ```bash
-npm run test:lesson 08    # check one lesson
-npm run lesson 08         # run it against the real LLM
+ppnpm test:lesson 08    # check one lesson
+pnpm lesson 08         # run it against the real LLM
 ```
 
 ## Switching LLM provider or model
@@ -44,7 +44,7 @@ Every lesson gets its model from `src/llm.ts` (`getLLM()` returns a LangChain `B
 | `GROQ_API_KEY` | key for the `groq` provider (each learner uses their own) |
 | `OLLAMA_API_KEY`, `OLLAMA_BASE_URL` | for the `ollama` provider (base URL has **no** `/api` suffix) |
 
-After changing provider or model, run `npm run check:llm`. It makes 4 live calls and reports whether basic calls, streaming, tool calling and structured output work. Findings for tested models are in `docs/notes/provider-findings.md`.
+After changing provider or model, run `pnpm check:llm`. It makes 4 live calls and reports whether basic calls, streaming, tool calling and structured output work. Findings for tested models are in `docs/notes/provider-findings.md`.
 
 ## Troubleshooting
 
@@ -56,11 +56,11 @@ After changing provider or model, run `npm run check:llm`. It makes 4 live calls
 ## For maintainers
 
 ```bash
-npm test                  # src + scripts tests (green on a fresh checkout)
-npm run check:solutions   # every solution/ must pass its checker
-npm run check:starters    # every starter must FAIL its checker (no lesson is solved already)
-npm run lint:lessons      # structure rules; add :strict to require contiguous numbering
-npm run typecheck
+pnpm test                  # src + scripts tests (green on a fresh checkout)
+pnpm check:solutions   # every solution/ must pass its checker
+pnpm check:starters    # every starter must FAIL its checker (no lesson is solved already)
+pnpm lint:lessons      # structure rules; add :strict to require contiguous numbering
+pnpm typecheck
 ```
 
 New lessons start from `scripts/lesson-template/`.
