@@ -16,7 +16,7 @@ export function buildSupervisorTeam(llm: BaseChatModel) {
       "supervisor",
       async (state) => {
         // 👉 ข้อ 1: ใช้ llm.withStructuredOutput(z.object({ next: Next })) เรียก invoke ด้วย
-        //          `งาน: ${state.task}\nผลงานตอนนี้: ${state.work}\nใครทำต่อ (researcher/writer/FINISH)?`
+        //          `งาน: ${state.task}\nผลงานตอนนี้: ${state.work}\nลูกทีม: researcher (ค้นข้อมูล) ต้องทำก่อน แล้ว writer (เขียนสรุป) ตามหลัง เมื่อมีทั้งสองอย่างในผลงานแล้วให้ FINISH ใครทำต่อ (researcher/writer/FINISH)?`
         //          แล้ว goto: ผล.next === "FINISH" ? END : ผล.next  คืนเป็น new Command({ goto })
         return todo(1);
       },

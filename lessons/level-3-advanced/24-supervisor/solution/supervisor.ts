@@ -16,7 +16,7 @@ export function buildSupervisorTeam(llm: BaseChatModel) {
       async (state) => {
         const decision = await llm
           .withStructuredOutput(z.object({ next: Next }))
-          .invoke(`งาน: ${state.task}\nผลงานตอนนี้: ${state.work}\nใครทำต่อ (researcher/writer/FINISH)?`);
+          .invoke(`งาน: ${state.task}\nผลงานตอนนี้: ${state.work}\nลูกทีม: researcher (ค้นข้อมูล) ต้องทำก่อน แล้ว writer (เขียนสรุป) ตามหลัง เมื่อมีทั้งสองอย่างในผลงานแล้วให้ FINISH ใครทำต่อ (researcher/writer/FINISH)?`);
         return new Command({ goto: decision.next === "FINISH" ? END : decision.next });
       },
       { ends: ["researcher", "writer", END] },
