@@ -45,3 +45,17 @@ test("รับ URL ที่เป็น URL object ได้ และบั�
   await f(new URL("https://x.test/p"));
   expect(f.calls[0].url).toBe("https://x.test/p");
 });
+
+test("chunks: ส่ง body เป็นหลายชิ้นตามที่กำหนด (จำลองสตรีมที่ถูกตัดกลางบรรทัด)", async () => {
+  const f = fakeFetch([{ body: "", chunks: ["data: ab", "c\n\nda", "ta: d\n\n"] }]);
+  const res = await f("https://x.test");
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  const pieces: string[] = [];
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    pieces.push(decoder.decode(value));
+  }
+  expect(pieces).toEqual(["data: ab", "c\n\nda", "ta: d\n\n"]);
+});
