@@ -1,11 +1,20 @@
 import { errorCode, errorStatus } from "../src/errorInfo";
+import { describeProvider } from "../src/llm";
 
 // โหลดก่อน run.ts ของทุกบท: ถ้าเกิด error ให้พิมพ์ข้อความสั้น ๆ ที่อ่านรู้เรื่อง ไม่พ่น stack trace
+function keyVar(): string {
+  try {
+    return describeProvider().keyVar;
+  } catch {
+    return "API key";
+  }
+}
+
 function hint(e: unknown): string {
   const status = errorStatus(e);
   const code = errorCode(e);
-  if (status === 401) return "key ไม่ถูกต้อง: ตรวจ OLLAMA_API_KEY ใน .env";
-  if (status === 404) return "ไม่พบปลายทาง: ตรวจ OLLAMA_BASE_URL (ห้ามมี /api) และชื่อโมเดล";
+  if (status === 401) return `key ไม่ถูกต้อง: ตรวจ ${keyVar()} ใน .env`;
+  if (status === 404) return "ไม่พบปลายทาง: ตรวจชื่อโมเดล (LLM_MODEL) และ URL ของ provider ใน .env";
   if (status === 429) return "เรียกถี่เกินไป: รอแล้วลองใหม่";
   if (code === "ENOTFOUND" || code === "ECONNREFUSED") return "ต่อเครือข่ายไม่ได้: ตรวจอินเทอร์เน็ต";
   return "ดูวิธีแก้ใน README หรือบทที่ 06";
