@@ -5,12 +5,13 @@ Verified live on 2026-11-17 with the author's own `GROQ_API_KEY` via `npm run ch
 | Model | basic | streaming | tools | structured |
 |---|---|---|---|---|
 | `openai/gpt-oss-120b` | ✓ | ✓ (123 chunks) | ✓ (`add({"a":2,"b":3})`) | ✓ (`.withStructuredOutput(zod)` returned `{name, age}`) |
+| `openai/gpt-oss-20b` | ✓ | ✓ (110 chunks) | ✓ (`add({"a":2,"b":3})`) | ✓ (`{name, age}`; kept the honorific "คุณสมชาย" where 120b dropped it) |
 | `llama-3.3-70b-versatile` | ✗ 404 `model_not_found` | ✗ | ✗ | ✗ |
 
 `llama-3.3-70b-versatile` is not available to this account ("does not exist or you do not have access"), so it could not be evaluated.
 
 ## Decision
-Default model: `openai/gpt-oss-120b` (passes all four checks). Per the Groq docs it does **not** support parallel tool calls; lessons on tools must not rely on them. Reasoning models may return `content` as blocks; lessons read text with `.text`.
+Default model: `openai/gpt-oss-120b` (passes all four checks). `openai/gpt-oss-20b` also passes all four checks (verified 2026-11-17, one `pnpm check:llm` run) and is a good choice for the author's own live testing (set `LLM_MODEL=openai/gpt-oss-20b` in `.env`); it was not chosen as the learners' default because 120b is the model verified across more of the course. Per the Groq docs it does **not** support parallel tool calls; lessons on tools must not rely on them. Reasoning models may return `content` as blocks; lessons read text with `.text`.
 
 ## Error shapes (real)
 - Wrong key: `AuthenticationError`, own keys `status, headers, error`; `status === 401`; message `401 {"error":{"message":"Invalid API Key",...,"code":"invalid_api_key"}}`.
