@@ -3,13 +3,14 @@ import { HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import type { SqliteSaver } from "@langchain/langgraph-checkpoint-sqlite";
 import { createAgent } from "langchain";
+import { todo } from "@src/todo";
 import { z } from "zod";
 
 export function makeNoteTools(store: string[]) {
   const addNote = tool(
     ({ text }: { text: string }) => {
-      store.push(text);
-      return `บันทึกแล้ว: ${text}`;
+      // 👉 ข้อ 1: เก็บ text ลงใน store แล้วคืน `บันทึกแล้ว: ${text}`
+      return todo(1);
     },
     {
       name: "addNote",
@@ -19,7 +20,8 @@ export function makeNoteTools(store: string[]) {
   );
   const listNotes = tool(
     () => {
-      return store.length === 0 ? "ยังไม่มีโน้ต" : store.map((n, i) => `${i + 1}. ${n}`).join("\n");
+      // 👉 ข้อ 2: ถ้า store ว่างคืน "ยังไม่มีโน้ต" ไม่เช่นนั้นคืนโน้ตทั้งหมดต่อกันบรรทัดละข้อ เช่น "1. ก\n2. ข"
+      return todo(2);
     },
     { name: "listNotes", description: "ดูโน้ตทั้งหมดที่จดไว้", schema: z.object({}) },
   );
@@ -27,12 +29,9 @@ export function makeNoteTools(store: string[]) {
 }
 
 export function buildNoteAssistant(llm: BaseChatModel, store: string[], saver: SqliteSaver) {
-  return createAgent({
-    model: llm,
-    tools: makeNoteTools(store),
-    checkpointer: saver,
-    systemPrompt: "คุณคือผู้ช่วยจดโน้ต ตอบสั้น ใช้ tool เมื่อผู้ใช้ขอจดหรือขอดูโน้ต",
-  });
+  // 👉 ข้อ 3: createAgent ด้วย model: llm, tools: makeNoteTools(store), checkpointer: saver
+  //          และ systemPrompt: "คุณคือผู้ช่วยจดโน้ต ตอบสั้น ใช้ tool เมื่อผู้ใช้ขอจดหรือขอดูโน้ต"
+  return todo(3);
 }
 
 export async function say(agent: ReturnType<typeof buildNoteAssistant>, text: string): Promise<string> {
