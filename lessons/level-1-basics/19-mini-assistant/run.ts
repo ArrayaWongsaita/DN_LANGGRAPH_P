@@ -6,10 +6,12 @@ import { buildAssistantGraph } from "./assistant";
 const graph = buildAssistantGraph(getLLM({ temperature: 0 }));
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
-for (;;) {
-  const question = (await rl.question("\nคุณ: ")).trim();
+process.stdout.write("\nคุณ: ");
+for await (const line of rl) {
+  const question = line.trim();
   if (!question || question === "exit") break;
   const result = await graph.invoke({ question });
   console.log(`[${result.category}] ${result.answer}`);
+  process.stdout.write("\nคุณ: ");
 }
 rl.close();

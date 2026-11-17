@@ -16,7 +16,7 @@ function makeAgent(self: "alice" | "bob", other: "alice" | "bob", llm: BaseChatM
   return async (state: { message: string }) => {
     const out = await llm
       .withStructuredOutput(z.object({ reply: z.string(), handoffTo: Name.optional() }))
-      .invoke(`คุณคือ ${self} ตอบลูกค้า: ${state.message}`);
+      .invoke(`คุณคือ ${self} ในทีมที่มี alice (ดูแลเรื่องขาย) และ bob (ดูแลเรื่องสินค้าเสียและซัพพอร์ต) ถ้าเรื่องนี้ไม่ใช่หน้าที่ของคุณ ให้ตั้ง handoffTo เป็น ${other} ถ้าเป็นหน้าที่ของคุณไม่ต้องใส่ handoffTo ตอบลูกค้า: ${state.message}`);
     if (out.handoffTo && out.handoffTo !== self) {
       // 👉 ข้อ 2: คืน new Command({ update: { reply: out.reply, active: out.handoffTo }, goto: out.handoffTo })
       return todo(2);

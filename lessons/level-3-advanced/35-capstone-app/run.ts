@@ -10,12 +10,17 @@ await store.put(["prefs", "me"], "lang", { lang: "th" });
 const app = buildApp(getLLM({ temperature: 0 }), SqliteSaver.fromConnString("capstone-memory.db"), store);
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
-const question = (await rl.question("หัวข้อรายงาน: ")).trim() || "ประโยชน์ของการนอนหลับ";
+const lines = rl[Symbol.asyncIterator]();
+const ask = async (prompt: string): Promise<string> => {
+  process.stdout.write(prompt);
+  return ((await lines.next()).value ?? "").trim();
+};
+const question = (await ask("หัวข้อรายงาน: ")) || "ประโยชน์ของการนอนหลับ";
 const threadId = `run-${Date.now()}`;
 
 const r = await start(app, threadId, "me", question);
 console.log(`ความคืบหน้า: ${r.stages.join(" → ")}`);
 console.log(`\n--- รายงานที่รออนุมัติ ---\n${r.report}\n`);
-const answer = (await rl.question("เผยแพร่ไหม (y/n): ")).trim().toLowerCase();
+const answer = (await ask("เผยแพร่ไหม (y/n): ")).toLowerCase();
 console.log(await decide(app, threadId, "me", answer === "y"));
 rl.close();
