@@ -3,3 +3,4 @@ node_modules
 .superpowers
 .tmp-check
 .tmp-check-result.json
+*.db

@@ -8,8 +8,9 @@
 
 ## Order (build and verify each part before the next)
 - **Part 3 Memory (2-01..2-07):** messages state; checkpointer; thread_id; read/update state; trim; summarize; SqliteSaver.
-- **Mini project (2-08):** chatbot with memory and a tool, persisted.
-- **Part 4 Tools and agents (2-09..2-17):** tool; bindTools; ToolNode; hand-built ReAct loop; recursion limit; tool errors; structured final answer; dynamic model/tools; createAgent.
+- **Part 4 Tools and agents (2-08..2-16):** define tool; bindTools; ToolNode; hand-built ReAct loop; recursion limit; tool errors; structured final answer; dynamic model/tools; createAgent. **Done.**
+- **Mini project (2-17):** notes assistant with memory, tools, createAgent, SqliteSaver. **Done.**
+  - Ruling: the spec put the mini project before Part 4, but it needs tools, so it moved after Part 4 (cross-lesson imports break the per-lesson check copy, so shared sample tools live in `src/sampleTools.ts` and the agent helper is inlined where needed).
 - **Part 5 Human-in-the-loop (2-18..2-21)**, **Part 6 Streaming (2-22..2-24)**, **Part 6b Reliability (2-25..2-27).**
 
 Each part ends with `pnpm test`, `check:solutions`, `check:starters`, `lint:lessons:strict`, `typecheck`, a commit, and a live check of any `run.ts`.
