@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src",
+    "scripts",
+    "lessons/**/solution/**/*.ts"
+  ],
+  "exclude": [
+    "scripts/lesson-template",
+    "legacy",
+    ".tmp-check",
+    "scripts/fixtures/.tmp-check"
+  ]
+}
