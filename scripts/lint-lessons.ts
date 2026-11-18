@@ -29,7 +29,8 @@ export function lintLessons(root: string, opts: { strict?: boolean } = {}): stri
       const files = readdirSync(dir).filter((f) => statSync(join(dir, f)).isFile());
       const checkers = files.filter((f) => f.endsWith(".test.ts"));
       const starters = files.filter(isStarter);
-      if (checkers.length === 0) problems.push(`${name}: no *.test.ts checker`);
+      // บทแบบไฟล์เดียวไม่มี checker ได้ แต่ต้องมีไฟล์เรียนไฟล์เดียว (ไฟล์นั้นรันตัวเองด้วย pnpm lesson)
+      if (checkers.length === 0 && starters.length !== 1) problems.push(`${name}: no *.test.ts checker (a single-file lesson needs exactly one starter .ts)`);
 
       const solutionDir = join(dir, "solution");
       if (!existsSync(solutionDir)) {

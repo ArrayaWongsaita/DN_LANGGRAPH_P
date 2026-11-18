@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { findLesson, parseLessonId } from "./find-lesson";
@@ -14,14 +14,17 @@ if (!found) {
   console.error(`ไม่พบบทที่ ${num}`);
   process.exit(1);
 }
-if (!existsSync(join(found, "run.ts"))) {
-  console.error(`บทที่ ${num} ไม่มีไฟล์ run.ts ให้รัน (ใช้ pnpm test:lesson ${num} แทน)`);
+// บทแบบไฟล์เดียว: ไม่มี run.ts ให้รันไฟล์ .ts ไฟล์เดียวของบทแทน
+const entries = readdirSync(found).filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"));
+const entry = existsSync(join(found, "run.ts")) ? "run.ts" : entries.length === 1 ? entries[0] : undefined;
+if (!entry) {
+  console.error(`บทที่ ${num} ไม่มีไฟล์ให้รัน (ใช้ pnpm test:lesson ${num} แทน)`);
   process.exit(1);
 }
 
 const result = spawnSync(
   process.execPath,
-  ["--import", "tsx", "--import", "./scripts/friendly-errors.ts", join(found, "run.ts")],
+  ["--import", "tsx", "--import", "./scripts/friendly-errors.ts", join(found, entry)],
   { stdio: "inherit" },
 );
 if (result.error) console.error(`รันไม่สำเร็จ: ${result.error.message}`);

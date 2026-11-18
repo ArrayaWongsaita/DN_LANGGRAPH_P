@@ -41,6 +41,9 @@ export function checkLessons(root: string, mode: CheckMode): { ok: boolean; prob
       const lessonDir = join(levelDir, lesson);
       if (!statSync(lessonDir).isDirectory()) continue;
 
+      // บทแบบไฟล์เดียว (ไม่มี *.test.ts) เรียก LLM จริงตอนรัน จึงตรวจแบบออฟไลน์ไม่ได้: ให้ typecheck/lint ดูแล
+      if (!readdirSync(lessonDir).some((f) => f.endsWith(".test.ts"))) continue;
+
       if (mode === "starters") {
         const r = runVitest(lessonDir);
         if (r.total === 0) problems.push(`${lesson}: checker ran no tests`);

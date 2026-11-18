@@ -1,7 +1,9 @@
+import { todo } from "@src/todo";
 import { END, ReducedValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
-import { todo } from "@src/todo";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 18  (ไม่ใช้ LLM)
 const State = new StateSchema({
   log: new ReducedValue(z.array(z.string()).default(() => []), {
     inputSchema: z.string(),
@@ -9,43 +11,39 @@ const State = new StateSchema({
   }),
 });
 
-export function buildStreamDemo() {
-  return new StateGraph(State)
-    .addNode("first", () => ({ log: "first" }))
-    .addNode("second", () => ({ log: "second" }))
-    .addEdge(START, "first")
-    .addEdge("first", "second")
-    .addEdge("second", END)
-    .compile();
-}
-
-interface Streamable {
-  stream(input: never, options: { streamMode: "updates" | "values" }): Promise<AsyncIterable<unknown>>;
-}
+const graph = new StateGraph(State)
+  .addNode("first", () => ({ log: "first" }))
+  .addNode("second", () => ({ log: "second" }))
+  .addEdge(START, "first")
+  .addEdge("first", "second")
+  .addEdge("second", END)
+  .compile();
 
 // streamMode "updates": ทุกครั้งที่ node ทำงานเสร็จ ได้ { ชื่อ node: สิ่งที่ node นั้นอัปเดต }
-export async function collectUpdates(
-  graph: Streamable,
-  input: object,
-): Promise<{ node: string; update: unknown }[]> {
-  const result: { node: string; update: unknown }[] = [];
+const updates: { node: string; update: unknown }[] = [];
 
-  // 👉 ข้อ 1: เปิด stream ด้วย { streamMode: "updates" } แล้ววนอ่านด้วย for await
-  //          แต่ละชิ้นเป็น object ที่มี key เดียวคือชื่อ node ให้เก็บ { node, update } ลง result
-  // แนวทาง: for await (const chunk of await graph.stream(input as never, { streamMode: "updates" })) {
-  //           for (const [node, update] of Object.entries(chunk as object)) result.push({ node, update });
-  //         }
-  todo(1);
-
-  return result;
-}
+// 👉 ข้อ 1: เปิด stream ด้วย { streamMode: "updates" } แล้ววนอ่านด้วย for await
+//          แต่ละชิ้นเป็น object ที่มี key เดียวคือชื่อ node ให้เก็บ { node, update } ลง updates
+// แนวทาง: for await (const chunk of await graph.stream({}, { streamMode: "updates" })) {
+//           for (const [node, update] of Object.entries(chunk)) updates.push({ node, update });
+//         }
+todo(1);
 
 // streamMode "values": ทุกก้าวได้ "state ทั้งก้อน" (ชิ้นแรกคือ state เริ่มต้นก่อน node ใดทำงาน)
-export async function collectValues(graph: Streamable, input: object): Promise<unknown[]> {
-  const result: unknown[] = [];
+const values: unknown[] = [];
 
-  // 👉 ข้อ 2: เหมือนข้อ 1 แต่ใช้ { streamMode: "values" } และเก็บ chunk ทั้งก้อนลง result
-  todo(2);
+// 👉 ข้อ 2: เหมือนข้อ 1 แต่ส่ง input { log: "start" } กับ { streamMode: "values" } และเก็บ chunk ทั้งก้อนลง values
+todo(2);
 
-  return result;
-}
+console.log("updates:", JSON.stringify(updates));
+console.log("values: ", JSON.stringify(values));
+check(
+  "updates: ได้ชิ้นละ 1 node เรียงตามที่ทำงาน พร้อมสิ่งที่ node นั้นอัปเดต",
+  JSON.stringify(updates.map((u) => u.node)) === '["first","second"]' && JSON.stringify(updates[0]?.update) === '{"log":"first"}',
+  'ใช้ { streamMode: "updates" } แล้วเก็บ { node, update }',
+);
+check(
+  "values: ได้ state เต็มหลังแต่ละก้าว รวม state เริ่มต้น (2 node = 3 ชิ้น)",
+  values.length === 3 && JSON.stringify(values[0]) === '{"log":["start"]}' && JSON.stringify(values[2]) === '{"log":["start","first","second"]}',
+  'ใช้ { streamMode: "values" } แล้วเก็บ chunk ทั้งก้อน',
+);

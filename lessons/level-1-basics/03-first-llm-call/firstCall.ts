@@ -1,0 +1,23 @@
+import type { AIMessage } from "@langchain/core/messages";
+import { todo } from "@src/todo";
+import { llm } from "../02-llm-config/llm"; // chat model ที่คุณตั้งไว้ในบท 02
+import { check } from "@src/check";
+
+// รันด้วย: pnpm lesson 03
+// อ่านจากบนลงล่างได้เลย ไม่มีฟังก์ชันครอบ
+
+// 1) คำถามที่จะส่ง
+const question = "ทักทายคนที่เพิ่งเริ่มเรียน LangGraph หนึ่งประโยค";
+
+// 👉 ข้อ 1: ส่ง question ให้ LLM แล้ว "รอ" ผลลัพธ์
+// แนวทาง: await llm.invoke(question)
+const reply: AIMessage = todo(1);
+
+// 👉 ข้อ 2: เอาเฉพาะ "ข้อความ" ของคำตอบ (reply เป็น object ข้อความ ไม่ใช่ string ตรง ๆ)
+// แนวทาง: reply.text
+const answer: string = todo(2);
+
+// 2) ดูผล (ไม่ต้องแก้)
+console.log("คำถาม:", question);
+console.log("คำตอบ:", answer);
+check("answer เป็น string ที่ไม่ว่าง", typeof answer === "string" && answer.length > 0, "ลืม await หรือ .text หรือเปล่า?");

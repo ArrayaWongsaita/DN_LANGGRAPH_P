@@ -24,7 +24,7 @@ Requirements: Node.js 22.12+ (developed on Node 26).
 ```bash
 pnpm install
 cp .env.example .env      # then put your GROQ_API_KEY in .env
-pnpm test:lesson 01    # Level 1, lesson 01 (red at first, that is normal)
+pnpm lesson 01         # Level 1, lesson 01 (single file: fill the gaps, then run it)
 pnpm test:lesson 0-01  # Level 0, lesson 01 (raw fetch)
 pnpm test:lesson 2-01  # Level 2, lesson 01 (chat memory)
 pnpm test:lesson 3-01  # Level 3, lesson 01 (input/output schemas)
@@ -32,11 +32,25 @@ pnpm test:lesson 4-01  # Level 4, lesson 01 (node timeout)
 pnpm test:lesson 5-01  # Level 5, lesson 01 (embedding contract)
 ```
 
-Lesson checkers use a fake model, so they need **no key**. Only `pnpm lesson NN` (real LLM calls) does.
+Level 1 lessons are single files that call the real LLM (`pnpm lesson NN`), so you need a key from lesson 01 onward. Levels 0 and 2-5 lessons have checkers (`pnpm test:lesson`) that use a fake model and need **no key**; only their `pnpm lesson NN` runs do.
 
 ## How a lesson works
 
-You write the code; the test file is only the checker.
+You write the code; the lesson tells you whether it works. There are two formats.
+
+**Level 1 (single file).** Open the one `.ts` file in the lesson, fill the `// 👉 ข้อ N` gaps (stubbed with `todo(N)`), and run it. It prints the result and `✅` / `❌` checks. The model comes from `lessons/level-1-basics/02-llm-config/llm.ts` (you choose the provider there) and the validated `.env` values from lesson 01.
+
+| File | What it is |
+|---|---|
+| `README.md` | teaches the concept (Thai) |
+| `<topic>.ts` | the file you edit and run, with gaps marked `// 👉 ข้อ N` |
+| `solution/<topic>.ts` | the finished version, peek only when stuck |
+
+```bash
+pnpm lesson 03         # run Level 1 lesson 03 (a bare number means Level 1)
+```
+
+**Levels 0 and 2-5 (checker).**
 
 | File | What it is |
 |---|---|
@@ -47,12 +61,13 @@ You write the code; the test file is only the checker.
 | `solution/` | the finished version, peek only when stuck |
 
 ```bash
-pnpm test:lesson 08    # check one lesson (a bare number means Level 1)
-pnpm lesson 08         # run it against the real LLM
-pnpm test:lesson 0-01  # Level 0 lessons use a 0- prefix
+pnpm test:lesson 0-01  # check one lesson (Level 0 lessons use a 0- prefix)
+pnpm lesson 2-01       # run it against the real LLM
 ```
 
 ## Switching LLM provider or model
+
+Level 1 picks the provider in `lessons/level-1-basics/02-llm-config/llm.ts` (uncomment one block). The rest of this section describes `src/llm.ts`, which Levels 0 and 2-5 use.
 
 `src/env.ts` reads and validates `.env` once with zod (`import { env } from "@src/env"`; a wrong value gives one Thai message listing every problem). Every lesson gets its model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`, built from that validated env). Change provider or model in `.env` only:
 

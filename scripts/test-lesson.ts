@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { findLesson } from "./find-lesson";
 
@@ -6,6 +7,11 @@ const num = process.argv[2] ?? "";
 const dir = findLesson("lessons", num);
 if (!dir) {
   console.error("วิธีใช้: pnpm test:lesson <เลขบท>  เช่น pnpm test:lesson 01 (Level 1) หรือ pnpm test:lesson 0-01 (Level 0) (ไม่พบบทนี้)");
+  process.exit(1);
+}
+
+if (!readdirSync(dir).some((f) => f.endsWith(".test.ts"))) {
+  console.error(`บทที่ ${num} ไม่มีตัวตรวจ: เติมโค้ดแล้วรัน pnpm lesson ${num} เพื่อดูผล`);
   process.exit(1);
 }
 

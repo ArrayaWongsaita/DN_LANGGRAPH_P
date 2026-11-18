@@ -10,19 +10,19 @@ State { question }                          State { question, answer }
       node "ask":  reply = await llm.invoke(question)│
                    return { answer: reply.text } ────┘
 ```
-สังเกตว่า graph ไม่รู้จัก LLM เจ้าไหนเลย เราส่ง `llm` เข้ามาตอนสร้าง graph (`buildAskGraph(llm)`) ตอนใช้จริงส่ง `getLLM()` ตอนตรวจงานส่ง LLM ปลอม
+สังเกตว่า graph ไม่รู้จัก LLM เจ้าไหนเลย node แค่เรียก `llm.invoke(...)` โดย `llm` มาจากไฟล์ตั้งค่าในบท 02 จะเปลี่ยนเจ้า LLM ก็แก้ที่นั่นที่เดียว
 
 **ข้อควรระวัง:** ชื่อ node ห้ามซ้ำกับชื่อ field ใน State ถ้าตั้ง node ชื่อ `answer` ขณะที่ State มี field `answer` จะ error ว่า "already being used as a state attribute"
 
 ## ดูตัวอย่าง
-`askGraph.ts`: `START → ask → END` โดย node `ask` อ่าน `question` จาก state และต้องเขียน `answer` กลับ
+เปิด `askGraph.ts`: `START → ask → END` โดย node `ask` อ่าน `question` จาก state และต้องเขียน `answer` กลับ ท้ายไฟล์ส่งคำถามเข้า graph แล้วพิมพ์คำตอบ
 
 ## โจทย์
-เติม 2 ช่องใน node `ask` แล้วรัน:
+เติมช่อง `// 👉 ข้อ N` (ตอนนี้เป็น `todo(N)`) ให้ครบ แล้วรัน:
 
-    pnpm test:lesson 12
+    pnpm lesson 12
 
-แล้วลองกับ LLM จริง `pnpm lesson 12`
+ถ้ายังเติมไม่ครบจะเห็น `ยังไม่ได้ทำข้อ N` บอกว่าช่องไหนค้างอยู่ เติมครบแล้วจะเห็นผลที่พิมพ์ออกมา และบรรทัด `✅` ทุกข้อ ถ้ามี `❌` ให้ดูคำใบ้ในวงเล็บท้ายบรรทัด
 
 ## คุณทำได้แล้ว
 - เขียน node ที่เรียก LLM และเขียนคำตอบลง state

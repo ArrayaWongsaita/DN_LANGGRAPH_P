@@ -112,3 +112,27 @@ describe("lintLessons", () => {
     expect(lintLessons(root).join("\n")).toContain("First_Test");
   });
 });
+
+describe("บทแบบไฟล์เดียว (ไม่มี *.test.ts)", () => {
+  function addSingleFile(root: string, name: string, files: string[]) {
+    const dir = join(root, "level-1-basics", name);
+    mkdirSync(join(dir, "solution"), { recursive: true });
+    writeFileSync(join(dir, "README.md"), "# บทเรียน");
+    for (const f of files) {
+      writeFileSync(join(dir, f), 'import { todo } from "@src/todo";\ntodo(1);\n');
+      writeFileSync(join(dir, "solution", f), "export {};\n");
+    }
+  }
+
+  test("ไฟล์เรียนไฟล์เดียวและไม่มี checker ผ่านได้", () => {
+    const root = makeRoot();
+    addSingleFile(root, "01-first", ["topic.ts"]);
+    expect(lintLessons(root)).toEqual([]);
+  });
+
+  test("ไม่มี checker และมีไฟล์เรียนหลายไฟล์ ถูกรายงาน", () => {
+    const root = makeRoot();
+    addSingleFile(root, "01-first", ["a.ts", "b.ts"]);
+    expect(lintLessons(root).join("\n")).toContain("single-file");
+  });
+});

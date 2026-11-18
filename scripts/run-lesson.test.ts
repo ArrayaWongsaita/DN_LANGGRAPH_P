@@ -26,3 +26,13 @@ test("pnpm lesson 0-01 โดยไม่มี key พิมพ์ข้อค�
   expect(result.stderr).toMatch(/GROQ_API_KEY/);
   expect(result.stderr).not.toMatch(/\n\s+at /);
 }, 30_000);
+
+// บทแบบไฟล์เดียว: ไม่มี run.ts ให้รัน .ts ไฟล์เดียวของบทแทน
+test("pnpm lesson รันไฟล์เดียวของบทเมื่อไม่มี run.ts", () => {
+  const result = spawnSync(process.execPath, ["--import", "tsx", "scripts/run-lesson.ts", "02"], {
+    encoding: "utf8",
+    env: { ...process.env, LESSONS_ROOT: "scripts/fixtures/run-lesson" },
+  });
+  expect(result.status).toBe(0);
+  expect(result.stdout).toContain("single-file ok");
+}, 30_000);
