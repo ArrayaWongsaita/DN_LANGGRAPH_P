@@ -2,7 +2,7 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is drafted in order; its real-LLM `run.ts` files have not all been run live yet. **Level 2** (2-01..2-27: memory, tools/agents, human-in-the-loop, streaming, reliability) is drafted; the rest is planned in `docs/superpowers/plans/2026-11-17-langgraph-course-level-2.md`. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is drafted; plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; a subset of its solutions has been run against real LLMs. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) is drafted and passes the solution/starter/lint/typecheck checks; design in `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md`. Checkers use fakes (no key, no database); 4-22 spawns a local MCP stdio server; 4-24 `pnpm lesson 4-24` needs `DATABASE_URL` for a real Postgres. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. `legacy/` holds an earlier build kept only for reuse.
+**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is drafted in order; its real-LLM `run.ts` files have not all been run live yet. **Level 2** (2-01..2-27: memory, tools/agents, human-in-the-loop, streaming, reliability) is drafted; the rest is planned in `docs/superpowers/plans/2026-11-17-langgraph-course-level-2.md`. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is drafted; plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; a subset of its solutions has been run against real LLMs. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) is drafted and passes the solution/starter/lint/typecheck checks; design in `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md`. Checkers use fakes (no key, no database); 4-22 spawns a local MCP stdio server; 4-24 `pnpm lesson 4-24` needs `DATABASE_URL` for a real Postgres. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. **Level 5** (5-01..5-23: real retrieval with pgvector and embeddings, event streaming, `langgraph dev` serving, checkpoint housekeeping/encryption, Functional API depth, SQL agent, MCP over HTTP, more middleware, context engineering, integration testing, Pregel runtime, capstone knowledge assistant) is drafted and passes the solution/starter/lint/typecheck checks; design in `docs/superpowers/plans/2026-11-17-langgraph-course-level-5-design.md`. Checkers need no key, database or network; `run.ts` files use the Docker Postgres, the embedding key and the model from `.env`. `legacy/` holds an earlier build kept only for reuse.
 
 ## Levels at a glance
 
@@ -13,8 +13,9 @@ A hands-on course for people who have **never built an LLM app**. Each lesson is
 | 2 | 27 | memory, tools/agents, human-in-the-loop, streaming, reliability | `2-01`..`2-27` |
 | 3 | 35 | advanced graphs, long-term memory, workflow and multi-agent patterns, middleware, capstone | `3-01`..`3-35` |
 | 4 | 26 | production: durability, testing/evals, official multi-agent patterns, safety, RAG, MCP, Postgres, capstone | `4-01`..`4-26` |
+| 5 | 23 | retrieval and serving: pgvector, streaming events, `langgraph dev`, SQL agent, MCP over HTTP, Pregel runtime, capstone | `5-01`..`5-23` |
 
-**Reading order:** want to see what an LLM call really is? Start at Level 0 (`0-01`). Want to go straight to LangChain/LangGraph? Start at Level 1 (`01`; lesson 02 covers `.env` setup). Levels build on each other: finish 1 → 2 → 3 → 4 in order.
+**Reading order:** want to see what an LLM call really is? Start at Level 0 (`0-01`). Want to go straight to LangChain/LangGraph? Start at Level 1 (`01`; lesson 02 covers `.env` setup). Levels build on each other: finish 1 → 2 → 3 → 4 → 5 in order.
 
 ## Quick start
 
@@ -28,6 +29,7 @@ pnpm test:lesson 0-01  # Level 0, lesson 01 (raw fetch)
 pnpm test:lesson 2-01  # Level 2, lesson 01 (chat memory)
 pnpm test:lesson 3-01  # Level 3, lesson 01 (input/output schemas)
 pnpm test:lesson 4-01  # Level 4, lesson 01 (node timeout)
+pnpm test:lesson 5-01  # Level 5, lesson 01 (embedding contract)
 ```
 
 Lesson checkers use a fake model, so they need **no key**. Only `pnpm lesson NN` (real LLM calls) does.
@@ -70,7 +72,7 @@ TypeScript syntax that may look odd (`!`, `as`, `??`): see `docs/typescript-note
 
 ## Database for real-Postgres lessons (Docker)
 
-Lessons that need a real database (4-24, later vector search) use the Postgres + pgvector container in `docker-compose.yml`:
+Lessons that need a real database (4-24 and Level 5) use the Postgres + pgvector container in `docker-compose.yml`:
 
 ```bash
 docker compose up -d --wait   # start (port 5434)
