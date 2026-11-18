@@ -67,3 +67,7 @@ Source for scope: `docs/notes/coverage-audit-2026-11-17.md`.
 ## Order of work
 
 Parts 18 → 19 → 21 → 22 → 20 → 23 → capstone. One commit per part. Part 20 stays late because it adds the CLI dependency and a server process.
+
+## Amendment (2026-11-18): lesson numbers follow build order
+
+The lint rule requires contiguous numbering, so ids are assigned in build order, not by the original part numbers. Final map: 5-01..5-06 retrieval (done), 5-07..5-09 event streaming (done), 5-10..5-12 depth (checkpoint housekeeping, serializer/encryption, Functional API depth), 5-13..5-14 SQL agent (safe SQL tool, SQL agent), 5-15..5-17 serving (`langgraph dev`, JS SDK, RemoteGraph), 5-18..5-22 remaining coverage (MCP over HTTP, prebuilt middleware, context engineering, integration testing, Pregel runtime), 5-23 capstone. Content is unchanged; only ids moved.
