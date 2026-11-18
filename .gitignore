@@ -4,3 +4,5 @@ node_modules
 .tmp-check
 .tmp-check-result.json
 *.db
+.tmp-spike/
+.tmp-run/
