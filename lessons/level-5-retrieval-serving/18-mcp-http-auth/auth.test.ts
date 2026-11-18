@@ -101,3 +101,32 @@ test("describeMcpError: ข้อความที่ผู้ใช้อ่�
   expect(describeMcpError(new Error("อื่น ๆ"))).toBe("เรียกเซิร์ฟเวอร์ MCP ไม่สำเร็จ");
   expect(describeMcpError("string")).toBe("เรียกเซิร์ฟเวอร์ MCP ไม่สำเร็จ");
 });
+
+// ---- proposed kill tests (18) ----
+import * as nodeCrypto from "node:crypto";
+vi.mock("node:crypto", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:crypto")>();
+  return { ...actual, timingSafeEqual: vi.fn(actual.timingSafeEqual) };
+});
+
+test("[K18abc] safeEqual compares sha256 digests with timingSafeEqual; authenticate checks every token", () => {
+  const spy = vi.mocked(nodeCrypto.timingSafeEqual);
+  spy.mockClear();
+  expect(safeEqual("abc", "abcd")).toBe(false);
+  expect(spy).toHaveBeenCalledTimes(1); // no === and no length short-circuit
+  expect((spy.mock.calls[0][0] as Buffer).length).toBe(32); // sha256 digest, not raw bytes
+  spy.mockClear();
+  const three = { alice: "tok-alice-1", bob: "tok-bob-2", carol: "tok-carol-3" };
+  expect(authenticate("Bearer tok-alice-1", three)).toEqual({ ok: true, client: "alice" });
+  expect(spy).toHaveBeenCalledTimes(3); // no early break on first match
+});
+
+test("[K18d] look-alike of 127.0.0.1 is not localhost", () => {
+  expect(() => buildMcpConfig([{ name: "r", url: "http://127a0b0c1/mcp", token: "t" }])).toThrow();
+});
+
+test("[K18e] bare http://localhost / http://127.0.0.1 (no port, no path) are local", () => {
+  for (const url of ["http://localhost", "http://127.0.0.1"]) {
+    expect(() => buildMcpConfig([{ name: "l", url, token: "t" }])).not.toThrow();
+  }
+});

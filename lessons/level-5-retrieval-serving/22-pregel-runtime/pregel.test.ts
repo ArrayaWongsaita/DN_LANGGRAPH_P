@@ -73,3 +73,16 @@ test("channel จริงของ graph: ฟิลด์ของเราม�
   expect(userChannels(names)).toEqual(["log"]);
   expect(names.length).toBeGreaterThan(1);
 });
+
+// ---- proposed kill tests (22) ----
+test("[K22c] groupSupersteps sorts steps numerically (10 after 2)", () => {
+  const events = [
+    { type: "task", step: 10, payload: { name: "late" } },
+    { type: "task", step: 2, payload: { name: "early" } },
+  ];
+  expect(groupSupersteps(events).map((s) => s.step)).toEqual([2, 10]);
+});
+
+test("[K22e] userChannels only strips internal PREFIXES", () => {
+  expect(userChannels(["notes__old", "restart:flag"])).toEqual(["notes__old", "restart:flag"]);
+});

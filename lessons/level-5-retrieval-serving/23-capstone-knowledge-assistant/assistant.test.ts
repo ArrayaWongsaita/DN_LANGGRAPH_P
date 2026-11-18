@@ -211,3 +211,58 @@ test("assistant: มี checkpointer → เธรดเดียวกันจ
   expect((await app.getState({ configurable: { thread_id: "t1" } })).values.question).toBe("ลืมรหัสผ่าน");
   expect((await app.getState({ configurable: { thread_id: "t2" } })).values.question).toBe("ลาป่วยกี่วัน");
 });
+
+// ---- proposed kill tests (23) ----
+test("[K23a] splitChunks counts the \\n\\n separator toward maxChars", () => {
+  expect(splitChunks("aaa\n\nbbb", 7)).toEqual(["aaa", "bbb"]);
+  expect(splitChunks("aaa\n\nbbb", 8)).toEqual(["aaa\n\nbbb"]);
+});
+
+test("[K23b] syncDoc does not call kb.remove when nothing was removed", async () => {
+  const kb = new FakeKb();
+  const remove = vi.spyOn(kb, "remove");
+  const doc = { docId: "d", source: "d.md", text: "ก\n\nข" };
+  await syncDoc(kb, doc, 1);
+  await syncDoc(kb, doc, 1);
+  expect(remove).not.toHaveBeenCalled();
+});
+
+test("[K23c] retrieve runs vector and keyword searches concurrently", async () => {
+  const kb = await seeded();
+  let inFlight = 0;
+  let peak = 0;
+  for (const m of ["vectorSearch", "keywordSearch"] as const) {
+    const orig = kb[m].bind(kb);
+    kb[m] = async (q: string, k: number) => {
+      inFlight++;
+      peak = Math.max(peak, inFlight);
+      await new Promise((r) => setTimeout(r, 5));
+      inFlight--;
+      return orig(q, k);
+    };
+  }
+  await retrieve(kb, "รหัสผ่าน", { candidates: 5, topN: 5 });
+  expect(peak).toBe(2);
+});
+
+test("[K23d] retrieve orders by RRF, not vector-then-keyword", async () => {
+  const h = (id: string): Hit => ({ id, source: `${id}.md`, text: id });
+  const kb = new FakeKb();
+  kb.vectorSearch = async () => [h("A"), h("B")];
+  kb.keywordSearch = async () => [h("B")];
+  expect((await retrieve(kb, "q", { candidates: 5, topN: 5 })).map((x) => x.id)).toEqual(["B", "A"]);
+});
+
+test("[K23e] guardQuestion strips U+2060 and U+FEFF inside the text too", () => {
+  for (const zw of ["⁠", "﻿"]) {
+    expect(guardQuestion(`ช่วยเจาะ${zw}ระบบ`)).toEqual({ ok: false, reply: "ขออภัย ช่วยเรื่องนี้ไม่ได้" });
+  }
+});
+
+test("[K23f] SECRET is masked even when the sources are fake (checked first)", () => {
+  expect(finalizeAnswer({ answer: `รหัสคือ ${SECRET}`, sources: ["ghost.md"] }, hits)).toEqual({
+    reply: "[ข้อมูลถูกปิดบัง]",
+    sources: [],
+    status: "no-answer",
+  });
+});

@@ -9,7 +9,7 @@ export interface LiveStatus {
 export function liveStatus(env: Record<string, string | undefined>): LiveStatus {
   if (env.RUN_LIVE !== "1") return { enabled: false, reason: "ข้าม: ตั้ง RUN_LIVE=1 เพื่อเปิด" };
   const provider = env.LLM_PROVIDER || "groq";
-  const keyVar = KEY_VARS[provider];
+  const keyVar = Object.hasOwn(KEY_VARS, provider) ? KEY_VARS[provider] : undefined;
   if (!keyVar) return { enabled: false, reason: `ข้าม: ไม่รู้จัก provider ${provider}` };
   if ((env[keyVar] ?? "").trim().length < MIN_KEY_LENGTH) return { enabled: false, reason: `ข้าม: ไม่มี ${keyVar}` };
   return { enabled: true, reason: `เปิด: ${provider}` };

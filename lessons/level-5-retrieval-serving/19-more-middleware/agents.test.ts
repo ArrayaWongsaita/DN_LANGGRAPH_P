@@ -91,3 +91,8 @@ test("toolsToEmulate: จำลองทุก tool ที่ไม่ได้�
   expect(toolsToEmulate(all, ["search", "email", "weather", "pay"])).toEqual([]);
   expect(toolsToEmulate([{ name: "ใหม่" }], ["ชื่ออื่น"])).toEqual(["ใหม่"]);
 });
+
+// ---- proposed kill tests (19) ----
+test("[K19d] toolsToEmulate matches exact names only (prefix look-alikes are still emulated)", () => {
+  expect(toolsToEmulate([{ name: "search_delete" }, { name: "search" }], ["search"])).toEqual(["search_delete"]);
+});

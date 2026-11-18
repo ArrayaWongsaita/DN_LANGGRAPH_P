@@ -11,7 +11,7 @@ export interface LiveStatus {
 export function liveStatus(env: Record<string, string | undefined>): LiveStatus {
   // 👉 ข้อ 1: ตรวจตามลำดับ:
   //   env.RUN_LIVE !== "1" → { enabled: false, reason: "ข้าม: ตั้ง RUN_LIVE=1 เพื่อเปิด" }
-  //   provider = (env.LLM_PROVIDER || "groq") ไม่อยู่ใน KEY_VARS → { enabled: false, reason: `ข้าม: ไม่รู้จัก provider ${provider}` }
+  //   provider = (env.LLM_PROVIDER || "groq") ไม่อยู่ใน KEY_VARS (ตรวจด้วย Object.hasOwn) → { enabled: false, reason: `ข้าม: ไม่รู้จัก provider ${provider}` }
   //   key ของ provider (ตัวแปรชื่อใน KEY_VARS) ยาวน้อยกว่า MIN_KEY_LENGTH หลัง trim → { enabled: false, reason: `ข้าม: ไม่มี ${ชื่อตัวแปร}` }
   //   ผ่านหมด → { enabled: true, reason: `เปิด: ${provider}` }
   return todo(1);

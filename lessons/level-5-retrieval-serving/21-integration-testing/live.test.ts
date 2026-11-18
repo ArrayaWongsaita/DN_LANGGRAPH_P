@@ -128,3 +128,43 @@ test("createBudget: ใช้ได้ตามงบแล้วหยุด", 
   expect(() => budget.spend()).toThrow("เกินงบการเรียกจริง (2 ครั้ง)");
   expect(budget.used).toBe(2);
 });
+
+// ---- proposed kill tests (21) ----
+test("[K21a] key of exactly MIN_KEY_LENGTH (10) is accepted", () => {
+  expect(liveStatus({ RUN_LIVE: "1", GROQ_API_KEY: "k".repeat(10) }).enabled).toBe(true);
+});
+
+test("[K21b] empty LLM_PROVIDER falls back to groq (||, not ??)", () => {
+  expect(liveStatus({ RUN_LIVE: "1", LLM_PROVIDER: "", GROQ_API_KEY: KEY })).toEqual({ enabled: true, reason: "เปิด: groq" });
+});
+
+test("[K21c] normalize removes the whole U+200B..U+200D range", () => {
+  expect(normalize("a‌b‍c")).toBe("abc");
+});
+
+test("[K21d] normalize applies NFC (decomposed == precomposed)", () => {
+  expect(normalize("Café")).toBe(normalize("café"));
+  expect(mentions("Café เปิดแล้ว", ["café"])).toBe(true);
+});
+
+test("[K21e] status 500 is transient (>=, not >)", () => {
+  expect(classifyError(Object.assign(new Error("x"), { status: 500 }))).toBe("transient");
+});
+
+test("[K21f] eventually rejects right after the final attempt (no trailing delay)", async () => {
+  let lastCall = 0;
+  await expect(
+    eventually(
+      async () => {
+        lastCall = Date.now();
+        throw new Error("x");
+      },
+      { attempts: 2, delayMs: 150 },
+    ),
+  ).rejects.toThrow();
+  expect(Date.now() - lastCall).toBeLessThan(100);
+});
+
+test("liveStatus: ชื่อ provider ที่ตรงกับคุณสมบัติของ Object (toString) ต้องถูกมองว่าไม่รู้จัก", () => {
+  expect(liveStatus({ RUN_LIVE: "1", LLM_PROVIDER: "toString", GROQ_API_KEY: KEY })).toEqual({ enabled: false, reason: "ข้าม: ไม่รู้จัก provider toString" });
+});

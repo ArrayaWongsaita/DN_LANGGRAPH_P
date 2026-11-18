@@ -84,3 +84,17 @@ test("agent: ชื่อที่เป็น prompt injection ถูกทำ�
   expect(sys).not.toContain("<");
   expect(sys.split("\n").filter((l) => l.startsWith("SYSTEM:"))).toHaveLength(0);
 });
+
+// ---- proposed kill tests (20) ----
+test("[K20b] sanitizeName cleans first, truncates last", () => {
+  expect(sanitizeName("     Alice", 5)).toBe("Alice");
+  expect(sanitizeName("{{{{{{{{{{Alice", 5)).toBe("Alice");
+});
+
+test("[K20c] sanitizeName replaces every C0 control char and DEL, not only CR/LF", () => {
+  expect(sanitizeName("a\u0000b\u001bc\u007fd")).toBe("a b c d");
+});
+
+test("[K20e] buildSystemPrompt applies the default 30-char name cap", () => {
+  expect(buildSystemPrompt({ name: "ก".repeat(100) })).toContain(`ผู้ใช้ชื่อ: ${"ก".repeat(30)}\n`);
+});
