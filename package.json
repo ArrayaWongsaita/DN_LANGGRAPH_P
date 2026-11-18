@@ -33,6 +33,8 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@langchain/langgraph-cli": "^1.8.0",
+    "@langchain/langgraph-sdk": "^1.17.0",
     "@modelcontextprotocol/server": "2.4.0",
     "@types/express": "^5.0.6",
     "@types/node": "22.20.5",
