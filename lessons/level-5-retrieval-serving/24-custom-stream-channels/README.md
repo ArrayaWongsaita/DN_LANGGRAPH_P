@@ -19,7 +19,7 @@ const graph = builder.compile({
 - `StreamChannel.local()` (ไม่ต้องตั้งชื่อ) ใช้ในโปรเซสเท่านั้น ไม่ถูกส่งไปที่ client
 - ต้องใช้ `@langchain/langgraph` ≥ 1.3.1
 
-เรื่องที่ต้องระวังจากของจริง: event `tasks` บอกแค่ "เริ่ม" (มี `input`) และ "จบ" (มี `result`) เมื่อ node ล้ม **ไม่มี event `tasks` ที่มี `error`** มีแค่ `lifecycle` `failed` ของทั้ง graph (พร้อมข้อความ error) ดังนั้น transformer ต้องจำว่า node ไหนกำลังรันอยู่ แล้วทำเครื่องหมาย error ให้ node เหล่านั้นเมื่อเห็น `failed`
+เรื่องที่ต้องระวังจากของจริง: event `tasks` บอกแค่ "เริ่ม" (มี `input`) และ "จบ" (มี `result`) เมื่อ node ล้ม **บางกรณีไม่มี event `tasks` ที่มี `error`** (เช่น node ที่สองเป็นต้นไป) มีแค่ `lifecycle` `failed` ของทั้ง graph (พร้อมข้อความ error) ดังนั้น transformer ต้องจำว่า node ไหนกำลังรันอยู่ แล้วทำเครื่องหมาย error ให้ node เหล่านั้นเมื่อเห็น `failed`
 
 ฝั่ง client (บท 5-25) ในเฟรมเวิร์กต่าง ๆ มี `useExtension(stream, "node-status")` สำหรับค่าล่าสุด และ `useChannel(stream, ["custom:node-status"])` สำหรับประวัติ (แพ็กเกจ UI เหล่านั้นเป็นของ React/Vue/Svelte/Angular คอร์สนี้ไม่รัน แต่หลักการเดียวกัน)
 

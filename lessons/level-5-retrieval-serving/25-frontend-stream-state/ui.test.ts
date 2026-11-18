@@ -128,3 +128,44 @@ test("ต่อกับสตรีมจริงของ LangGraph: UI จ�
   expect(ui.nodes.map((n) => `${n.node}:${n.status}`)).toEqual(["a:complete", "b:complete"]);
   expect(progressPercent(ui.nodes, 2)).toBe(100);
 });
+
+
+test("K-m2: root lifecycle events we do not handle (interrupted/started/no data) return the same object", () => {
+  const s = applyEvents([ev("lifecycle", { event: "running" }), node("a", "running")]);
+  for (const e of [ev("lifecycle", { event: "interrupted" }), ev("lifecycle", { event: "started" }), ev("lifecycle", undefined)]) {
+    expect(reduceUi(s, e)).toBe(s);
+  }
+});
+
+test("K-m3: appending a new node does not mutate the previous state's nodes array", () => {
+  const before = applyEvents([node("a", "running")]);
+  const after = reduceUi(before, node("b", "running"));
+  expect(before.nodes).toEqual([{ node: "a", status: "running" }]);
+  expect(after.nodes).not.toBe(before.nodes);
+  expect(after.nodes.map((n) => n.node)).toEqual(["a", "b"]);
+});
+
+test("K-m4: a later status replaces the node view entirely (old error does not stick)", () => {
+  const s = applyEvents([node("a", "error", "พัง"), node("a", "running")]);
+  expect(s.nodes).toEqual([{ node: "a", status: "running" }]);
+});
+
+test("K-m5: values replaces the whole snapshot (keys missing from the new snapshot disappear)", () => {
+  const s = applyEvents([ev("values", { a: 1, b: 2 }), ev("values", { b: 3 })]);
+  expect(s.values).toEqual({ b: 3 });
+});
+
+test("K-m6: progressPercent rounds to nearest, not down (2/3 -> 67)", () => {
+  const nodes = [
+    { node: "a", status: "complete" as const },
+    { node: "b", status: "complete" as const },
+    { node: "c", status: "running" as const },
+  ];
+  expect(progressPercent(nodes, 3)).toBe(67);
+});
+
+test("K-m8: complete text is returned byte-for-byte, including trailing whitespace/newlines", () => {
+  for (const ok of ["บรรทัดแรก\n", "จบด้วยช่องว่าง ", "**หนา**\n\n", "```ts\nx\n```\n"]) {
+    expect(closeMarkdown(ok)).toBe(ok);
+  }
+});
