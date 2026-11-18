@@ -18,14 +18,14 @@ import { z } from "zod";
 // ชื่อ provider ที่ใช้ได้ -> ชื่อตัวแปรที่เก็บ API key ของ provider นั้น
 export const PROVIDER_KEY_VARS = {
   groq: "GROQ_API_KEY",
-  ollama: "OLLAMA_API_KEY",
+  google: "GOOGLE_API_KEY",
+  deepseek: "DEEPSEEK_API_KEY",
   opencode: "OPENCODE_GO_KEY",
 } as const;
 
 export type ProviderName = keyof typeof PROVIDER_KEY_VARS;
 const PROVIDER_NAMES = Object.keys(PROVIDER_KEY_VARS) as [ProviderName, ...ProviderName[]];
 
-const OLLAMA_DEFAULT_URL = "https://ollama.com";
 const MIN_KEY_LENGTH = 10;
 
 // ค่าว่างหรือมีแต่ช่องว่าง = "ไม่ได้ตั้ง" (ให้ใช้ค่าเริ่มต้น)
@@ -41,20 +41,13 @@ const envSchema = z
     ),
     LLM_MODEL: z.preprocess(blankToUndefined, z.string().trim().default("")),
     GROQ_API_KEY: z.string().trim().default(""),
-    OLLAMA_API_KEY: z.string().trim().default(""),
     OPENCODE_GO_KEY: z.string().trim().default(""),
+    DEEPSEEK_API_KEY: z.string().trim().default(""),
     DATABASE_URL: z.string().trim().default(""), // ใช้เฉพาะบทที่ต้องมีฐานข้อมูลจริง (4-24 และ Level 5)
-    // embedding (Level 5): key ตรวจตอนเรียก getEmbeddings() เท่านั้น บทอื่นไม่ต้องมี
+    // key ของ Google ใช้ได้ทั้งเป็น LLM_PROVIDER=google และ embedding (Level 5)
     GOOGLE_API_KEY: z.string().trim().default(""),
     EMBEDDING_MODEL: z.preprocess(blankToUndefined, z.string().trim().default("gemini-embedding-001")),
     EMBEDDING_DIMENSIONS: z.preprocess(blankToUndefined, z.coerce.number().int().positive().default(768)),
-    OLLAMA_BASE_URL: z
-      .string()
-      .optional()
-      .transform((v) => ((v ?? "").trim() || OLLAMA_DEFAULT_URL).replace(/\/+$/, ""))
-      .refine((v) => !v.endsWith("/api"), {
-        message: `ต้องเป็นโดเมนเปล่า ๆ เช่น ${OLLAMA_DEFAULT_URL} ห้ามต่อท้ายด้วย /api (ไม่งั้นจะเจอ error 404)`,
-      }),
   })
   // key ที่ต้องมี ขึ้นกับ provider ที่เลือก (provider อื่นไม่ต้องมี key)
   .superRefine((value, ctx) => {

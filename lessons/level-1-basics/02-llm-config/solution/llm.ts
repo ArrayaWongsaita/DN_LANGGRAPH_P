@@ -10,15 +10,23 @@ export const llm = new ChatGroq({
   apiKey: env.GROQ_API_KEY,
 });
 
-// ── ตัวเลือก B: Ollama ──
-// import { ChatOllama } from "@langchain/ollama";
-// export const llm = new ChatOllama({
-//   model: env.LLM_MODEL || "gpt-oss:120b",
-//   baseUrl: env.OLLAMA_BASE_URL,
-//   headers: { Authorization: `Bearer ${env.OLLAMA_API_KEY}` },
+// ── ตัวเลือก B: Google (Gemini) ──
+// import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+// export const llm = new ChatGoogleGenerativeAI({
+//   model: env.LLM_MODEL || "gemini-flash-lite-latest",
+//   apiKey: env.GOOGLE_API_KEY,
 // });
 
-// ── ตัวเลือก C: OpenCode Go (ใช้ ChatOpenAI เพราะเป็นรูปแบบ OpenAI-compatible) ──
+// ── ตัวเลือก C: DeepSeek (ใช้ ChatOpenAI ชี้ไปที่ baseURL ของ DeepSeek เพราะเป็นรูปแบบ OpenAI-compatible) ──
+// import { ChatOpenAI } from "@langchain/openai";
+// export const llm = new ChatOpenAI({
+//   model: env.LLM_MODEL || "deepseek-flash",
+//   apiKey: env.DEEPSEEK_API_KEY,
+//   configuration: { baseURL: "https://api.deepseek.com" },
+//   modelKwargs: { thinking: { type: "disabled" } }, // ปิดโหมดคิด ไม่งั้นบทที่ใช้ tool จะ error 400
+// });
+
+// ── ตัวเลือก D: OpenCode Go (ใช้ ChatOpenAI เพราะเป็นรูปแบบ OpenAI-compatible) ──
 // import { randomUUID } from "node:crypto";
 // import { ChatOpenAI } from "@langchain/openai";
 // export const llm = new ChatOpenAI({

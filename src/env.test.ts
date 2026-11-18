@@ -35,36 +35,34 @@ describe("parseEnv", () => {
     expect(() => parseEnv({ GROQ_API_KEY: "short" })).toThrow(/GROQ_API_KEY/);
   });
 
-  test("ต้องการ key ของ provider ที่เลือกเท่านั้น: ollama ไม่ต้องมี GROQ_API_KEY", () => {
-    const result = parseEnv({ LLM_PROVIDER: "ollama", OLLAMA_API_KEY: KEY });
-    expect(result.LLM_PROVIDER).toBe("ollama");
-    expect(() => parseEnv({ LLM_PROVIDER: "ollama", GROQ_API_KEY: KEY })).toThrow(/OLLAMA_API_KEY/);
+  test("ต้องการ key ของ provider ที่เลือกเท่านั้น: google ไม่ต้องมี GROQ_API_KEY", () => {
+    const result = parseEnv({ LLM_PROVIDER: "google", GOOGLE_API_KEY: KEY });
+    expect(result.LLM_PROVIDER).toBe("google");
+    expect(() => parseEnv({ LLM_PROVIDER: "google", GROQ_API_KEY: KEY })).toThrow(/GOOGLE_API_KEY/);
+  });
+
+  test("deepseek ต้องมี DEEPSEEK_API_KEY", () => {
+    expect(parseEnv({ LLM_PROVIDER: "deepseek", DEEPSEEK_API_KEY: KEY }).LLM_PROVIDER).toBe("deepseek");
+    expect(() => parseEnv({ LLM_PROVIDER: "deepseek", GROQ_API_KEY: KEY })).toThrow(/DEEPSEEK_API_KEY/);
   });
 
   test("provider ที่ไม่รู้จัก: ข้อความบอกรายชื่อที่ใช้ได้", () => {
     const run = () => parseEnv({ LLM_PROVIDER: "nope", GROQ_API_KEY: KEY });
     expect(run).toThrow(/LLM_PROVIDER/);
     expect(run).toThrow(/groq/);
-    expect(run).toThrow(/ollama/);
+    expect(run).toThrow(/google/);
   });
 
   test("รวมทุกปัญหาไว้ในข้อความเดียว (ไม่ใช่ทีละอัน)", () => {
-    const run = () => parseEnv({ LLM_PROVIDER: "ollama", OLLAMA_BASE_URL: "https://ollama.com/api" });
-    expect(run).toThrow(/OLLAMA_API_KEY/);
-    expect(run).toThrow(/OLLAMA_BASE_URL/);
-  });
-
-  test("OLLAMA_BASE_URL: ค่าเริ่มต้น https://ollama.com, ตัด / ท้าย, ปฏิเสธ /api ท้าย URL", () => {
-    const base = { LLM_PROVIDER: "ollama", OLLAMA_API_KEY: KEY };
-    expect(parseEnv(base).OLLAMA_BASE_URL).toBe("https://ollama.com");
-    expect(parseEnv({ ...base, OLLAMA_BASE_URL: "https://example.test/" }).OLLAMA_BASE_URL).toBe("https://example.test");
-    expect(() => parseEnv({ ...base, OLLAMA_BASE_URL: "https://ollama.com/api" })).toThrow(/\/api/);
+    const run = () => parseEnv({ LLM_PROVIDER: "nope", EMBEDDING_DIMENSIONS: "abc" });
+    expect(run).toThrow(/LLM_PROVIDER/);
+    expect(run).toThrow(/EMBEDDING_DIMENSIONS/);
   });
 });
 
 describe("getEnv / env", () => {
   beforeEach(() => {
-    for (const v of ["LLM_PROVIDER", "LLM_MODEL", "GROQ_API_KEY", "OLLAMA_API_KEY", "OLLAMA_BASE_URL"]) vi.stubEnv(v, "");
+    for (const v of ["LLM_PROVIDER", "LLM_MODEL", "GROQ_API_KEY", "GOOGLE_API_KEY", "DEEPSEEK_API_KEY"]) vi.stubEnv(v, "");
     resetEnv();
   });
   afterEach(() => {

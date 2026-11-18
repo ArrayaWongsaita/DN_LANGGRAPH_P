@@ -2,14 +2,14 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** Level 1 draft (lessons 01-19) is ready for review; the real-LLM `run.ts` files have not all been run live yet. **Level 0** (raw `fetch`, lessons 0-01..0-06) is drafted in order; its real-LLM `run.ts` files have not all been run live yet. **Level 2** (2-01..2-27: memory, tools/agents, human-in-the-loop, streaming, reliability) is drafted; the rest is planned in `docs/superpowers/plans/2026-11-17-langgraph-course-level-2.md`. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is drafted; plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; a subset of its solutions has been run against real LLMs. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) is drafted and passes the solution/starter/lint/typecheck checks; design in `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md`. Checkers use fakes (no key, no database); 4-22 spawns a local MCP stdio server; 4-24 `pnpm lesson 4-24` needs `DATABASE_URL` for a real Postgres. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. **Level 5** (5-01..5-25: real retrieval with pgvector and embeddings, event streaming, `langgraph dev` serving, checkpoint housekeeping/encryption, Functional API depth, SQL agent, MCP over HTTP, more middleware, context engineering, integration testing, Pregel runtime, capstone knowledge assistant, custom stream channels and framework-agnostic frontend stream state) is drafted and passes the solution/starter/lint/typecheck checks; design in `docs/superpowers/plans/2026-11-17-langgraph-course-level-5-design.md`. Checkers need no key, database or network; `run.ts` files use the Docker Postgres, the embedding key and the model from `.env`. `legacy/` holds an earlier build kept only for reuse.
+**Status:** Level 1 (lessons 01-20, single-file format) is ready for review; every solution was run against the real model. **Level 0** (raw `fetch`, lessons 0-01..0-06) is drafted in order; its real-LLM `run.ts` files have not all been run live yet. **Level 2** (2-01..2-27: memory, tools/agents, human-in-the-loop, streaming, reliability) is drafted; the rest is planned in `docs/superpowers/plans/2026-11-17-langgraph-course-level-2.md`. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is drafted; plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; a subset of its solutions has been run against real LLMs. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) is drafted and passes the solution/starter/lint/typecheck checks; design in `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md`. Checkers use fakes (no key, no database); 4-22 spawns a local MCP stdio server; 4-24 `pnpm lesson 4-24` needs `DATABASE_URL` for a real Postgres. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. **Level 5** (5-01..5-25: real retrieval with pgvector and embeddings, event streaming, `langgraph dev` serving, checkpoint housekeeping/encryption, Functional API depth, SQL agent, MCP over HTTP, more middleware, context engineering, integration testing, Pregel runtime, capstone knowledge assistant, custom stream channels and framework-agnostic frontend stream state) is drafted and passes the solution/starter/lint/typecheck checks; design in `docs/superpowers/plans/2026-11-17-langgraph-course-level-5-design.md`. Checkers need no key, database or network; `run.ts` files use the Docker Postgres, the embedding key and the model from `.env`. `legacy/` holds an earlier build kept only for reuse.
 
 ## Levels at a glance
 
 | Level | Lessons | Focus | Lesson ids |
 |---|---|---|---|
 | 0 | 6 | what an LLM call really is (raw `fetch`) | `0-01`..`0-06` |
-| 1 | 19 | LangChain + LangGraph basics, mini assistant | `01`..`19` |
+| 1 | 20 | LangChain + LangGraph basics, mini assistant | `01`..`20` |
 | 2 | 27 | memory, tools/agents, human-in-the-loop, streaming, reliability | `2-01`..`2-27` |
 | 3 | 35 | advanced graphs, long-term memory, workflow and multi-agent patterns, middleware, capstone | `3-01`..`3-35` |
 | 4 | 26 | production: durability, testing/evals, official multi-agent patterns, safety, RAG, MCP, Postgres, capstone | `4-01`..`4-26` |
@@ -73,13 +73,14 @@ Level 1 picks the provider in `lessons/level-1-basics/02-llm-config/llm.ts` (unc
 
 | Variable | Meaning |
 |---|---|
-| `LLM_PROVIDER` | `groq` (default), `opencode` or `ollama`. Add another with one table row in `src/llm.ts` |
+| `LLM_PROVIDER` | `groq` (default), `google`, `deepseek` or `opencode`. Add another with one table row in `src/llm.ts` |
 | `LLM_MODEL` | model name; empty = the provider's default |
 | `GROQ_API_KEY` | key for the `groq` provider (each learner uses their own; at least 10 characters; only the selected provider's key is required) |
+| `DEEPSEEK_API_KEY` | key for the `deepseek` provider (DeepSeek API through its OpenAI-compatible endpoint, default model `deepseek-flash`) |
 | `OPENCODE_GO_KEY` | key for the `opencode` provider (OpenCode Go, default model `deepseek-v4.1-flash`) |
-| `OLLAMA_API_KEY`, `OLLAMA_BASE_URL` | for the `ollama` provider (base URL has **no** `/api` suffix) |
+| `GOOGLE_API_KEY` | key for the `google` provider (Gemini, default model `gemini-flash-lite-latest`) and for embeddings in Level 5. The free tier is limited to about 15 requests per minute, so run lessons one at a time |
 
-Note: Level 0 lessons (raw `fetch`) send only `Authorization` and `Content-Type`, so they work with `groq` and `ollama`; the `opencode` provider additionally needs an `x-opencode-session` header that only `getLLM()` adds (Levels 1-3).
+Note: Level 0 lessons (raw `fetch`) send only `Authorization` and `Content-Type`, so they work with `groq`, `google` (Google's OpenAI-compatible endpoint) and `deepseek`; the `opencode` provider additionally needs an `x-opencode-session` header that only `getLLM()` adds (Levels 1-3).
 
 After changing provider or model, run `pnpm check:llm`. It makes 4 live calls and reports whether basic calls, streaming, tool calling and structured output work. Findings for tested models are in `docs/notes/provider-findings.md`.
 

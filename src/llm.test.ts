@@ -2,7 +2,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { EnvError, resetEnv } from "./env";
 import { describeProvider, getLLM } from "./llm";
 
-const VARS = ["LLM_PROVIDER", "LLM_MODEL", "GROQ_API_KEY", "OLLAMA_API_KEY", "OLLAMA_BASE_URL"];
+const VARS = ["LLM_PROVIDER", "LLM_MODEL", "GROQ_API_KEY", "GOOGLE_API_KEY", "DEEPSEEK_API_KEY"];
 const KEY = "test-key-0123456789";
 
 // ตั้งทุกตัวแปรเป็นค่าว่างก่อนทุก test เพื่อไม่ให้ .env จริงของผู้เรียนมีผลกับ test
@@ -22,14 +22,14 @@ describe("getLLM", () => {
     expect(() => getLLM()).toThrow(/GROQ_API_KEY/);
   });
 
-  test("LLM_PROVIDER=ollama ไม่มี key ต้องพูดถึง OLLAMA_API_KEY", () => {
-    vi.stubEnv("LLM_PROVIDER", "ollama");
-    expect(() => getLLM()).toThrow(/OLLAMA_API_KEY/);
+  test("LLM_PROVIDER=google ไม่มี key ต้องพูดถึง GOOGLE_API_KEY", () => {
+    vi.stubEnv("LLM_PROVIDER", "google");
+    expect(() => getLLM()).toThrow(/GOOGLE_API_KEY/);
   });
 
   test("provider ที่ไม่รู้จักต้อง throw ข้อความที่ระบุรายชื่อที่ใช้ได้", () => {
     vi.stubEnv("LLM_PROVIDER", "nope");
-    expect(() => getLLM()).toThrow(/groq.*ollama|ollama.*groq/s);
+    expect(() => getLLM()).toThrow(/groq.*google|google.*groq/s);
   });
 
   test("groq ที่มี key คืน BaseChatModel", () => {
@@ -37,20 +37,18 @@ describe("getLLM", () => {
     expect(getLLM()).toBeInstanceOf(BaseChatModel);
   });
 
-  test("ollama ที่มี key คืน BaseChatModel", () => {
-    vi.stubEnv("LLM_PROVIDER", "ollama");
-    vi.stubEnv("OLLAMA_API_KEY", KEY);
+  test("google ที่มี key คืน BaseChatModel", () => {
+    vi.stubEnv("LLM_PROVIDER", "google");
+    vi.stubEnv("GOOGLE_API_KEY", KEY);
     expect(getLLM()).toBeInstanceOf(BaseChatModel);
   });
 
-  test("ollama ปฏิเสธ OLLAMA_BASE_URL ที่ลงท้ายด้วย /api แต่รับ / ท้าย URL", () => {
-    vi.stubEnv("LLM_PROVIDER", "ollama");
-    vi.stubEnv("OLLAMA_API_KEY", KEY);
-    vi.stubEnv("OLLAMA_BASE_URL", "https://ollama.com/api");
-    expect(() => getLLM()).toThrow(/\/api/);
-    vi.stubEnv("OLLAMA_BASE_URL", "https://ollama.com/");
+  test("deepseek ที่มี key คืน BaseChatModel และไม่มี key ต้องพูดถึง DEEPSEEK_API_KEY", () => {
+    vi.stubEnv("LLM_PROVIDER", "deepseek");
+    expect(() => getLLM()).toThrow(/DEEPSEEK_API_KEY/);
+    vi.stubEnv("DEEPSEEK_API_KEY", KEY);
     resetEnv();
-    expect(() => getLLM()).not.toThrow();
+    expect(getLLM({ temperature: 0 })).toBeInstanceOf(BaseChatModel);
   });
 
   test("รับ option temperature", () => {
@@ -93,18 +91,23 @@ describe("describeProvider", () => {
     expect(describeProvider().chatUrl).toBe("https://api.groq.com/openai/v1/chat/completions");
   });
 
-  test("chatUrl ของ ollama ใช้ /v1/chat/completions ต่อจากโดเมนเริ่มต้น", () => {
-    vi.stubEnv("LLM_PROVIDER", "ollama");
-    vi.stubEnv("OLLAMA_API_KEY", KEY);
+  test("deepseek: โมเดลเริ่มต้น deepseek-flash และ chatUrl ชี้ไปที่ api.deepseek.com", () => {
+    vi.stubEnv("LLM_PROVIDER", "deepseek");
+    vi.stubEnv("DEEPSEEK_API_KEY", KEY);
     resetEnv();
-    expect(describeProvider().chatUrl).toBe("https://ollama.com/v1/chat/completions");
+    const info = describeProvider();
+    expect(info.keyVar).toBe("DEEPSEEK_API_KEY");
+    expect(info.model).toBe("deepseek-flash");
+    expect(info.chatUrl).toBe("https://api.deepseek.com/chat/completions");
   });
 
-  test("chatUrl ของ ollama ใช้ OLLAMA_BASE_URL และตัด / ท้ายออก", () => {
-    vi.stubEnv("LLM_PROVIDER", "ollama");
-    vi.stubEnv("OLLAMA_API_KEY", KEY);
-    vi.stubEnv("OLLAMA_BASE_URL", "https://example.test/");
+  test("google: โมเดลเริ่มต้น gemini-flash-lite-latest และ chatUrl เป็น endpoint แบบ OpenAI-compatible", () => {
+    vi.stubEnv("LLM_PROVIDER", "google");
+    vi.stubEnv("GOOGLE_API_KEY", KEY);
     resetEnv();
-    expect(describeProvider().chatUrl).toBe("https://example.test/v1/chat/completions");
+    const info = describeProvider();
+    expect(info.keyVar).toBe("GOOGLE_API_KEY");
+    expect(info.model).toBe("gemini-flash-lite-latest");
+    expect(info.chatUrl).toBe("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
   });
 });

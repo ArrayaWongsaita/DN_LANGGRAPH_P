@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatGroq } from "@langchain/groq";
-import { ChatOllama } from "@langchain/ollama";
 import { ChatOpenAI } from "@langchain/openai";
 import { PROVIDER_KEY_VARS, type ProviderName, env } from "./env";
 
@@ -49,6 +49,7 @@ interface Provider {
   create: (args: CreateArgs) => BaseChatModel;
 }
 
+const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 const OPENCODE_BASE_URL = "https://opencode.ai/zen/go/v1";
 // OpenCode Go ต้องการ header นี้ (รหัส session ต่อหนึ่งโปรเซส) ไม่งั้นตอบ 400
 const OPENCODE_HEADERS = { "x-opencode-session": randomUUID() };
@@ -64,6 +65,20 @@ const PROVIDERS: Record<ProviderName, Provider> = {
     create: ({ model, apiKey, temperature }) =>
       new ChatGroq({ model, apiKey, ...withTemperature(temperature) }),
   },
+  deepseek: {
+    defaultModel: "deepseek-flash",
+    // DeepSeek ใช้รูปแบบ OpenAI-compatible จึงใช้ ChatOpenAI ชี้ไปที่ baseURL ของ DeepSeek
+    chatUrl: () => `${DEEPSEEK_BASE_URL}/chat/completions`,
+    create: ({ model, apiKey, temperature }) =>
+      new ChatOpenAI({
+        model,
+        apiKey,
+        configuration: { baseURL: DEEPSEEK_BASE_URL },
+        // ปิดโหมดคิด (thinking) เพราะเปิดอยู่จะใช้ tool_choice ไม่ได้ (error 400) ตอนเรียก tool
+        modelKwargs: { thinking: { type: "disabled" } },
+        ...withTemperature(temperature),
+      }),
+  },
   opencode: {
     defaultModel: "deepseek-v4.1-flash",
     chatUrl: () => `${OPENCODE_BASE_URL}/chat/completions`,
@@ -75,16 +90,12 @@ const PROVIDERS: Record<ProviderName, Provider> = {
         ...withTemperature(temperature),
       }),
   },
-  ollama: {
-    defaultModel: "gpt-oss:120b",
-    chatUrl: () => `${env.OLLAMA_BASE_URL}/v1/chat/completions`,
+  google: {
+    defaultModel: "gemini-flash-lite-latest",
+    // endpoint แบบ OpenAI-compatible ของ Google ใช้ในบท Level 0 ที่เรียกด้วย fetch ตรง ๆ (ส่ง key ใน Authorization: Bearer)
+    chatUrl: () => "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     create: ({ model, apiKey, temperature }) =>
-      new ChatOllama({
-        model,
-        baseUrl: env.OLLAMA_BASE_URL,
-        headers: { Authorization: `Bearer ${apiKey}` },
-        ...withTemperature(temperature),
-      }),
+      new ChatGoogleGenerativeAI({ model, apiKey, ...withTemperature(temperature) }),
   },
 };
 

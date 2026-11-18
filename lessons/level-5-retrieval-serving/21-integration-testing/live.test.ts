@@ -19,7 +19,7 @@ test("liveStatus: provider เริ่มต้น groq ต้องมี GROQ
 test("liveStatus: ใช้ key ของ provider ที่เลือกเท่านั้น และไม่รู้จักก็ข้าม", () => {
   expect(liveStatus({ RUN_LIVE: "1", LLM_PROVIDER: "opencode", OPENCODE_GO_KEY: KEY })).toEqual({ enabled: true, reason: "เปิด: opencode" });
   expect(liveStatus({ RUN_LIVE: "1", LLM_PROVIDER: "opencode", GROQ_API_KEY: KEY })).toEqual({ enabled: false, reason: "ข้าม: ไม่มี OPENCODE_GO_KEY" });
-  expect(liveStatus({ RUN_LIVE: "1", LLM_PROVIDER: "ollama", OLLAMA_API_KEY: KEY }).enabled).toBe(true);
+  expect(liveStatus({ RUN_LIVE: "1", LLM_PROVIDER: "google", GOOGLE_API_KEY: KEY }).enabled).toBe(true);
   expect(liveStatus({ RUN_LIVE: "1", LLM_PROVIDER: "ไม่มีจริง", GROQ_API_KEY: KEY })).toEqual({ enabled: false, reason: "ข้าม: ไม่รู้จัก provider ไม่มีจริง" });
 });
 

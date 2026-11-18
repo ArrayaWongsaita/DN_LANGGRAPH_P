@@ -52,7 +52,7 @@ Rules for this format:
 - **No wrapper function** around the flow. Write the steps inline (`const reply = await llm.invoke(...)`); keep a function only when the function is the concept (a node, a router, a reducer).
 - **No checker file and no `run.ts`.** The script itself is the check: it prints the result and `check()` lines. It exits with code 1 when a check fails or a gap is still `todo`.
 - Annotate a gap that is a whole value (`const reply: AIMessage = todo(1);`) so later lines keep their types; a bare `todo(1)` has type `never`.
-- Because the script calls the real model (or real graph), lessons that call an LLM need a key. Lessons that do not (09, 10, 11, 14, 16, 17, 18) run offline.
+- Because the script calls the real model (or real graph), lessons that call an LLM need a key. Lessons that do not (10, 11, 12, 15, 17, 18, 19) run offline.
 - CI cannot run these (no key), so `check:solutions` and `check:starters` skip lessons without a `*.test.ts`; `typecheck` and `lint:lessons` still cover the solutions. Every solution is run against the real model before it is committed.
 - Lessons depend on earlier ones: 02 imports `env` from 01, later lessons import `llm` from 02. Solutions import the earlier lesson's `solution/` file.
 

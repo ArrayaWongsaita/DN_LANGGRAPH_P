@@ -1,4 +1,4 @@
-const KEY_VARS: Record<string, string> = { groq: "GROQ_API_KEY", ollama: "OLLAMA_API_KEY", opencode: "OPENCODE_GO_KEY" };
+const KEY_VARS: Record<string, string> = { groq: "GROQ_API_KEY", google: "GOOGLE_API_KEY", deepseek: "DEEPSEEK_API_KEY", opencode: "OPENCODE_GO_KEY" };
 const MIN_KEY_LENGTH = 10;
 
 export interface LiveStatus {

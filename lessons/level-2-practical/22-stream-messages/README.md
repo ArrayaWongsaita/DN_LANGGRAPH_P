@@ -1,7 +1,7 @@
 # บทที่ 2-22: สตรีมข้อความจาก LLM ทีละชิ้น (`messages`)
 
 ## แนวคิด
-บท 18 ของ Level 1 สอน `updates` และ `values` (ผลทีละ node) แต่แชตบอตอยากให้ผู้ใช้เห็นคำตอบ **ค่อย ๆ พิมพ์ออกมา** (token ต่อ token) ใช้โหมด `messages`:
+บท 19 ของ Level 1 สอน `updates` และ `values` (ผลทีละ node) แต่แชตบอตอยากให้ผู้ใช้เห็นคำตอบ **ค่อย ๆ พิมพ์ออกมา** (token ต่อ token) ใช้โหมด `messages`:
 
 ```ts
 for await (const [chunk, meta] of await graph.stream(input, { streamMode: "messages" })) {
