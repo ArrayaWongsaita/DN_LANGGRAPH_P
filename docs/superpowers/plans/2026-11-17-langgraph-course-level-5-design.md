@@ -71,3 +71,7 @@ Parts 18 → 19 → 21 → 22 → 20 → 23 → capstone. One commit per part. P
 ## Amendment (2026-11-18): lesson numbers follow build order
 
 The lint rule requires contiguous numbering, so ids are assigned in build order, not by the original part numbers. Final map: 5-01..5-06 retrieval (done), 5-07..5-09 event streaming (done), 5-10..5-12 depth (checkpoint housekeeping, serializer/encryption, Functional API depth), 5-13..5-14 SQL agent (safe SQL tool, SQL agent), 5-15..5-17 serving (`langgraph dev`, JS SDK, RemoteGraph), 5-18..5-22 remaining coverage (MCP over HTTP, prebuilt middleware, context engineering, integration testing, Pregel runtime), 5-23 capstone. Content is unchanged; only ids moved.
+
+## Amendment (2026-11-18): frontend lessons
+
+A re-audit against the docs index found the Frontend section as the main gap. Added 5-24 (custom stream channels: `StreamChannel.remote` plus a compile-time `transformers` factory) and 5-25 (framework-agnostic UI state from the stream: reducer, dynamic progress, partial markdown). The React/Vue/Svelte/Angular hooks (`useStream`, `useExtension`, `useChannel`) are described, not run. Level 5 now has 25 lessons; the capstone 5-23 stays as the main integration piece.
