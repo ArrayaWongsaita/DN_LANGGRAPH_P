@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
@@ -21,7 +22,8 @@
   "include": [
     "src",
     "scripts",
-    "lessons/**/*.ts"
+    "lessons/**/*.ts",
+    "lessons/**/*.tsx"
   ],
   "exclude": [
     "scripts/lesson-template",

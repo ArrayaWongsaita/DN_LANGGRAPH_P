@@ -3,7 +3,8 @@
   "include": [
     "src",
     "scripts",
-    "lessons/**/solution/**/*.ts"
+    "lessons/**/solution/**/*.ts",
+    "lessons/**/solution/**/*.tsx"
   ],
   "exclude": [
     "scripts/lesson-template",
