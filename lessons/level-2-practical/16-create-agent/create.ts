@@ -1,21 +1,35 @@
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import type { StructuredToolInterface } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createAgent } from "langchain";
+import { makeAddTool, makeWeatherTool } from "@src/sampleTools";
 import { todo } from "@src/todo";
+import { llm } from "../../level-1-basics/02-llm-config/llm";
+import { check } from "@src/check";
 
-export function buildAssistant(llm: BaseChatModel, tools: StructuredToolInterface[]) {
-  // 👉 ข้อ 1: เรียก createAgent({ model: llm, tools, ... })
+// รันด้วย: pnpm lesson 2-16
+// createAgent = ทางลัดที่ประกอบ ReAct agent (agent + tools + loop) ให้ในบรรทัดเดียว (บท 2-11 คือสิ่งที่มันทำให้ข้างใน)
+const agent = createAgent({
+  // 👉 ข้อ 1: ใส่ model: llm
+  model: todo(1),
+  tools: [makeAddTool(), makeWeatherTool()],
   // 👉 ข้อ 2: ใส่ systemPrompt: "คุณคือผู้ช่วยที่ตอบสั้น กระชับ"
-  // 👉 ข้อ 3: ใส่ checkpointer: new MemorySaver()
-  return todo(1);
-}
+  systemPrompt: todo(2),
+  // 👉 ข้อ 3: ใส่ checkpointer: new MemorySaver() เพื่อให้จำบทสนทนาได้
+  checkpointer: todo(3),
+});
 
-export async function chat(agent: ReturnType<typeof buildAssistant>, threadId: string, text: string) {
-  const result = await agent.invoke(
-    { messages: [new HumanMessage(text)] },
-    { configurable: { thread_id: threadId } },
-  );
-  return result.messages[result.messages.length - 1].text;
+const config = { configurable: { thread_id: "me" } };
+const replies: string[] = [];
+let result;
+for (const text of ["ฉันชื่อมาลี", "ฉันชื่ออะไร", "อากาศที่เชียงใหม่เป็นอย่างไร"]) {
+  result = await agent.invoke({ messages: [new HumanMessage(text)] }, config);
+  replies.push(result.messages[result.messages.length - 1].text);
 }
+console.log(replies);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("agent จำชื่อ 'มาลี' ได้ (มี checkpointer)", replies[1].includes("มาลี"), "ใส่ checkpointer และส่ง thread_id เดิม");
+check("agent เรียก tool getWeather ได้เอง", result!.messages.some((m) => m.type === "tool" && m.text.includes("22")), "ส่ง tools ให้ createAgent");
+check("ได้คำตอบสุดท้ายเป็นข้อความ", replies[2].length > 0);

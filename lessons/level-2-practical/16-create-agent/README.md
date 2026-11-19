@@ -17,12 +17,14 @@ await agent.invoke({ messages: [new HumanMessage("2+3")] }, { configurable: { th
 ข้างในมันคือ graph ที่คุณสร้างไว้ในบท 2-11 (agent ⇄ tools) เพิ่มของที่ต้องใช้จริง และเพราะคุณเคยสร้างเองแล้ว เมื่อมันทำงานแปลก ๆ คุณรู้ว่าต้องมองตรงไหน
 
 ## ดูตัวอย่าง
-`create.ts` มี `buildAssistant` ที่ต้องประกอบ `createAgent` ให้ครบ
+`create.ts` เรียก `createAgent` ไว้แล้ว ขาด 3 อย่างที่ใส่ในออปชัน: model, systemPrompt และ checkpointer
 
 ## โจทย์
-เติม 3 ข้อ แล้วรัน:
+เติม 3 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
 
-    pnpm test:lesson 2-16
+    pnpm lesson 2-16
+
+สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
 
 ## คุณทำได้แล้ว
 - สร้าง agent พร้อม tool, system prompt และความจำด้วย `createAgent`

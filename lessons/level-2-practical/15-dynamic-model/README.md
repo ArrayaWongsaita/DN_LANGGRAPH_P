@@ -15,12 +15,14 @@ const reply = await (tools.length ? model.bindTools(tools) : model).invoke(messa
 (ตัว `createAgent` ใช้แนวคิดเดียวกันผ่าน middleware ใน Level 3)
 
 ## ดูตัวอย่าง
-`dynamic.ts` มี node ที่ใช้ฟังก์ชันเลือก 2 ตัว ซึ่งเป็นสิ่งที่ต้องเติม
+`dynamic.ts` มี node ที่ใช้ฟังก์ชันเลือก 2 ตัว (`pickModel`, `pickTools`) ซึ่งเป็นสิ่งที่ต้องเติม
 
 ## โจทย์
-เติม 2 ข้อ แล้วรัน:
+เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
 
-    pnpm test:lesson 2-15
+    pnpm lesson 2-15
+
+สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
 
 ## คุณทำได้แล้ว
 - เลือกโมเดลและ tool แบบ dynamic ตามคำถาม

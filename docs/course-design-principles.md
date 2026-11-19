@@ -24,7 +24,7 @@ How the content of this LangGraph TypeScript course is designed. Read this befor
 
 ## 4. Lesson anatomy
 
-There are two formats. **Level 1 uses the single-file format** (below, "Level 1: single file"). Levels 0 and 2-5 use the checker format described next.
+There are two formats. **Levels 1 and 2 use the single-file format** (below, "Level 1: single file"). Levels 0 and 3-5 use the checker format described next.
 
 Every lesson folder `NN-slug/` (lowercase, digits, hyphens) has:
 
@@ -53,8 +53,9 @@ Rules for this format:
 - **Checks go at the bottom.** Every `check()` call lives in a final section under a banner (`// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้`), so the main code reads top to bottom without checking noise. Keep what a check needs (for example the `models` array in 04, or `results` in 20) as plain variables in the main code.
 - **No checker file and no `run.ts`.** The script itself is the check: it prints the result and `check()` lines. It exits with code 1 when a check fails or a gap is still `todo`.
 - Annotate a gap that is a whole value (`const reply: AIMessage = todo(1);`) so later lines keep their types; a bare `todo(1)` has type `never`.
-- Because the script calls the real model (or real graph), lessons that call an LLM need a key. Lessons that do not (10, 11, 12, 15, 17, 18, 19) run offline.
+- Because the script calls the real model (or real graph), lessons that call an LLM need a key. Lessons that do not (Level 1: 10, 11, 12, 15, 17, 18, 19; Level 2: 2-08, 2-10, 2-12, 2-13, 2-18, 2-19, 2-23, 2-24) run offline. Where a lesson needs a failure or a loop that a real model will not produce reliably (2-12 endless agent, 2-27 failing primary), the file uses a small scripted stand-in and keeps the real model for the rest.
 - CI cannot run these (no key), so `check:solutions` and `check:starters` skip lessons without a `*.test.ts`; `typecheck` and `lint:lessons` still cover the solutions. Every solution is run against the real model before it is committed.
+- Level 2 uses the same format; its `llm` comes from `lessons/level-1-basics/02-llm-config/llm.ts` (solutions import `../../../level-1-basics/02-llm-config/solution/llm`). Checks assert structure (message counts, state, tool results) rather than exact model wording. Groq's free tier can hit its tokens-per-minute limit on multi-turn lessons (2-06, 2-17); wait a minute or switch provider in 1-02.
 - Lessons depend on earlier ones: 02 imports `env` from 01, later lessons import `llm` from 02. Solutions import the earlier lesson's `solution/` file.
 
 Lesson ids: Level 1 uses a bare number (`08`), the other levels use a prefix (`0-01`, `2-05`, `5-12`).
