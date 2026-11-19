@@ -51,6 +51,9 @@ const withStart = await parallel.invoke({ score: 10 });
 console.log("เรียงกัน:", seq);
 console.log("ขนานกัน: ", par);
 
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("log: ค่าใหม่ถูก 'ต่อท้าย' ไม่ใช่ทับ (ทำงานเรียงกัน)", JSON.stringify(seq.log) === '["a","b"]', "reducer ของ log: [...current, next]");
 check("สอง node ขนานกันเขียน log พร้อมกัน ค่าถูกรวมครบ", JSON.stringify([...par.log].sort()) === '["x","y"]');
 check("score: ค่าใหม่ถูก 'บวกเพิ่ม' (1 + 2 = 3)", par.score === 3, "reducer ของ score: current + next");

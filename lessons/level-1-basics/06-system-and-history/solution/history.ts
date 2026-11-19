@@ -20,6 +20,10 @@ const noHistory = await llm.invoke([new SystemMessage(system), new HumanMessage(
 
 console.log("มีประวัติ:   ", reply.text);
 console.log("ไม่มีประวัติ:", noHistory.text);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "ลำดับข้อความเป็น system, human, ai, human",
   messages.map((m) => m.type).join(",") === "system,human,ai,human",

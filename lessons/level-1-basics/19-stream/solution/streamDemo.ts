@@ -37,6 +37,10 @@ for await (const chunk of await graph.stream({ log: "start" }, { streamMode: "va
 
 console.log("updates:", JSON.stringify(updates));
 console.log("values: ", JSON.stringify(values));
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "updates: ได้ชิ้นละ 1 node เรียงตามที่ทำงาน พร้อมสิ่งที่ node นั้นอัปเดต",
   JSON.stringify(updates.map((u) => u.node)) === '["first","second"]' && JSON.stringify(updates[0]?.update) === '{"log":"first"}',

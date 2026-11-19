@@ -30,6 +30,10 @@ graph.addEdge("improve", END);
 const result = await graph.compile().invoke({ topic: "ประโยชน์ของการนอนหลับ" });
 console.log("--- ร่าง ---\n" + result.draft);
 console.log("\n--- ฉบับปรับปรุง ---\n" + result.final);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("มีร่างจากขั้นแรก", result.draft.length > 0, "ต่อ START -> writeDraft ด้วย addEdge");
 check("มีฉบับปรับปรุงจากขั้นที่สอง", result.final.length > 0, "ต่อ writeDraft -> improve -> END และเก็บผลลง final");
 check("ฉบับปรับปรุงไม่ใช่ข้อความเดียวกับร่าง", result.final !== result.draft, "improve ต้องเรียก LLM ใหม่");

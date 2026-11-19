@@ -19,7 +19,6 @@ const graph: ReturnType<typeof builder.compile> = todo(1);
 
 const result = await graph.invoke({ n: 1 });
 console.log("ผลลัพธ์:", result);
-check("compile แล้ว invoke ได้ state สุดท้าย { n: 2 }", result.n === 2, "ต้อง .compile() ก่อน invoke");
 
 // graph ที่วนไม่จบ: node inc ชี้กลับตัวเองตลอด (ให้มาแล้ว)
 const neverEnding = new StateGraph(State)
@@ -41,4 +40,9 @@ try {
   throw e;
 }
 console.log("status:", status);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("compile แล้ว invoke ได้ state สุดท้าย { n: 2 }", result.n === 2, "ต้อง .compile() ก่อน invoke");
 check("graph วนไม่จบถูกหยุดที่ limit (ไม่ crash)", status === "limit", "จับ GraphRecursionError แล้วตั้ง status = 'limit'");

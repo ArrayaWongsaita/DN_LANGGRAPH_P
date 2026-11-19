@@ -16,5 +16,9 @@ const summary = { type: reply.type, text: reply.text };
 console.log("summary:", summary);
 console.log("content:", reply.content);
 console.log("usage_metadata:", reply.usage_metadata);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("type ของคำตอบคือ 'ai'", summary.type === "ai", "ดู reply.type");
 check("text เป็น string ที่ไม่ว่าง", typeof summary.text === "string" && summary.text.length > 0, "ดู reply.text");

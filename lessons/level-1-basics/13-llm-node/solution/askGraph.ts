@@ -24,5 +24,9 @@ const graph = new StateGraph(State)
 
 const result = await graph.invoke({ question: "LangGraph ใช้ทำอะไร ตอบสั้น ๆ หนึ่งประโยค" });
 console.log(result.answer);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("state.answer เป็นข้อความที่ไม่ว่าง", typeof result.answer === "string" && result.answer.length > 0, "ลืม await หรือ .text หรือเปล่า?");
 check("state.question ยังอยู่ครบ", result.question.length > 0);

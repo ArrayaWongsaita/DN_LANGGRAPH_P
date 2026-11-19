@@ -26,4 +26,8 @@ graph.addEdge("second", END);
 
 const result = await graph.compile().invoke({});
 console.log("เดินผ่าน:", result.trace);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("เดินผ่าน first แล้ว second ตามลำดับ", result.trace === "first>second", "ต่อ START -> first -> second -> END");

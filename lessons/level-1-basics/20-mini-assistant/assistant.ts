@@ -28,9 +28,6 @@ function pickRoute(state: Pick<AssistantState, "category">): "smallTalk" | "resp
   return todo(1);
 }
 
-check("pickRoute: greeting -> smallTalk", pickRoute({ category: "greeting" }) === "smallTalk", "เทียบ state.category กับ 'greeting'");
-check("pickRoute: อย่างอื่น -> respond", pickRoute({ category: "question" }) === "respond");
-
 const graph = new StateGraph(State)
   .addNode("classify", async (state) => {
     // 👉 ข้อ 2: ให้ LLM จัดประเภทข้อความ state.question เป็น "greeting" หรือ "question"
@@ -53,8 +50,19 @@ todo(4);
 todo(5);
 
 const app = graph.compile();
-for (const question of ["สวัสดี", "LangGraph คืออะไร ตอบสั้น ๆ หนึ่งประโยค"]) {
+const questions = ["สวัสดี", "LangGraph คืออะไร ตอบสั้น ๆ หนึ่งประโยค"];
+const results: { category: string; answer: string }[] = [];
+for (const question of questions) {
   const result = await app.invoke({ question });
+  results.push(result);
   console.log(`[${result.category}] ${result.answer}`);
-  check(`"${question}" ได้หมวดหมู่และคำตอบ`, result.category !== "" && result.answer !== "", "ต่อ edge ให้ครบทุกทางไปถึง END");
 }
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("pickRoute: greeting -> smallTalk", pickRoute({ category: "greeting" }) === "smallTalk", "เทียบ state.category กับ 'greeting'");
+check("pickRoute: อย่างอื่น -> respond", pickRoute({ category: "question" }) === "respond");
+results.forEach((result, i) =>
+  check(`"${questions[i]}" ได้หมวดหมู่และคำตอบ`, result.category !== "" && result.answer !== "", "ต่อ edge ให้ครบทุกทางไปถึง END"),
+);

@@ -37,6 +37,9 @@ const graph = new StateGraph(State)
 const result = await graph.invoke({ text: "   abc   " });
 console.log(result);
 
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 const original = { text: " x ", length: 0 };
 clean(original);
 check("clean ตัดช่องว่างหัวท้ายของ text", clean({ text: "  สวัสดี  ", length: 0 }).text === "สวัสดี", "ใช้ state.text.trim()");

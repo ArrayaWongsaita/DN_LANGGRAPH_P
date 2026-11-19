@@ -50,6 +50,7 @@ Beginners found the checker layout (starter, checker, `run.ts`, wrapper function
 
 Rules for this format:
 - **No wrapper function** around the flow. Write the steps inline (`const reply = await llm.invoke(...)`); keep a function only when the function is the concept (a node, a router, a reducer).
+- **Checks go at the bottom.** Every `check()` call lives in a final section under a banner (`// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้`), so the main code reads top to bottom without checking noise. Keep what a check needs (for example the `models` array in 04, or `results` in 20) as plain variables in the main code.
 - **No checker file and no `run.ts`.** The script itself is the check: it prints the result and `check()` lines. It exits with code 1 when a check fails or a gap is still `todo`.
 - Annotate a gap that is a whole value (`const reply: AIMessage = todo(1);`) so later lines keep their types; a bare `todo(1)` has type `never`.
 - Because the script calls the real model (or real graph), lessons that call an LLM need a key. Lessons that do not (10, 11, 12, 15, 17, 18, 19) run offline.

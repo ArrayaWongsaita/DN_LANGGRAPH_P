@@ -28,6 +28,9 @@ const everything = await graph.invoke({ name: "สมชาย", age: 30, city: 
 console.log("ส่งแค่ name:  ", onlyName);
 console.log("ส่งครบทุกช่อง:", everything);
 
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 let rejected = false;
 try {
   await graph.invoke({ name: "มาลี", age: "สามสิบ" } as never);
