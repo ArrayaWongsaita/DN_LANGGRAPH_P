@@ -4,7 +4,7 @@ import { z } from "zod";
 import { llm } from "../02-llm-config/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 20
+// รันด้วย: pnpm lesson 1-20
 // โปรเจกต์ปิด Level 1: ผู้ช่วยที่ "จัดประเภทข้อความก่อน แล้วเลือกทางตอบ"
 //
 //   START ──► classify ──?──► smallTalk ──► END      (ทักทาย: ตอบสำเร็จรูป ไม่เปลือง LLM)

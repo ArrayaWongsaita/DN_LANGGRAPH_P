@@ -1,7 +1,7 @@
 import { env } from "../../01-env-schema/solution/env"; // (ในโปรเจกต์จริงของคุณคือ ../01-env-schema/env)
 import { ChatGroq } from "@langchain/groq";
 
-// รันด้วย: pnpm lesson 02
+// รันด้วย: pnpm lesson 1-02
 // เฉลย: เลือก Groq ตัวเลือกอื่นคอมเมนต์ไว้ (ถ้าใช้เจ้าอื่น ให้เปิดบล็อกของเจ้านั้นแทน)
 
 // ── ตัวเลือก A: Groq (เลือกอยู่) ──

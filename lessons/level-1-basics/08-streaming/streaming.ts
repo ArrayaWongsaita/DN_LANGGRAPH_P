@@ -3,7 +3,7 @@ import { todo } from "@src/todo";
 import { llm } from "../02-llm-config/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 08  ดูตัวอักษรทยอยขึ้นเหมือนแชตจริง
+// รันด้วย: pnpm lesson 1-08  ดูตัวอักษรทยอยขึ้นเหมือนแชตจริง
 
 const chunks: string[] = [];
 

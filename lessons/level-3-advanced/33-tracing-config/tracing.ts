@@ -1,26 +1,41 @@
-import { z } from "zod";
 import { todo } from "@src/todo";
+import { z } from "zod";
+import { check } from "@src/check";
 
-export function makeTracingSchema() {
-  // 👉 ข้อ 1: คืน z.object({ LANGSMITH_TRACING: z.string().optional(), LANGSMITH_API_KEY: z.string().optional(),
-  //                          LANGSMITH_PROJECT: z.string().optional() })
-  return todo(1);
-}
+// รันด้วย: pnpm lesson 3-33  (ไม่ใช้ LLM)
+// การ trace (บันทึกทุกก้าวของ agent ไปดูใน LangSmith) เปิดด้วย environment variable: บทนี้ฝึกอ่านและตรวจค่าตั้งนั้นอย่างปลอดภัย
+// (คอร์สนี้ไม่ส่งข้อมูล trace ออกไปไหน และไม่ต้องมีบัญชี LangSmith)
 
-export interface TracingStatus {
+// 👉 ข้อ 1: schema ของตัวแปรที่เกี่ยวข้อง ทุกตัวเป็นข้อความที่ไม่บังคับ:
+//        z.object({ LANGSMITH_TRACING: z.string().optional(), LANGSMITH_API_KEY: z.string().optional(), LANGSMITH_PROJECT: z.string().optional() })
+const tracingSchema = todo(1);
+
+interface TracingStatus {
   enabled: boolean;
   project: string;
   reason: string;
 }
 
-export function readTracing(source: Record<string, string | undefined>): TracingStatus {
-  const env = makeTracingSchema().parse(source);
+function readTracing(source: Record<string, string | undefined>): TracingStatus {
+  const env = tracingSchema.parse(source);
   // 👉 ข้อ 2: enabled เป็นจริงก็ต่อเมื่อ LANGSMITH_TRACING เท่ากับ "true" และ LANGSMITH_API_KEY มีค่า (ไม่ว่าง)
-  //          project = LANGSMITH_PROJECT ถ้าไม่มีใช้ "default"
-  //          reason: เปิดอยู่ = "เปิด", ไม่ตั้ง TRACING = "ไม่ได้เปิด", เปิดแต่ไม่มี key = "ขาด LANGSMITH_API_KEY"
+  //        project = LANGSMITH_PROJECT ถ้าไม่มีใช้ "default"
+  //        reason: เปิดอยู่ = "เปิด", ไม่ตั้ง TRACING = "ไม่ได้เปิด", เปิดแต่ไม่มี key = "ขาด LANGSMITH_API_KEY"
   return todo(2);
 }
 
-export function maskKey(key: string): string {
-  return key.length <= 8 ? "***" : `${key.slice(0, 4)}...${key.slice(-2)}`;
-}
+// ซ่อน key ก่อนแสดงผล (ให้แล้ว): ไม่เคยพิมพ์ key เต็มลง log
+const maskKey = (key: string): string => (key.length <= 8 ? "***" : `${key.slice(0, 4)}...${key.slice(-2)}`);
+
+const on = readTracing({ LANGSMITH_TRACING: "true", LANGSMITH_API_KEY: "lsv2_pt_abcdef123456", LANGSMITH_PROJECT: "course" });
+const off = readTracing({});
+const noKey = readTracing({ LANGSMITH_TRACING: "true" });
+console.log({ on, off, noKey, masked: maskKey("lsv2_pt_abcdef123456") });
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("ตั้งครบ: เปิดอยู่ และใช้ชื่อโปรเจกต์ที่ตั้ง", on.enabled && on.project === "course" && on.reason === "เปิด");
+check("ไม่ตั้งอะไรเลย: ไม่เปิด โปรเจกต์ default", !off.enabled && off.project === "default" && off.reason === "ไม่ได้เปิด");
+check("เปิดแต่ไม่มี key: ไม่เปิด บอกเหตุผล", !noKey.enabled && noKey.reason === "ขาด LANGSMITH_API_KEY");
+check("maskKey ซ่อนส่วนกลางของ key", maskKey("lsv2_pt_abcdef123456") === "lsv2...56" && maskKey("short") === "***");

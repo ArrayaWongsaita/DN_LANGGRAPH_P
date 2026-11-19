@@ -2,7 +2,7 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import { todo } from "@src/todo";
 import { env } from "../01-env-schema/env"; // env ที่คุณตรวจไว้ในบท 01
 
-// รันด้วย: pnpm lesson 02
+// รันด้วย: pnpm lesson 1-02
 // ไฟล์นี้สร้าง chat model ชื่อ llm แล้ว export ให้บทอื่น import ไปใช้
 // ให้เลือกเจ้า LLM "เจ้าเดียว" ที่คุณมี key (บท 01 ตั้ง key ไว้ใน .env แล้ว) ที่เหลือคอมเมนต์ไว้
 

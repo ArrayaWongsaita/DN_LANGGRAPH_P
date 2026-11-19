@@ -4,7 +4,7 @@ import { z } from "zod";
 import { llm } from "../02-llm-config/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 16  (ไม่เกิน 3 รอบ) เริ่มจากข้อความ "แมวกินปลา" แล้วให้ LLM ปรับปรุงทีละรอบ
+// รันด้วย: pnpm lesson 1-16  (ไม่เกิน 3 รอบ) เริ่มจากข้อความ "แมวกินปลา" แล้วให้ LLM ปรับปรุงทีละรอบ
 const maxRounds = 3;
 
 const State = new StateSchema({

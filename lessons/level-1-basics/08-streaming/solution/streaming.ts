@@ -1,7 +1,7 @@
 import { llm } from "../../02-llm-config/solution/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 08  ดูตัวอักษรทยอยขึ้นเหมือนแชตจริง
+// รันด้วย: pnpm lesson 1-08  ดูตัวอักษรทยอยขึ้นเหมือนแชตจริง
 
 const chunks: string[] = [];
 

@@ -3,7 +3,7 @@ import { END, GraphRecursionError, START, StateGraph, StateSchema } from "@langc
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 18  (ไม่ใช้ LLM)
+// รันด้วย: pnpm lesson 1-18  (ไม่ใช้ LLM)
 const State = new StateSchema({ n: z.number().default(0) });
 
 // StateGraph ที่เราต่อ node/edge อยู่ เป็นแค่ "แบบแปลน" ยังรันไม่ได้

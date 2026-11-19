@@ -14,12 +14,14 @@ new Command({ update: {...}, goto: "support", graph: Command.PARENT })
 และ node ที่เป็น subgraph ตัวนั้นต้องประกาศ `{ ends: ["support"] }`
 
 ## ดูตัวอย่าง
-`handoff.ts` มี agent สองตัว: `sales` (subgraph) กับ `support` เมื่อลูกค้าพูดถึงปัญหา (คำว่า "พัง") sales ต้องส่งต่อให้ support
+`handoff.ts` มี agent สองตัว: `sales` (subgraph) กับ `support` เมื่อลูกค้าพูดถึงปัญหา (คำว่า "พัง") sales ต้องส่งต่อให้ support ขาดคำสั่งส่งต่อและการประกอบ graph แม่ บทนี้ไม่ใช้ LLM
 
 ## โจทย์
-เติม 2 ข้อ แล้วรัน:
+เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
 
-    pnpm test:lesson 3-23
+    pnpm lesson 3-23
+
+สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
 
 ## คุณทำได้แล้ว
 - ส่งต่องานระหว่าง agent ด้วย `Command` และ `Command.PARENT`

@@ -5,7 +5,7 @@ import { findLesson, parseLessonId } from "./find-lesson";
 
 const num = process.argv[2] ?? "";
 if (!parseLessonId(num)) {
-  console.error("วิธีใช้: pnpm lesson <เลขบท>  เช่น pnpm lesson 08 (Level 1) หรือ pnpm lesson 0-01 (Level 0)");
+  console.error("วิธีใช้: pnpm lesson <ระดับ>-<เลขบท>  เช่น pnpm lesson 1-08 (Level 1) หรือ pnpm lesson 2-03 (Level 2)");
   process.exit(1);
 }
 

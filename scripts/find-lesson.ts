@@ -2,13 +2,13 @@ import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * รหัสบท: "3" หรือ "03" = Level 1, "0-03" = Level 0, "1-03" = Level 1
- * (เลขบทนับแยกตามระดับ)
+ * รหัสบท: "<ระดับ>-<เลขบท>" เช่น "0-03" = Level 0, "1-03" = Level 1, "2-05" = Level 2
+ * (เลขบทนับแยกตามระดับ และต้องระบุระดับเสมอ)
  */
 export function parseLessonId(id: string): { level: number; num: string } | undefined {
-  const m = /^(?:(\d+)-)?(\d{1,2})$/.exec(id);
+  const m = /^(\d+)-(\d{1,2})$/.exec(id);
   if (!m) return undefined;
-  return { level: m[1] === undefined ? 1 : Number(m[1]), num: m[2].padStart(2, "0") };
+  return { level: Number(m[1]), num: m[2].padStart(2, "0") };
 }
 
 /** หาโฟลเดอร์ของบทจากรหัสบท ภายใต้ root/level-<n>-*\/ */

@@ -16,12 +16,14 @@ new StateGraph({ state: Full, input: In, output: Out })
 - `Out`: field ที่คืนตอนจบ (field ที่ไม่อยู่ใน `Out` เช่น `scratch` จะไม่ถูกคืน)
 
 ## ดูตัวอย่าง
-`schemas.ts` ประกาศ 3 schema ให้แล้ว ขาดการประกอบเข้า `StateGraph` และ node ที่ใช้ field ส่วนตัว
+`schemas.ts` ประกาศ 3 schema ให้แล้ว ขาดการประกอบเข้า `StateGraph` และ node ที่ใช้ field ส่วนตัว สคริปต์เรียก graph แล้วดูว่าผลลัพธ์มีแค่ field ของ Out หรือไม่ บทนี้ไม่ใช้ LLM
 
 ## โจทย์
-เติม 2 ข้อ แล้วรัน:
+เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
 
-    pnpm test:lesson 3-01
+    pnpm lesson 3-01
+
+สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
 
 ## คุณทำได้แล้ว
 - กำหนดหน้าตา input/output ของ graph และซ่อน state ภายใน

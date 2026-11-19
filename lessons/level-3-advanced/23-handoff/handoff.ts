@@ -1,7 +1,10 @@
-import { Command, END, MemorySaver, START, StateGraph, StateSchema, interrupt, isInterrupted } from "@langchain/langgraph";
-import { z } from "zod";
+import { Command, END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { todo } from "@src/todo";
+import { z } from "zod";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 3-23  (ไม่ใช้ LLM)
+// handoff: agent (ที่เป็น subgraph) ส่งต่อให้ agent อื่นใน graph แม่ด้วย Command ที่ชี้ graph: Command.PARENT
 const S = new StateSchema({
   message: z.string().default(""),
   log: z.string().default(""),
@@ -19,11 +22,16 @@ const sales = new StateGraph(S)
   .addEdge(START, "handle")
   .compile();
 
-export function buildTeam() {
-  return new StateGraph(S)
-    .addNode("support", (state) => ({ log: `${state.log}support รับช่วง;` }))
-    // 👉 ข้อ 2: เพิ่ม sales เป็น node พร้อมประกาศปลายทางที่ส่งต่อได้ { ends: ["support"] }
-    .addEdge(START, "sales")
-    .addEdge("support", END)
-    .compile();
-}
+// 👉 ข้อ 2: ประกอบ graph แม่: เพิ่ม node "support" (ให้แล้วด้านล่าง) และเพิ่ม sales เป็น node พร้อมประกาศปลายทางที่ส่งต่อได้
+//        .addNode("sales", sales, { ends: ["support"] }) แล้วต่อ START -> sales และ support -> END แล้ว .compile()
+const team: { invoke: (input: { message: string }) => Promise<{ log: string }> } = todo(2);
+
+const broken = await team.invoke({ message: "สินค้าที่ซื้อไปพังแล้ว" });
+const price = await team.invoke({ message: "ขอถามราคาหน่อย" });
+console.log({ broken: broken.log, price: price.log });
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("เรื่องของพัง: sales ส่งต่อ support", broken.log === "sales→support;support รับช่วง;", "Command.PARENT + goto: support");
+check("เรื่องทั่วไป: sales ตอบเอง ไม่ส่งต่อ", price.log === "sales ตอบเอง;");

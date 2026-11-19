@@ -1,8 +1,11 @@
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { Command, END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { todo } from "@src/todo";
 import { z } from "zod";
+import { llm } from "../../level-1-basics/02-llm-config/llm";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 3-24
+// supervisor: LLM "หัวหน้า" เลือกว่าใครทำต่อ ลูกทีมทำเสร็จแล้วกลับมาที่หัวหน้า จนหัวหน้าสั่ง FINISH
 const Next = z.enum(["researcher", "writer", "FINISH"]);
 
 const State = new StateSchema({
@@ -10,22 +13,30 @@ const State = new StateSchema({
   work: z.string().default(""),
 });
 
-export function buildSupervisorTeam(llm: BaseChatModel) {
-  return new StateGraph(State)
-    .addNode(
-      "supervisor",
-      async (state) => {
-        // 👉 ข้อ 1: ใช้ llm.withStructuredOutput(z.object({ next: Next })) เรียก invoke ด้วย
-        //          `งาน: ${state.task}\nผลงานตอนนี้: ${state.work}\nลูกทีม: researcher (ค้นข้อมูล) ต้องทำก่อน แล้ว writer (เขียนสรุป) ตามหลัง เมื่อมีทั้งสองอย่างในผลงานแล้วให้ FINISH ใครทำต่อ (researcher/writer/FINISH)?`
-        //          แล้ว goto: ผล.next === "FINISH" ? END : ผล.next  คืนเป็น new Command({ goto })
-        return todo(1);
-      },
-      { ends: ["researcher", "writer", END] },
-    )
-    .addNode("researcher", (state) => ({ work: `${state.work}[ค้นข้อมูล]` }))
-    .addNode("writer", (state) => ({ work: `${state.work}[เขียนสรุป]` }))
-    .addEdge(START, "supervisor")
-    // 👉 ข้อ 2: ลูกทีมทุกคนต้องกลับมาที่ supervisor: addEdge("researcher", "supervisor") และ addEdge("writer", "supervisor")
-    //          (ใส่ต่อโซ่นี้ด้านล่าง)
-    .compile();
-}
+const builder = new StateGraph(State)
+  .addNode(
+    "supervisor",
+    async (state) => {
+      // 👉 ข้อ 1: ใช้ llm.withStructuredOutput(z.object({ next: Next }), { method: "functionCalling" }) เรียก invoke ด้วย prompt นี้
+      //        `งาน: ${state.task}\nผลงานตอนนี้: ${state.work || "(ยังไม่มี)"}\nลูกทีม: researcher (ค้นข้อมูล) ต้องทำก่อน แล้ว writer (เขียนสรุป) ตามหลัง เมื่อมีทั้ง [ค้นข้อมูล] และ [เขียนสรุป] ในผลงานแล้วให้ FINISH ใครทำต่อ (researcher/writer/FINISH)?`
+      //        แล้วคืน new Command({ goto: ผล.next === "FINISH" ? END : ผล.next })
+      return todo(1);
+    },
+    { ends: ["researcher", "writer", END] },
+  )
+  .addNode("researcher", (state) => ({ work: `${state.work}[ค้นข้อมูล]` }))
+  .addNode("writer", (state) => ({ work: `${state.work}[เขียนสรุป]` }))
+  .addEdge(START, "supervisor");
+
+// 👉 ข้อ 2: ลูกทีมทุกคนต้องกลับมาที่ supervisor: builder.addEdge("researcher", "supervisor") และ builder.addEdge("writer", "supervisor")
+todo(2);
+
+const graph = builder.compile();
+const result = await graph.invoke({ task: "สรุปข้อดีของการอ่านหนังสือ" }, { recursionLimit: 15 });
+console.log("ผลงาน:", result.work);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("ลูกทีมทั้งสองทำงาน", result.work.includes("[ค้นข้อมูล]") && result.work.includes("[เขียนสรุป]"), "ลูกทีมต้องกลับมาที่ supervisor เพื่อให้ตัดสินต่อ");
+check("researcher ทำก่อน writer", result.work.indexOf("[ค้นข้อมูล]") < result.work.indexOf("[เขียนสรุป]"));

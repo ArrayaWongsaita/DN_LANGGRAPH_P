@@ -1,6 +1,10 @@
 import { END, MemorySaver, ReducedValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
+import { todo } from "@src/todo";
 import { z } from "zod";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 3-14  (ไม่ใช้ LLM)
+// time travel: ย้อนกลับไปจุดเก่าแล้ว "เล่นซ้ำ" (replay) หรือ "แก้ State แล้วแตกเส้นทางใหม่" (fork) ต่อจากจุดนั้น
 const State = new StateSchema({
   log: new ReducedValue(z.array(z.string()).default(() => []), {
     inputSchema: z.string(),
@@ -8,46 +12,42 @@ const State = new StateSchema({
   }),
 });
 
-export function buildTimeGraph() {
-  return new StateGraph(State)
-    .addNode("a", () => ({ log: "a" }))
-    .addNode("b", () => ({ log: "b" }))
-    .addNode("c", () => ({ log: "c" }))
-    .addEdge(START, "a")
-    .addEdge("a", "b")
-    .addEdge("b", "c")
-    .addEdge("c", END)
-    .compile({ checkpointer: new MemorySaver() });
-}
+const graph = new StateGraph(State)
+  .addNode("a", () => ({ log: "a" }))
+  .addNode("b", () => ({ log: "b" }))
+  .addNode("c", () => ({ log: "c" }))
+  .addEdge(START, "a")
+  .addEdge("a", "b")
+  .addEdge("b", "c")
+  .addEdge("c", END)
+  .compile({ checkpointer: new MemorySaver() });
 
-export type TimeGraph = ReturnType<typeof buildTimeGraph>;
-export const cfg = (threadId: string) => ({ configurable: { thread_id: threadId } });
-import type { StateSnapshot } from "@langchain/langgraph";
-import { todo } from "@src/todo";
+// รันให้จบไปแล้วสอง thread (หนึ่งไว้เล่นซ้ำ หนึ่งไว้แตกเส้นใหม่)
+const replayCfg = { configurable: { thread_id: "replay" } };
+const forkCfg = { configurable: { thread_id: "fork" } };
+await graph.invoke({}, replayCfg);
+await graph.invoke({}, forkCfg);
 
-async function snapshotBefore(graph: TimeGraph, threadId: string, nodeName: string): Promise<StateSnapshot> {
-  for await (const s of graph.getStateHistory(cfg(threadId))) {
-    if (s.next.includes(nodeName)) return s;
+// หา checkpoint ก่อนทำ node "b" ของ thread หนึ่ง (ให้มาแล้ว)
+async function snapshotBeforeB(config: typeof replayCfg) {
+  for await (const s of graph.getStateHistory(config)) {
+    if (s.next.includes("b")) return s;
   }
-  throw new Error(`ไม่พบ checkpoint ก่อน ${nodeName}`);
+  throw new Error("ไม่พบ checkpoint ก่อน b");
 }
 
-// เล่นซ้ำจากจุดก่อนทำ nodeName คืน log สุดท้าย
-export async function replayFrom(graph: TimeGraph, threadId: string, nodeName: string): Promise<string[]> {
-  const snap = await snapshotBefore(graph, threadId, nodeName);
-  // 👉 ข้อ 1: const r = await graph.invoke(null, snap.config); คืน r.log
-  return todo(1);
-}
+const beforeReplay = await snapshotBeforeB(replayCfg);
+// 👉 ข้อ 1 (replay): เล่นซ้ำจากจุดนั้น: await graph.invoke(null, beforeReplay.config) ได้ state สุดท้าย
+const replayed: { log: string[] } = todo(1);
 
-// แก้ State ที่จุดก่อนทำ nodeName ให้มี log เพิ่ม extra แล้วรันต่อบนเส้นใหม่ คืน log สุดท้าย
-export async function forkFrom(
-  graph: TimeGraph,
-  threadId: string,
-  nodeName: string,
-  extra: string,
-): Promise<string[]> {
-  const snap = await snapshotBefore(graph, threadId, nodeName);
-  // 👉 ข้อ 2: const forked = await graph.updateState(snap.config, { log: extra });
-  //          แล้ว const r = await graph.invoke(null, forked); คืน r.log
-  return todo(2);
-}
+const beforeFork = await snapshotBeforeB(forkCfg);
+// 👉 ข้อ 2 (fork): แก้ State ที่จุดนั้นให้มี log เพิ่ม "X" ได้ config ของเส้นใหม่: const forked = await graph.updateState(beforeFork.config, { log: "X" })
+//        แล้วรันต่อ: await graph.invoke(null, forked) ได้ state สุดท้าย
+const forkedResult: { log: string[] } = todo(2);
+console.log({ replayed: replayed.log, forked: forkedResult.log });
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("replay: node b และ c ทำงานซ้ำจากจุดเดิม ได้ log a,b,c", replayed.log.join("") === "abc", "invoke(null, snapshot.config)");
+check("fork: log มี X แทรกระหว่าง a กับ b", forkedResult.log.join("") === "aXbc", "updateState ที่ snapshot แล้ว invoke(null, config ใหม่)");

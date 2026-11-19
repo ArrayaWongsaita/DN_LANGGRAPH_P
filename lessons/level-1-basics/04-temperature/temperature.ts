@@ -4,7 +4,7 @@ import { ChatGroq } from "@langchain/groq"; // ตัวอย่างใช้
 import { check } from "@src/check";
 import { env } from "../01-env-schema/env";
 
-// รันด้วย: pnpm lesson 04
+// รันด้วย: pnpm lesson 1-04
 // บทนี้สร้าง chat model ของตัวเองในไฟล์นี้ (ไม่ใช้ llm จากบท 02) เพราะต้องสร้างหลายตัวที่ตั้ง temperature ต่างกัน
 // temperature = ปุ่มปรับความสุ่มของคำตอบ: ต่ำ (0) = นิ่ง คาดเดาได้ / สูง (เช่น 1.5) = หลากหลาย สร้างสรรค์
 

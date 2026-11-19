@@ -2,7 +2,7 @@ import { END, ReducedValue, START, StateGraph, StateSchema } from "@langchain/la
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 19  (ไม่ใช้ LLM)
+// รันด้วย: pnpm lesson 1-19  (ไม่ใช้ LLM)
 const State = new StateSchema({
   log: new ReducedValue(z.array(z.string()).default(() => []), {
     inputSchema: z.string(),

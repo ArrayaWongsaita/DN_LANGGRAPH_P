@@ -2,7 +2,7 @@ import { END, ReducedValue, START, StateGraph, StateSchema } from "@langchain/la
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 17  (ไม่ใช้ LLM)
+// รันด้วย: pnpm lesson 1-17  (ไม่ใช้ LLM)
 // field ธรรมดา: ค่าใหม่ "ทับ" ค่าเก่า
 // field ที่มี reducer: ค่าใหม่ถูก "รวม" กับค่าเก่าตามกติกาที่เรากำหนด
 //   reducer: (ค่าปัจจุบัน, ค่าใหม่ที่เข้ามา) => ค่าที่จะเก็บ

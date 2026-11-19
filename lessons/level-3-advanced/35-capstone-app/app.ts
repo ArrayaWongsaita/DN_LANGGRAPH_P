@@ -1,9 +1,12 @@
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { Command, END, START, StateGraph, StateSchema, interrupt, isInterrupted } from "@langchain/langgraph";
-import type { BaseCheckpointSaver, BaseStore } from "@langchain/langgraph";
+import { Command, END, InMemoryStore, MemorySaver, START, StateGraph, StateSchema, interrupt } from "@langchain/langgraph";
 import { todo } from "@src/todo";
 import { z } from "zod";
+import { llm } from "../../level-1-basics/02-llm-config/llm";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 3-35
+// โปรเจกต์ปิด Level 3: แอปเขียนรายงานที่ "จำความชอบผู้ใช้ (store) + รายงานความคืบหน้า (custom stream) + ขออนุมัติก่อนเผยแพร่ (interrupt) + ทำต่อได้ (checkpointer)"
+// บทนี้รวมของที่เรียนมา: store (3-10..3-12), context (3-05), stream custom (2-23), interrupt (2-18), checkpointer
 const State = new StateSchema({
   question: z.string().default(""),
   lang: z.string().default("th"),
@@ -12,55 +15,56 @@ const State = new StateSchema({
   result: z.string().default(""),
 });
 
-export function buildApp(llm: BaseChatModel, saver: BaseCheckpointSaver, store: BaseStore) {
-  return new StateGraph(State, { context: z.object({ userId: z.string() }) })
-    .addNode("prepare", async (_state, runtime) => {
-      // 👉 ข้อ 1: อ่านภาษาที่ชอบ: const item = await runtime.store!.get(["prefs", runtime.context!.userId], "lang");
-      //          lang = item?.value.lang ถ้าไม่มีใช้ "th" แล้วคืน { lang }
-      // 👉 ข้อ 2: ก่อน return ส่งความคืบหน้า: runtime.writer?.({ stage: "prepare" })
-      return todo(1);
-    })
-    .addNode("draft", async (state, runtime) => {
-      runtime.writer?.({ stage: "draft" });
-      const reply = await llm.invoke(`เขียนรายงานสั้น ๆ เรื่อง ${state.question} เป็นภาษา ${state.lang}`);
-      return { report: reply.text };
-    })
-    .addNode("approve", (state) => {
-      // 👉 ข้อ 3: const ok = interrupt({ report: state.report }); คืน { approved: ok === true }
-      return todo(3);
-    })
-    .addNode("publish", (state) => ({
-      result: state.approved ? `เผยแพร่แล้ว: ${state.report}` : "ไม่เผยแพร่",
-    }))
-    .addEdge(START, "prepare")
-    .addEdge("prepare", "draft")
-    .addEdge("draft", "approve")
-    .addEdge("approve", "publish")
-    .addEdge("publish", END)
-    // 👉 ข้อ 4: compile พร้อม { checkpointer: saver, store }
-    .compile();
-}
+const store = new InMemoryStore();
+await store.put(["prefs", "me"], "lang", { lang: "th" }); // ความชอบที่จำไว้ของผู้ใช้ "me"
 
-export type App = ReturnType<typeof buildApp>;
-const cfg = (threadId: string, userId: string) => ({ configurable: { thread_id: threadId }, context: { userId } });
+const builder = new StateGraph(State, { context: z.object({ userId: z.string() }) })
+  .addNode("prepare", async (_state, runtime) => {
+    // 👉 ข้อ 1: อ่านภาษาที่ชอบ: const item = await runtime.store!.get(["prefs", runtime.context!.userId], "lang");
+    //        lang = item?.value.lang ถ้าไม่มีใช้ "th"
+    //        ก่อน return ส่งความคืบหน้า: runtime.writer?.({ stage: "prepare" }) แล้วคืน { lang }
+    return todo(1);
+  })
+  .addNode("draft", async (state, runtime) => {
+    runtime.writer?.({ stage: "draft" });
+    const reply = await llm.invoke(`เขียนรายงานสั้น ๆ สองประโยคเรื่อง ${state.question} เป็นภาษา ${state.lang}`);
+    return { report: reply.text };
+  })
+  .addNode("approve", (state) => {
+    // 👉 ข้อ 2: ขออนุมัติ: const ok = interrupt({ report: state.report }); คืน { approved: ok === true }
+    return todo(2);
+  })
+  .addNode("publish", (state) => ({
+    result: state.approved ? `เผยแพร่แล้ว: ${state.report}` : "ไม่เผยแพร่",
+  }))
+  .addEdge(START, "prepare")
+  .addEdge("prepare", "draft")
+  .addEdge("draft", "approve")
+  .addEdge("approve", "publish")
+  .addEdge("publish", END);
 
-// เริ่มงาน: คืนรายงานที่รออนุมัติ (ถ้าหยุดรอ) พร้อมรายชื่อ stage ที่ส่งความคืบหน้า
-export async function start(app: App, threadId: string, userId: string, question: string) {
-  const stages: string[] = [];
-  let report = "";
-  for await (const [mode, data] of await app.stream(
-    { question },
-    { ...cfg(threadId, userId), streamMode: ["custom", "values"] },
-  )) {
-    if (mode === "custom") stages.push((data as { stage: string }).stage);
-    if (mode === "values") report = (data as { report?: string }).report ?? report;
-  }
-  const state = await app.getState({ configurable: { thread_id: threadId } });
-  return { stages, report, waiting: state.next.includes("approve") };
-}
+// 👉 ข้อ 3: compile พร้อม checkpointer และ store: builder.compile({ checkpointer: new MemorySaver(), store })
+const app: ReturnType<typeof builder.compile> = todo(3);
 
-// ตัดสินใจอนุมัติ/ไม่ แล้วคืนผลสุดท้าย
-export async function decide(app: App, threadId: string, userId: string, approve: boolean): Promise<string> {
-  const r = await app.invoke(new Command({ resume: approve }), cfg(threadId, userId));
-  return r.result;
-}
+// เริ่มงาน: ฟังความคืบหน้า (custom) และ state (values) ไปพร้อมกัน จนกว่า graph จะหยุดรออนุมัติ
+const config = { configurable: { thread_id: "run-1" }, context: { userId: "me" } };
+const stages: string[] = [];
+let report = "";
+// 👉 ข้อ 4: เปิด stream ด้วย streamMode ["custom", "values"]: app.stream({ question: "ประโยชน์ของการนอนหลับ" }, { ...config, streamMode: ["custom", "values"] })
+//        แต่ละชิ้นเป็น [mode, data]: ถ้า mode เป็น "custom" push (data as { stage: string }).stage ลง stages
+//        ถ้าเป็น "values" เก็บ (data as { report?: string }).report ลง report (ถ้ามี)
+todo(4);
+const waiting = (await app.getState({ configurable: { thread_id: "run-1" } })).next.includes("approve");
+console.log({ stages, waiting });
+console.log("รายงานที่รออนุมัติ:", report);
+
+// ผู้ใช้กดอนุมัติ แล้วงานทำต่อจนเผยแพร่
+const finished = await app.invoke(new Command({ resume: true }), config);
+console.log(finished.result);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("ส่งความคืบหน้าตามขั้น: prepare แล้ว draft", JSON.stringify(stages) === '["prepare","draft"]', "writer ใน prepare และ stream custom");
+check("ได้รายงานจาก LLM และหยุดรออนุมัติ", report.length > 0 && waiting, "approve ต้องเรียก interrupt และมี checkpointer");
+check("อนุมัติแล้วเผยแพร่ (ผลขึ้นต้นด้วย 'เผยแพร่แล้ว')", finished.result.startsWith("เผยแพร่แล้ว:"), "resume ด้วย true ทำให้ approved = true");

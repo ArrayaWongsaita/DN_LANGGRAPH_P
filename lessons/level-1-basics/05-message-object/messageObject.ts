@@ -4,7 +4,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { llm } from "../02-llm-config/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 05  (ต้องตั้ง llm ในบท 02 ให้เสร็จก่อน)
+// รันด้วย: pnpm lesson 1-05  (ต้องตั้ง llm ในบท 02 ให้เสร็จก่อน)
 
 const question = "ตอบสั้น ๆ ว่า สวัสดี";
 

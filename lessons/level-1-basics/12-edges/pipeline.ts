@@ -3,7 +3,7 @@ import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 12  (ไม่ใช้ LLM)
+// รันด้วย: pnpm lesson 1-12  (ไม่ใช้ LLM)
 // แต่ละ node ต่อชื่อตัวเองท้าย trace เพื่อให้เรารู้ว่าเดินผ่านลำดับไหน
 const State = new StateSchema({
   trace: z.string().default(""),

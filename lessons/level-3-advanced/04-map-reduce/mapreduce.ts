@@ -1,7 +1,10 @@
 import { END, ReducedValue, Send, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { todo } from "@src/todo";
 import { z } from "zod";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 3-04  (ไม่ใช้ LLM)
+// map-reduce = แตกงานทำพร้อมกัน (map ด้วย Send) แล้วรวมผล (reduce) ใน node ถัดไปหลังทุกชิ้นเสร็จ
 const State = new StateSchema({
   docs: z.array(z.string()).default(() => []),
   counts: new ReducedValue(z.array(z.number()).default(() => []), {
@@ -11,26 +14,34 @@ const State = new StateSchema({
   total: z.number().default(0),
 });
 
-export function buildMapReduceGraph() {
-  return new StateGraph(State)
-    .addNode("countWords", (input: unknown) => {
-      const { doc } = input as { doc: string };
-      // 👉 ข้อ 2 (map): คืน { counts: จำนวนคำของ doc } โดยคำคั่นด้วยช่องว่าง (doc.split(" ").length)
-      return todo(2);
-    })
-    .addNode("sum", (state) => {
-      // 👉 ข้อ 3 (reduce): คืน { total: ผลรวมของ state.counts }
+const graph = new StateGraph(State)
+  .addNode("countWords", (input: unknown) => {
+    const { doc } = input as { doc: string };
+    // 👉 ข้อ 1 (map): คืน { counts: จำนวนคำของ doc } โดยคำคั่นด้วยช่องว่าง
+    // แนวทาง: { counts: doc.split(" ").length }
+    return todo(1);
+  })
+  .addNode("sum", (state) => {
+    // 👉 ข้อ 2 (reduce): คืน { total: ผลรวมของ state.counts }
+    return todo(2);
+  })
+  .addConditionalEdges(
+    START,
+    (state) => {
+      // 👉 ข้อ 3: แตกงานหนึ่งอันต่อหนึ่งเอกสาร: new Send("countWords", { doc })
       return todo(3);
-    })
-    .addConditionalEdges(
-      START,
-      (state) => {
-        // 👉 ข้อ 1: แตกงานหนึ่งอันต่อหนึ่งเอกสาร: new Send("countWords", { doc })
-        return todo(1);
-      },
-      ["countWords"],
-    )
-    .addEdge("countWords", "sum")
-    .addEdge("sum", END)
-    .compile();
-}
+    },
+    ["countWords"],
+  )
+  .addEdge("countWords", "sum")
+  .addEdge("sum", END)
+  .compile();
+
+const result = await graph.invoke({ docs: ["one two three", "four five", "six"] });
+console.log(result);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("map: นับคำของแต่ละเอกสารได้ครบ", JSON.stringify([...result.counts].sort()) === "[1,2,3]", "countWords คืน { counts: จำนวนคำ }");
+check("reduce: total = 6", result.total === 6, "sum รวม counts ทั้งหมด หลังทุกชิ้นเสร็จ");

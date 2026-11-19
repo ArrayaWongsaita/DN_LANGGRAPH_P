@@ -15,12 +15,14 @@
 (subgraph ยังตั้งความจำของตัวเองแยกได้ผ่านตัวเลือก checkpointer ตอน compile แต่กรณีส่วนใหญ่ใช้ของแม่ก็พอ และเรียบง่ายกว่า)
 
 ## ดูตัวอย่าง
-`subcheck.ts` มี subgraph `confirm` ที่ถามยืนยันด้วย `interrupt` ใส่ใน graph แม่ ขาดการติด checkpointer ที่แม่และฟังก์ชัน resume
+`subcheck.ts` มี subgraph `confirm` ที่ถามยืนยันด้วย `interrupt` ใส่ใน graph แม่ ขาดการติด checkpointer ที่แม่และการ resume บทนี้ไม่ใช้ LLM
 
 ## โจทย์
-เติม 2 ข้อ แล้วรัน:
+เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
 
-    pnpm test:lesson 3-22
+    pnpm lesson 3-22
+
+สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
 
 ## คุณทำได้แล้ว
 - หยุดและทำต่อ (human-in-the-loop) ผ่าน subgraph

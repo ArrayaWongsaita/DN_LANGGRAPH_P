@@ -2,7 +2,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { llm } from "../../02-llm-config/solution/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 07
+// รันด้วย: pnpm lesson 1-07
 // แม่แบบข้อความ: ช่องที่เขียนในปีกกา {ชื่อ} จะถูกเติมค่าตอนใช้งาน
 
 // ข้อ 1: สร้างแม่แบบด้วย ChatPromptTemplate.fromMessages มี 2 ข้อความ

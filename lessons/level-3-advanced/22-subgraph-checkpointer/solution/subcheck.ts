@@ -1,8 +1,12 @@
 import { Command, END, MemorySaver, START, StateGraph, StateSchema, interrupt, isInterrupted } from "@langchain/langgraph";
 import { z } from "zod";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 3-22  (ไม่ใช้ LLM)
+// subgraph ที่มี interrupt ข้างใน: ใส่ checkpointer ที่ graph "แม่" ที่เดียว ลูกใช้ร่วมกันเอง
 const S = new StateSchema({ log: z.string().default("") });
 
+// subgraph: ถามยืนยัน
 const confirm = new StateGraph(S)
   .addNode("ask", (state) => {
     const answer = interrupt("ยืนยันไหม?");
@@ -12,24 +16,25 @@ const confirm = new StateGraph(S)
   .addEdge("ask", END)
   .compile();
 
-export function buildApp() {
-  return new StateGraph(S)
-    .addNode("prepare", (state) => ({ log: `${state.log}เตรียม` }))
-    .addNode("confirm", confirm)
-    .addEdge(START, "prepare")
-    .addEdge("prepare", "confirm")
-    .addEdge("confirm", END)
-    .compile({ checkpointer: new MemorySaver() });
-}
+const builder = new StateGraph(S)
+  .addNode("prepare", (state) => ({ log: `${state.log}เตรียม` }))
+  .addNode("confirm", confirm)
+  .addEdge(START, "prepare")
+  .addEdge("prepare", "confirm")
+  .addEdge("confirm", END);
 
-type App = ReturnType<typeof buildApp>;
-const cfg = (threadId: string) => ({ configurable: { thread_id: threadId } });
+// ข้อ 1: compile ที่ graph แม่พร้อม checkpointer: builder.compile({ checkpointer: new MemorySaver() })
+const app = builder.compile({ checkpointer: new MemorySaver() });
 
-export async function begin(app: App, threadId: string): Promise<boolean> {
-  return isInterrupted(await app.invoke({}, cfg(threadId)));
-}
+const config = { configurable: { thread_id: "t" } };
+const paused = isInterrupted(await app.invoke({}, config));
 
-export async function reply(app: App, threadId: string, answer: string): Promise<string> {
-  const r = await app.invoke(new Command({ resume: answer }), cfg(threadId));
-  return r.log;
-}
+// ข้อ 2: ตอบคำถามที่ค้างใน subgraph: invoke ด้วย new Command({ resume: "ใช่" }) และ config เดิม ได้ state สุดท้าย
+const finished = await app.invoke(new Command({ resume: "ใช่" }), config);
+console.log({ paused, log: finished.log });
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("interrupt ใน subgraph ทำให้ graph แม่หยุดรอ", paused, "ต้องมี checkpointer ที่ graph แม่");
+check("resume แล้วงานทั้งสองขั้นต่อกัน (เตรียม แล้ว ตอบ:ใช่)", finished.log === "เตรียม|ตอบ:ใช่", "resume ด้วย Command และ config เดิม");

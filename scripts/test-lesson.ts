@@ -6,7 +6,7 @@ import { findLesson } from "./find-lesson";
 const num = process.argv[2] ?? "";
 const dir = findLesson("lessons", num);
 if (!dir) {
-  console.error("วิธีใช้: pnpm test:lesson <เลขบท>  เช่น pnpm test:lesson 01 (Level 1) หรือ pnpm test:lesson 0-01 (Level 0) (ไม่พบบทนี้)");
+  console.error("วิธีใช้: pnpm test:lesson <เลขบท>  เช่น pnpm test:lesson 0-01 (Level 0) หรือ pnpm test:lesson 4-01 (Level 4) (ไม่พบบทนี้)");
   process.exit(1);
 }
 

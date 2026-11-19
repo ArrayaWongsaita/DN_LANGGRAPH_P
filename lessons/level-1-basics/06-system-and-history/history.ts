@@ -4,7 +4,7 @@ import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages
 import { llm } from "../02-llm-config/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 06
+// รันด้วย: pnpm lesson 1-06
 // LLM "จำอะไรไม่ได้เลย" ทุกครั้งที่เรียก เราต้องส่งบทสนทนาทั้งหมดไปให้ใหม่เสมอ
 
 const system = "ตอบสั้น ๆ เป็นภาษาไทย";

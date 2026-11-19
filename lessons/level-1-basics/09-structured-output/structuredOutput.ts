@@ -4,7 +4,7 @@ import { z } from "zod";
 import { llm } from "../02-llm-config/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 09
+// รันด้วย: pnpm lesson 1-09
 
 // รูปร่างข้อมูลที่เราอยากได้ (บอกด้วย zod)
 const personSchema = z.object({ name: z.string(), age: z.number() });

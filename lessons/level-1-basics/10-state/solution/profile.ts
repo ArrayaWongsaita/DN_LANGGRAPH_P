@@ -2,7 +2,7 @@ import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 10  (ไม่ใช้ LLM)
+// รันด้วย: pnpm lesson 1-10  (ไม่ใช้ LLM)
 // State = "กระดานกลาง" ที่ทุก node ใน graph อ่าน/เขียนร่วมกัน
 // แต่ละ field ประกาศชนิดข้อมูลด้วย zod  และ .default(...) คือค่าเริ่มต้นเมื่อผู้เรียกไม่ได้ส่งมา
 const ProfileState = new StateSchema({

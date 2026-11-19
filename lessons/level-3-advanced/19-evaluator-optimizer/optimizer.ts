@@ -1,8 +1,11 @@
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { z } from "zod";
 import { todo } from "@src/todo";
+import { z } from "zod";
+import { llm } from "../../level-1-basics/02-llm-config/llm";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 3-19
+// evaluator-optimizer: LLM ตัวหนึ่งเขียน อีกตัว (ที่นี่คือ LLM ตัวเดิมที่รับบทผู้ตรวจ) ตรวจและให้ข้อติ วนปรับจนผ่านหรือครบรอบ
 const MAX_ROUNDS = 3;
 
 const State = new StateSchema({
@@ -13,27 +16,35 @@ const State = new StateSchema({
   round: z.number().default(0),
 });
 
-export function buildOptimizer(llm: BaseChatModel) {
-  return new StateGraph(State)
-    .addNode("generate", async (state) => {
-      // 👉 ข้อ 1: prompt = `เขียนเกี่ยวกับ ${state.topic}` ถ้ามี state.feedback ให้ต่อท้ายด้วย `\nแก้ตามข้อติ: ${state.feedback}`
-      //          เรียก llm.invoke(prompt) แล้วคืน { draft: .text, round: state.round + 1 }
-      return todo(1);
-    })
-    .addNode("evaluate", async (state) => {
-      // 👉 ข้อ 2: ใช้ llm.withStructuredOutput(z.object({ approved: z.boolean(), feedback: z.string() }))
-      //          invoke ด้วย `ตรวจงานนี้: ${state.draft}` แล้วคืน { approved: ผล.approved, feedback: ผล.feedback }
-      return todo(2);
-    })
-    .addEdge(START, "generate")
-    .addEdge("generate", "evaluate")
-    .addConditionalEdges(
-      "evaluate",
-      (state) => {
-        // 👉 ข้อ 3: คืน END ถ้า state.approved หรือ state.round >= MAX_ROUNDS ไม่เช่นนั้นคืน "generate"
-        return todo(3);
-      },
-      ["generate", END],
-    )
-    .compile();
-}
+const graph = new StateGraph(State)
+  .addNode("generate", async (state) => {
+    // 👉 ข้อ 1: prompt = `เขียนประโยคสั้น ๆ เกี่ยวกับ ${state.topic}` ถ้ามี state.feedback ให้ต่อท้ายด้วย `\nแก้ตามข้อติ: ${state.feedback}`
+    //        เรียก llm.invoke(prompt) แล้วคืน { draft: .text, round: state.round + 1 }
+    return todo(1);
+  })
+  .addNode("evaluate", async (state) => {
+    // 👉 ข้อ 2: ใช้ llm.withStructuredOutput(z.object({ approved: z.boolean(), feedback: z.string() }), { method: "functionCalling" })
+    //        invoke ด้วย `ตรวจงานนี้ (ต้องมีตัวอย่างประกอบจึงจะผ่าน): ${state.draft}` แล้วคืน { approved: ผล.approved, feedback: ผล.feedback }
+    return todo(2);
+  })
+  .addEdge(START, "generate")
+  .addEdge("generate", "evaluate")
+  .addConditionalEdges(
+    "evaluate",
+    (state) => {
+      // 👉 ข้อ 3: คืน END ถ้า state.approved หรือ state.round >= MAX_ROUNDS ไม่เช่นนั้นคืน "generate"
+      return todo(3);
+    },
+    ["generate", END],
+  )
+  .compile();
+
+const result = await graph.invoke({ topic: "การดื่มน้ำให้พอ" });
+console.log(`วนไป ${result.round} รอบ อนุมัติ=${result.approved}\nร่างสุดท้าย: ${result.draft}\nข้อติล่าสุด: ${result.feedback}`);
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check(`วนอย่างน้อย 1 รอบและไม่เกิน ${MAX_ROUNDS} รอบ`, result.round >= 1 && result.round <= MAX_ROUNDS, "หยุดเมื่อ approved หรือครบ MAX_ROUNDS");
+check("ได้ร่างที่ไม่ว่าง", result.draft.length > 0);
+check("จบเพราะอนุมัติ หรือครบรอบ (ไม่หยุดกลางคัน)", result.approved || result.round === MAX_ROUNDS, "ถ้ายังไม่อนุมัติ ต้องวนต่อจนครบรอบ");

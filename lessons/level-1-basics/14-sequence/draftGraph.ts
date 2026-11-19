@@ -4,7 +4,7 @@ import { z } from "zod";
 import { llm } from "../02-llm-config/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 14
+// รันด้วย: pnpm lesson 1-14
 const State = new StateSchema({
   topic: z.string(),
   draft: z.string().default(""),

@@ -1,7 +1,7 @@
 import { llm } from "../../02-llm-config/solution/llm"; // chat model ที่คุณตั้งไว้ในบท 02
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 03
+// รันด้วย: pnpm lesson 1-03
 // อ่านจากบนลงล่างได้เลย ไม่มีฟังก์ชันครอบ
 
 // 1) คำถามที่จะส่ง

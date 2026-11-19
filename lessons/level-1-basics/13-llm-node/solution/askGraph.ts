@@ -3,7 +3,7 @@ import { z } from "zod";
 import { llm } from "../../02-llm-config/solution/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 13
+// รันด้วย: pnpm lesson 1-13
 const State = new StateSchema({
   question: z.string(),
   answer: z.string().default(""),

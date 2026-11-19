@@ -2,7 +2,7 @@ import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 11  (ไม่ใช้ LLM)
+// รันด้วย: pnpm lesson 1-11  (ไม่ใช้ LLM)
 const State = new StateSchema({
   text: z.string(),
   length: z.number().default(0),
