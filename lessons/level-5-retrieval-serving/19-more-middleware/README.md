@@ -21,7 +21,7 @@ llmToolSelectorMiddleware({ model: selectorLlm, maxTools: 2, alwaysInclude: ["se
 
 ยังมี middleware ที่เป็น "เครื่องมือ" ให้ agent (เช่น tool สำหรับ shell และค้นไฟล์) ซึ่ง **มีความเสี่ยงสูง** (รันคำสั่งในเครื่อง) บทนี้ไม่ได้รัน ถ้าจะใช้ต้องมี sandbox และ human-in-the-loop (บท 2-18)
 
-ตัวตรวจใช้ `createAgent` จริงกับโมเดลปลอม จึงเห็นพฤติกรรมจริงของ middleware (ชุด tool ที่โมเดลหลักเห็น, ค่า `todos`, tool จริงถูกเรียกกี่ครั้ง)
+ส่วนที่ 1 ของสคริปต์ใช้ `createAgent` จริงกับโมเดลปลอม จึงเห็นพฤติกรรมจริงของ middleware (ชุด tool ที่โมเดลหลักเห็น, ค่า `todos`, tool จริงถูกเรียกกี่ครั้ง)
 
 ## ดูตัวอย่าง
 `agents.ts` ขาด 5 ส่วน: ตั้งค่า middleware ทั้ง 3 ตัว และฟังก์ชันช่วยล้วน ๆ 2 ตัว
@@ -29,7 +29,9 @@ llmToolSelectorMiddleware({ model: selectorLlm, maxTools: 2, alwaysInclude: ["se
 ## โจทย์
 เติม 5 ข้อ แล้วรัน:
 
-    pnpm test:lesson 5-19
+    pnpm lesson 5-19
+
+สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
 
 ## คุณทำได้แล้ว
 - เลือก tool ให้โมเดลอัตโนมัติ ให้โมเดลวางแผนงานยาว และทดสอบ agent โดยไม่แตะระบบจริง

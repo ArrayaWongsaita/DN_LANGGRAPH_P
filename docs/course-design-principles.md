@@ -1,11 +1,11 @@
 # Course design principles
 
-How the content of this LangGraph TypeScript course is designed. Read this before adding or changing a lesson. It records the approach already used in Levels 0–5; the structural rules are enforced by `pnpm lint:lessons:strict`, the rest is convention.
+How the content of this LangGraph TypeScript course is designed. Read this before adding or changing a lesson. It records the approach already used in Levels 0–5 (all single-file lessons); the structural rules are enforced by `pnpm lint:lessons:strict`, the rest is convention.
 
 ## 1. Audience and goal
 
 - The learner may have **never built an LLM app**. Assume no LangChain, LangGraph or agent background.
-- The learner **writes the code**. The checker only tells them whether it works ("fill the gaps until the checker is green").
+- The learner **writes the code**. The checks at the bottom of the script only tell them whether it works ("fill the gaps until every line is ✅").
 - A lesson should end with a small win. Progress comes from many small lessons, not a few big ones.
 
 ## 2. One concept per lesson
@@ -19,28 +19,16 @@ How the content of this LangGraph TypeScript course is designed. Read this befor
 
 - **Lesson text is Thai** (README, comments marking gaps, hints).
 - **Code, identifiers, commit messages and repository docs are English.**
-- Outside Level 1, lesson text **never names an LLM or embedding provider**. It says "the model set in `.env`" and "the embedding provider set in `.env`", and code goes through `getLLM()` and `getEmbeddings()`. Switching provider must not require editing a lesson.
-- Level 1 is the exception: lesson 02 (`02-llm-config/llm.ts`) shows the provider classes on purpose, the learner enables one block, and every later Level 1 lesson does `import { llm }` from it (lesson 01 exports the validated `env` for 02). The rest of the course still uses `getLLM()`.
+- Lesson text **never names an LLM or embedding provider**. It says "the model set in `.env`" and "the embedding provider set in `.env`". Switching provider must not require editing a lesson.
+- Level 1 lesson 02 (`02-llm-config/llm.ts`) shows the provider classes on purpose: the learner enables one block, and every later lesson (Levels 1–5) does `import { llm }` from it (lesson 01 exports the validated `env` for 02). Embeddings go through `getEmbeddings()` in `src/embeddings.ts`. Level 0 reads the provider through `describeProvider()` and uses raw `fetch`.
 
 ## 4. Lesson anatomy
 
-There are two formats. **Levels 0, 1, 2 and 3 use the single-file format** (below, "Level 1: single file"). Levels 4 and 5 use the checker format described next.
+Every level (0–5) uses the **single-file format**, described next. Older lessons once used a checker format (starter, `*.test.ts`, `run.ts`); it was retired because beginners found it too much to hold in their head. The linter still accepts a lesson that has a checker, but no lesson uses one now.
 
-Every lesson folder `NN-slug/` (lowercase, digits, hyphens) has:
+### The single-file format
 
-| File | Role |
-|---|---|
-| `README.md` | Thai text following `scripts/lesson-template/README.md`: แนวคิด → ดูตัวอย่าง → โจทย์ → คุณทำได้แล้ว → ข้อควรจำ → บทถัดไป |
-| `<topic>.ts` | the starter: almost complete code, gaps marked `// 👉 ข้อ N` and stubbed with `todo(N)` |
-| `<topic>.test.ts` | the checker; red until the gaps are filled; the learner never edits it |
-| `solution/<topic>.ts` | the finished version, same file names as the starters |
-| `run.ts` | optional; runs the learner's code against a real service with `pnpm lesson NN` |
-
-Rules the linter enforces: a README exists, there is at least one `*.test.ts` (or, for a single-file lesson, exactly one starter `.ts`), every starter has a `todo(` gap, every starter has a counterpart in `solution/`, `solution/` holds no checker, checkers never use `getLLM` or contain `todo(`, and numbering inside a level is contiguous.
-
-### Level 1: single file
-
-Beginners found the checker layout (starter, checker, `run.ts`, wrapper functions) too much to hold in their head. Level 1 lessons are:
+A lesson folder `NN-slug/` (lowercase, digits, hyphens) has:
 
 | File | Role |
 |---|---|
@@ -53,8 +41,10 @@ Rules for this format:
 - **Checks go at the bottom.** Every `check()` call lives in a final section under a banner (`// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้`), so the main code reads top to bottom without checking noise. Keep what a check needs (for example the `models` array in 04, or `results` in 20) as plain variables in the main code.
 - **No checker file and no `run.ts`.** The script itself is the check: it prints the result and `check()` lines. It exits with code 1 when a check fails or a gap is still `todo`.
 - Annotate a gap that is a whole value (`const reply: AIMessage = todo(1);`) so later lines keep their types; a bare `todo(1)` has type `never`.
-- Because the script calls the real model (or real graph), lessons that call an LLM need a key. Lessons that do not (Level 1: 10, 11, 12, 15, 17, 18, 19; Level 2: 2-08, 2-10, 2-12, 2-13, 2-18, 2-19, 2-23, 2-24; Level 3: 3-01..3-14, 3-20..3-23, 3-26, 3-31..3-33) run offline. Where a lesson needs a failure or a loop that a real model will not produce reliably (2-12 endless agent, 2-27 failing primary, 3-30 flaky primary model), the file uses a small scripted stand-in and keeps the real model for the rest.
-- CI cannot run these (no key), so `check:solutions` and `check:starters` skip lessons without a `*.test.ts`; `typecheck` and `lint:lessons` still cover the solutions. Every solution is run against the real model before it is committed.
+- Because the script calls the real model (or real graph, database or server), lessons that call an LLM need a key. Lessons that do not run offline: Level 1: 10, 11, 12, 15, 17, 18, 19; Level 2: 2-08, 2-10, 2-12, 2-13, 2-18, 2-19, 2-23, 2-24; Level 3: 3-01..3-14, 3-20..3-23, 3-26, 3-31..3-33; Level 4: most lessons use scripted fake models (`fakeToolLLM`, `KeywordEmbeddings`) and need no key; Level 5: 5-04, 5-05, 5-07, 5-08, 5-12, 5-13 (part 1), 5-15..5-18, 5-22, 5-24, 5-25 need no LLM. Where a lesson needs a failure or a loop that a real model will not produce reliably (2-12 endless agent, 2-27 failing primary, 3-30 flaky primary model), the file uses a small scripted stand-in and keeps the real model for the rest.
+- Lessons that need a service say so at the top of the file: Postgres (4-24, 5-02, 5-03, 5-10, 5-11, 5-13, 5-14, 5-23) stops with a message when `DATABASE_URL` is missing; embeddings (5-01..5-03, 5-23) need the embedding key; serving lessons (5-15..5-17) start `langgraph dev` themselves through `@src/devServer` and stop it in `finally`; 5-09 and 5-18 open a local HTTP server inside the script.
+- When the offline part of a lesson is the point (SQL text, SSE text, ranking, reducers), the checks verify behaviour through fakes (fake fetch, fake client, in-memory knowledge base); the real service runs in an earlier section of the same file.
+- CI cannot run these (some need a key or Docker), so `check:solutions` and `check:starters` skip lessons without a `*.test.ts`; `typecheck` and `lint:lessons` still cover the solutions. Every solution is run (real model, real database, real server where used) before it is committed.
 - Level 0 uses the same format but reads its provider through `describeProvider()` from `src/llm.ts` and calls it with raw `fetch` (works with groq, google and deepseek; its failure lesson 0-02 causes real 401/404/network errors on purpose).
 - Levels 2 and 3 use the same format; their `llm` comes from `lessons/level-1-basics/02-llm-config/llm.ts` (solutions import `../../../level-1-basics/02-llm-config/solution/llm`). Checks assert structure (message counts, state, tool results) rather than exact model wording. Groq's free tier can hit its tokens-per-minute limit on multi-turn lessons (2-06, 2-17); wait a minute or switch provider in 1-02.
 - Lessons depend on earlier ones: 02 imports `env` from 01, later lessons import `llm` from 02. Solutions import the earlier lesson's `solution/` file.
@@ -66,21 +56,20 @@ Lesson ids always carry the level: `<level>-<lesson>` (`0-01`, `1-08`, `2-05`, `
 - Give the learner the **whole shape** and remove only the part that carries the concept. Surrounding code should be complete and readable.
 - Each gap has a Thai comment that says what to do and, where useful, the approach in one line (for example `// แนวทาง: await llm.invoke([new HumanMessage(question)])`).
 - `todo(N)` numbers gaps in the order the learner should fill them. Failing with "ยังไม่ได้ทำข้อ N" is the intended first state, so the message must be friendly and point to the README.
-- Starters import project helpers through the `@src/*` alias (`@src/todo`, `@src/llm`, `@src/fakeLLM`).
+- Starters import project helpers through the `@src/*` alias (`@src/todo`, `@src/check`, `@src/fakeToolLLM`, `@src/devServer`). The model comes from lesson 1-02 (`@@LLM` in the generator, a relative path to `level-1-basics/02-llm-config/llm` in files).
 
-## 6. Writing the checker
+## 6. Writing the checks
 
-- A checker must be **deterministic and offline**: no real LLM, no database, no network, no API key. Use the fakes in `src/` (`fakeLLM`, `fakeToolLLM`, `fakeFetch`, `KeywordEmbeddings`, in-memory stores) and pure-function seams.
+- The checks live at the bottom of the file under the banner. Each is `check("what it proves", boolean, "hint")`; the hint helps a learner who sees ❌.
 - Test **behaviour, not the wording of the solution**. When SQL, SSE text or another string is checked, verify the structure and parameter order, not incidental whitespace.
-- A checker has to be able to fail. Every starter must fail its own checker (`pnpm check:starters`) and every solution must pass (`pnpm check:solutions`). After writing a lesson, think of a wrong implementation (a mutant) that would still pass the checker; if there is one, tighten the checker.
-- When a lesson is about something only a real service can show (a vector database, a server process), make the **checkable part pure** (build the SQL, format the event, merge the ranks) and keep the real service in `run.ts`.
+- A check has to be able to fail. After writing a lesson, run the starter (it must stop at `todo`) and think of a wrong implementation (a mutant) that would still pass; if there is one, tighten the check.
+- Keep the offline part deterministic: use the fakes in `src/` (`fakeToolLLM`, `KeywordEmbeddings`, in-memory stores) and pure-function seams. Real services are fine in the script, but a lesson must say which ones it needs and fail with a clear message (not a stack trace) when they are missing.
 
-## 7. `run.ts`: seeing it for real
+## 7. Seeing it for real
 
-- `run.ts` exists so the learner sees the concept work against the real thing. It should **call the function the learner just wrote**, then print the raw result, so the two can be compared (1-03 and 1-05 do this; 1-04 was fixed to do it).
-- It may need a key, Docker or a server. That is acceptable only here, never in a checker.
-- Every new `run.ts` is run against the real service before it is committed.
-- Real Postgres uses the course container only (`langgraph-course-postgres`, `127.0.0.1:5434`). Never touch other database instances.
+- A lesson should **call the code the learner just wrote** against the real thing (model, database, server) and print the raw result, so the fake-backed checks and the real result can be compared.
+- Real Postgres uses the course container only (`langgraph-course-postgres`, `127.0.0.1:5434`). Never touch other database instances; clean up tables the lesson created in `finally`.
+- Every solution is run against the real service before it is committed.
 
 ## 8. Before writing: verify against the installed version
 
@@ -92,8 +81,8 @@ Lesson ids always carry the level: `<level>-<lesson>` (`0-01`, `1-08`, `2-05`, `
 
 1. Audit coverage against the official docs and list gaps by value to the learner.
 2. Write a short design doc in `docs/superpowers/plans/` with the lesson list, decisions, risks and order of work.
-3. Build in parts. After each part: `pnpm check:solutions`, `pnpm check:starters`, `pnpm lint:lessons:strict`, `pnpm typecheck`, `pnpm test`. One commit per part.
-4. Do a mutant review of the part's checkers.
+3. Build in parts. After each part: run every new solution (`pnpm tsx lessons/<level>/<NN-slug>/solution/<file>.ts`), then `pnpm lint:lessons:strict`, `pnpm typecheck`, `pnpm test`. One commit per part.
+4. Do a mutant review of the part's checks.
 5. Update the README status line and the "Levels at a glance" table.
 
 Lesson ids follow build order, because the linter requires contiguous numbering; if the order changes, renumber and record the change as an amendment in the design doc.
@@ -112,7 +101,7 @@ Things that cannot be run without an account or a product (hosted Studio, deploy
 
 These recur across levels, so teach them by example rather than lecture:
 
-- Fakes for tests, real services only in `run.ts`.
+- Fakes for the offline checks, real services in a clearly marked section of the script.
 - Idempotent writes (hash, then upsert) and safe retries.
 - Least privilege: read-only SQL, single statement, allowlisted tables, row caps, timeouts.
 - Guardrails and permission checks around tools.
@@ -123,7 +112,7 @@ These recur across levels, so teach them by example rather than lecture:
 - [ ] One concept, 1–3 gaps, Thai text, no provider name in the lesson text
 - [ ] README follows the template and names the previous and next lesson
 - [ ] Starter has `todo(N)` gaps with Thai hints; solution has the same file names
-- [ ] Checker is offline and deterministic, fails on the starter, passes on the solution, and survives a mutant review
-- [ ] `run.ts` (if any) calls the learner's function and has been run against the real service
-- [ ] `pnpm check:solutions`, `pnpm check:starters`, `pnpm lint:lessons:strict`, `pnpm typecheck`, `pnpm test` all pass
+- [ ] The checks sit under the bottom banner, stop at `todo` for the starter, are all ✅ for the solution, and survive a mutant review
+- [ ] Any real service the lesson needs is named at the top of the file and was used when running the solution
+- [ ] `pnpm lint:lessons:strict`, `pnpm typecheck`, `pnpm test` pass
 - [ ] README level table and status line updated when a lesson is added

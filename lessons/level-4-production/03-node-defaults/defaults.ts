@@ -1,36 +1,48 @@
 import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { todo } from "@src/todo";
 import { z } from "zod";
+import { check } from "@src/check";
 
+// รันด้วย: pnpm lesson 4-03  (ไม่ใช้ LLM)
+// ตั้งค่าเริ่มต้นให้ "ทุก node" ครั้งเดียว (retry policy) แล้วทับเฉพาะ node ที่ต้องการต่างออกไป
 const State = new StateSchema({ log: z.string().default("") });
 
-export interface Attempts {
-  a: number;
-  b: number;
-  strict: number;
-}
+const attempts = { a: 0, b: 0, strict: 0 };
 
 // node ที่ล้มเหลว failTimes ครั้งแรกแล้วสำเร็จ
-const flaky = (name: keyof Attempts, attempts: Attempts, failTimes: number) => () => {
+const flaky = (name: keyof typeof attempts, failTimes: number) => () => {
   attempts[name]++;
   if (attempts[name] <= failTimes) throw new Error(`${name} ล้ม`);
   return {};
 };
 
-export function buildApp(attempts: Attempts) {
-  // 👉 ข้อ 1: ค่าเริ่มต้นของทุก node: { retryPolicy: { maxAttempts: 3, initialInterval: 1 } }
-  const defaults = todo(1);
-  // 👉 ข้อ 2: ค่าเฉพาะของ strict ที่ทับค่าเริ่มต้น: { retryPolicy: { maxAttempts: 1 } }
-  const strictOptions = todo(2);
-  return new StateGraph(State)
-    .setNodeDefaults(defaults as never)
-    .addNode("a", flaky("a", attempts, 2))
-    .addNode("b", flaky("b", attempts, 2))
-    .addNode("strict", flaky("strict", attempts, 1), strictOptions as never)
-    .addEdge(START, "a")
-    .addEdge(START, "b")
-    .addEdge("a", "strict")
-    .addEdge("b", "strict")
-    .addEdge("strict", END)
-    .compile();
+// 👉 ข้อ 1: ค่าเริ่มต้นของทุก node: { retryPolicy: { maxAttempts: 3, initialInterval: 1 } }
+const defaults = todo(1);
+// 👉 ข้อ 2: ค่าเฉพาะของ strict ที่ทับค่าเริ่มต้น: { retryPolicy: { maxAttempts: 1 } }
+const strictOptions = todo(2);
+
+const app = new StateGraph(State)
+  .setNodeDefaults(defaults as never)
+  .addNode("a", flaky("a", 2))
+  .addNode("b", flaky("b", 2))
+  .addNode("strict", flaky("strict", 1), strictOptions as never)
+  .addEdge(START, "a")
+  .addEdge(START, "b")
+  .addEdge("a", "strict")
+  .addEdge("b", "strict")
+  .addEdge("strict", END)
+  .compile();
+
+let failure = "";
+try {
+  await app.invoke({});
+} catch (e) {
+  failure = (e as Error).message;
 }
+console.log({ attempts, failure });
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
+check("a และ b ล้มสองครั้งแต่ใช้ค่าเริ่มต้น (ลองสูงสุด 3): ถูกลองจนสำเร็จ", attempts.a === 3 && attempts.b === 3, "ใช้ .setNodeDefaults(defaults)");
+check("strict ตั้งทับเป็นลองครั้งเดียว: ล้มแล้วจบ ไม่ลองใหม่", attempts.strict === 1 && failure === "strict ล้ม", "ส่ง strictOptions เป็นอาร์กิวเมนต์ที่สามของ addNode");
