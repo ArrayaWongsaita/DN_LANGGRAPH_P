@@ -6,7 +6,7 @@ const NAME_RE = /^(\d{2})-[a-z0-9-]+$/;
 const dirs = (p: string) => readdirSync(p).filter((n) => statSync(join(p, n)).isDirectory());
 
 // starter = ไฟล์ .ts ในโฟลเดอร์บทที่ไม่ใช่ checker (.test.ts) และไม่ใช่ run.ts
-const isStarter = (f: string) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts") && f !== "run.ts";
+const isStarter = (f: string) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts") && f !== "run.ts" && !/^playground\.tsx?$/.test(f);
 
 /** คืนรายการปัญหา (ภาษาอ่านง่าย) ถ้าว่างแปลว่าผ่าน. strict = ตรวจว่าเลขบทต่อเนื่องไม่ข้าม */
 export function lintLessons(root: string, opts: { strict?: boolean } = {}): string[] {

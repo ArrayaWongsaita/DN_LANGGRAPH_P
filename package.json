@@ -7,6 +7,8 @@
     "test": "vitest run src scripts",
     "test:lesson": "tsx scripts/test-lesson.ts",
     "lesson": "tsx scripts/run-lesson.ts",
+    "play": "tsx scripts/playground.ts",
+    "playground:build": "tsx scripts/playground-all.ts",
     "check:solutions": "tsx scripts/check-lessons-cli.ts --mode solutions",
     "check:starters": "tsx scripts/check-lessons-cli.ts --mode starters",
     "check:llm": "tsx scripts/check-llm.ts",

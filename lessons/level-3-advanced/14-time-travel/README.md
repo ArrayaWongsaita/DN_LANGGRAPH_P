@@ -30,5 +30,8 @@ await graph.invoke(null, forked);                                      // รั
 - node หลังจุดที่ย้อนไปจะรันใหม่จริง ๆ (รวมผลข้างเคียงและการเรียก LLM)
 - fork สร้างเส้นใหม่ ไม่ทำลายของเดิม
 
+## ลองเล่นต่อ
+อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 3-14` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+
 ## บทถัดไป
 บท 3-15: รูปแบบ workflow (prompt chaining, routing, parallelization, orchestrator-worker, evaluator-optimizer)

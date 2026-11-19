@@ -15,7 +15,7 @@ if (!found) {
   process.exit(1);
 }
 // บทแบบไฟล์เดียว: ไม่มี run.ts ให้รันไฟล์ .ts ไฟล์เดียวของบทแทน
-const entries = readdirSync(found).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts"));
+const entries = readdirSync(found).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts") && !/^playground\.tsx?$/.test(f));
 const entry = existsSync(join(found, "run.ts")) ? "run.ts" : entries.length === 1 ? entries[0] : undefined;
 if (!entry) {
   console.error(`บทที่ ${num} ไม่มีไฟล์ให้รัน (ใช้ pnpm test:lesson ${num} แทน)`);

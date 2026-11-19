@@ -49,6 +49,8 @@ Rules for this format:
 - Levels 2 and 3 use the same format; their `llm` comes from `lessons/level-1-basics/02-llm-config/llm.ts` (solutions import `../../../level-1-basics/02-llm-config/solution/llm`). Checks assert structure (message counts, state, tool results) rather than exact model wording. Groq's free tier can hit its tokens-per-minute limit on multi-turn lessons (2-06, 2-17); wait a minute or switch provider in 1-02.
 - Lessons depend on earlier ones: 02 imports `env` from 01, later lessons import `llm` from 02. Solutions import the earlier lesson's `solution/` file.
 
+**Playground.** `pnpm play <id>` (`scripts/playground.ts`) runs `<lesson>/playground.ts`, generated from the lesson's solution (created when missing, rebuilt by `--reset`; the file is committed so learners see it). It holds only the imports the solution uses (relative ones rewritten to `@lessons/...`, the `check` import dropped) and no code, so the learner writes everything; the header has Thai ideas from `scripts/playground-ideas.ts` in the header. A lesson without an entry in that file has no playground (for example config lessons 1-01 and 1-02). Every lesson has one except 1-01 and 1-02. `pnpm playground:build` rebuilds all of them. Writing the ideas is the only per-lesson work; the file itself is generated, so it cannot drift from the solution.
+
 Lesson ids always carry the level: `<level>-<lesson>` (`0-01`, `1-08`, `2-05`, `5-12`). A bare number is rejected.
 
 ## 5. Writing the starter

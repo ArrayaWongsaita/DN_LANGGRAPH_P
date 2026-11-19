@@ -49,6 +49,8 @@ pnpm lesson 1-03       # run Level 1 lesson 03 (always <level>-<lesson>)
 pnpm lesson 5-09       # run Level 5 lesson 09
 ```
 
+**Playground (every lesson except the config lessons 1-01 and 1-02):** each lesson folder has a `playground.ts` (only the imports the lesson uses, plus ideas to try at the top; you write the code); `pnpm play 1-03` runs it. It is yours to edit. `pnpm play 1-03 --watch` re-runs on every save; `--reset` starts over from the original.
+
 ## Switching LLM provider or model
 
 Levels 1-5 pick the provider in `lessons/level-1-basics/02-llm-config/llm.ts` (uncomment one block). The rest of this section describes `src/llm.ts` (`getLLM()`), which Level 0 and the helper scripts use.
@@ -97,4 +99,4 @@ pnpm lint:lessons      # structure rules; pnpm lint:lessons:strict also requires
 pnpm typecheck
 ```
 
-New lessons start from `scripts/lesson-template/`.
+New lessons start from `scripts/lesson-template/`. Add Thai playground ideas for a new lesson in `scripts/playground-ideas.ts`, then `pnpm playground:build` regenerates every `playground.ts` from the solutions (it overwrites edits).
