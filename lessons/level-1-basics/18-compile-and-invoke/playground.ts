@@ -3,9 +3,8 @@
 // เริ่มใหม่: pnpm play 1-18 --reset
 //
 // ลองทำดู:
-//   1) สร้าง graph ที่วนไม่จบ แล้ว invoke ด้วย recursionLimit ต่าง ๆ ดูว่า error บอกอะไร
-//   2) ลอง compile graph ที่ลืมต่อ edge แล้วดู error
-//   3) ลองส่งค่าเริ่มต้นหลายค่าให้ graph ที่รันได้ปกติ
+//   1) เปลี่ยน recursionLimit โดยใช้ target เดิม
+//   2) เรียก graph ที่ compile แล้วด้วย n หลายค่า
 
 import { END, GraphRecursionError, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";

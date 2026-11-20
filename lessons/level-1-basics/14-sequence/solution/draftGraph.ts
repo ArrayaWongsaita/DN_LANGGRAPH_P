@@ -1,39 +1,34 @@
 import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
-import { llm } from "../../02-llm-config/solution/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 1-14
 const State = new StateSchema({
   topic: z.string(),
   draft: z.string().default(""),
   final: z.string().default(""),
 });
 
-// เขียนร่าง แล้วให้ LLM อีกรอบปรับปรุง (ผลของขั้นแรกส่งต่อให้ขั้นที่สองผ่าน state)
-const graph = new StateGraph(State)
-  .addNode("writeDraft", async (state) => {
-    const reply = await llm.invoke(`เขียนย่อหน้าสั้น ๆ เกี่ยวกับ: ${state.topic}`);
-    return { draft: reply.text };
-  })
-  .addNode("improve", async (state) => {
-    // ข้อ 1: ส่งร่าง (state.draft) ให้ LLM ปรับปรุง แล้วเก็บผลลง field "final"
-    const reply = await llm.invoke(`ปรับปรุงข้อความนี้ให้ดีขึ้น: ${state.draft}`);
-    return { final: reply.text };
-  });
+function improve(state: typeof State.State): { final: string } {
+  return { final: `${state.draft} (ฉบับทบทวน)` };
+}
 
-// ข้อ 2: ต่อ START -> "writeDraft" -> "improve" -> END
-graph.addEdge(START, "writeDraft");
-graph.addEdge("writeDraft", "improve");
-graph.addEdge("improve", END);
+const app = new StateGraph(State)
+  .addNode("writeDraft", (state) => ({ draft: `หัวข้อ ${state.topic}` }))
+  .addNode("improve", improve)
+  .addEdge(START, "writeDraft")
+  .addEdge("writeDraft", "improve")
+  .addEdge("improve", END)
+  .compile();
 
-const result = await graph.compile().invoke({ topic: "ประโยชน์ของการนอนหลับ" });
-console.log("--- ร่าง ---\n" + result.draft);
-console.log("\n--- ฉบับปรับปรุง ---\n" + result.final);
+const result = await app.invoke({ topic: "การนอนหลับ" });
+console.log(result.draft);
+console.log(result.final);
 
 // ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
 // ─────────────────────────────────────────────────────────────
-check("มีร่างจากขั้นแรก", result.draft.length > 0, "ต่อ START -> writeDraft ด้วย addEdge");
-check("มีฉบับปรับปรุงจากขั้นที่สอง", result.final.length > 0, "ต่อ writeDraft -> improve -> END และเก็บผลลง final");
-check("ฉบับปรับปรุงไม่ใช่ข้อความเดียวกับร่าง", result.final !== result.draft, "improve ต้องเรียก LLM ใหม่");
+check("writeDraft สร้างร่างจาก topic", result.draft === "หัวข้อ การนอนหลับ");
+check("improve เห็นร่างที่ writeDraft เพิ่งเขียน", result.final === "หัวข้อ การนอนหลับ (ฉบับทบทวน)", "อ่าน state.draft แล้วคืน final");
+
+const revised = improve({ topic: "การนอนหลับ", draft: "ประโยชน์ของการนอนเต็มอิ่ม", final: "" });
+check("ฉบับทบทวนใช้ข้อความใน draft", revised.final === "ประโยชน์ของการนอนเต็มอิ่ม (ฉบับทบทวน)");

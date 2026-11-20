@@ -1,40 +1,70 @@
-# บทที่ 13: node ที่เรียก LLM
+# บทที่ 1-13 เรียก LLM ใน Node
 
-## แนวคิด
-ถึงตอนรวมของที่เรียนมา: **node ที่ข้างในเรียก LLM** ไม่มีอะไรพิเศษ เพราะ node ก็คือฟังก์ชัน และเราเรียก `llm.invoke(...)` ในฟังก์ชันได้ (ต้องเป็น `async` เพราะรอผล)
+รับคำถามหนึ่งข้อแล้วให้ node เก็บข้อความที่โมเดลตอบลง State บทนี้นำ `llm.invoke()` จาก [บท 1-03](../03-first-llm-call/README.md) มาไว้ใน Graph ที่ต่อเส้นแบบ [บท 1-12](../12-edges/README.md)
 
+## 1. ให้ Node ตอบคำถามจาก State
+
+เปิด [`askGraph.ts`](./askGraph.ts) แล้วเติมข้อ 1 ให้ `ask` ส่ง `state.question` ไปยัง `llm.invoke()` รอผลด้วย `await` แล้วคืน `answer` จาก `reply.text` รันจากโฟลเดอร์หลักของโปรเจกต์หลังติดตั้ง dependencies ด้วย `pnpm install` ตัวอย่างใช้โมเดลจำลองในเครื่อง จึงรันได้โดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 1-13
 ```
-State { question }                          State { question, answer }
-        │                                            ▲
-        ▼                                            │
-      node "ask":  reply = await llm.invoke(question)│
-                   return { answer: reply.text } ────┘
+
+`fakeToolLLM` ในไฟล์จะคืนคำตอบตามรายการที่กำหนดไว้ ส่วน `app` สร้างจาก schema `State` และต่อ `START` → `ask` → `END` ไว้ให้แล้ว
+
+```ts
+const llm = fakeToolLLM([
+  "LangGraph ใช้ต่อขั้นตอนที่อ่านและอัปเดต State ร่วมกัน",
+  "node คือขั้นตอนที่อ่าน State และคืนค่าอัปเดต",
+]);
+
+async function ask(state: typeof State.State): Promise<{ answer: string }> {
+  const reply = await llm.invoke(state.question);
+  return { answer: reply.text };
+}
+
+console.log(await app.invoke({ question: "LangGraph ใช้ทำอะไร" }));
 ```
-สังเกตว่า graph ไม่รู้จัก LLM เจ้าไหนเลย node แค่เรียก `llm.invoke(...)` โดย `llm` มาจากไฟล์ตั้งค่าในบท 02 จะเปลี่ยนเจ้า LLM ก็แก้ที่นั่นที่เดียว
 
-**ข้อควรระวัง:** ชื่อ node ห้ามซ้ำกับชื่อ field ใน State ถ้าตั้ง node ชื่อ `answer` ขณะที่ State มี field `answer` จะ error ว่า "already being used as a state attribute"
+```text
+{
+  question: 'LangGraph ใช้ทำอะไร',
+  answer: 'LangGraph ใช้ต่อขั้นตอนที่อ่านและอัปเดต State ร่วมกัน'
+}
+✅ node ส่งคำถามจาก State ให้โมเดลหนึ่งครั้ง
+✅ คำตอบจากโมเดลอยู่ใน State
+✅ State ยังเก็บคำถามเดิม
+✅ เมื่อเปลี่ยนคำถาม node ส่งคำถามใหม่และเก็บคำตอบรอบใหม่
+```
 
-## ดูตัวอย่าง
-เปิด `askGraph.ts`: `START → ask → END` โดย node `ask` อ่าน `question` จาก state และต้องเขียน `answer` กลับ ท้ายไฟล์ส่งคำถามเข้า graph แล้วพิมพ์คำตอบ
+Node อัปเดต `answer` เพียงช่องเดียว เราจึงยังอ่านคำถามเดิมจากผลลัพธ์ได้
 
-## โจทย์
-เติมช่อง `// 👉 ข้อ N` (ตอนนี้เป็น `todo(N)`) ให้ครบ แล้วรัน:
+## 2. ข้อมูลเข้ากับค่าที่ได้จากโมเดล
 
-    pnpm lesson 1-13
+| ค่า | ชนิดและความหมาย |
+|---|---|
+| `question` | `string` ที่ต้องส่งเมื่อเรียก Graph |
+| `answer` | `string` ค่าเริ่มต้น `""` จนกว่า node จะเขียนคำตอบ |
+| `await llm.invoke(state.question)` | ใช้คำถามเป็นข้อความเข้า แล้วรอผลชนิด `AIMessage` |
+| `reply.text` | ส่วนข้อความของคำตอบที่นำไปใส่ `answer` |
 
-ถ้ายังเติมไม่ครบจะเห็น `ยังไม่ได้ทำข้อ N` บอกว่าช่องไหนค้างอยู่ เติมครบแล้วจะเห็นผลที่พิมพ์ออกมา และบรรทัด `✅` ทุกข้อ ถ้ามี `❌` ให้ดูคำใบ้ในวงเล็บท้ายบรรทัด
+## 3. เปลี่ยนคำตอบของโมเดลจำลอง
 
-## คุณทำได้แล้ว
-- เขียน node ที่เรียก LLM และเขียนคำตอบลง state
-- ส่ง LLM เข้ามาจากภายนอกเพื่อเปลี่ยนเจ้าได้ง่ายและทดสอบได้
+คัดลอกโค้ดก่อนส่วนตรวจคำตอบจาก [เฉลย `askGraph.ts`](./solution/askGraph.ts) ไปที่ [`playground.ts`](./playground.ts) เก็บ import ไว้ชุดเดียว เปลี่ยนข้อความแรกในรายการของ `fakeToolLLM` แล้วรัน `pnpm play 1-13` โดยใช้คำถามเดิม โมเดลจำลองคืนข้อความตามลำดับที่กำหนดไว้
 
-## ข้อควรจำ
-- node ที่เรียก LLM ต้องเป็น `async` และใช้ `await`
-- คืนคำตอบด้วย `.text`
-- อย่าตั้งชื่อ node ซ้ำกับ field ใน State
+| ข้อความแรกในรายการ | `result.answer` |
+|---|---|
+| `"LangGraph ใช้ต่อขั้นตอนที่อ่านและอัปเดต State ร่วมกัน"` | `"LangGraph ใช้ต่อขั้นตอนที่อ่านและอัปเดต State ร่วมกัน"` |
+| `"ใช้สร้างเวิร์กโฟลว์แบบกราฟ"` | `"ใช้สร้างเวิร์กโฟลว์แบบกราฟ"` |
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 1-13` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+### ลองกับโมเดลที่ตั้งไว้ใน `.env`
 
-## บทถัดไป
-บทที่ 14 จะต่อ LLM สองตัวเรียงกัน ให้ตัวที่สองใช้ผลของตัวแรก
+เมื่อทำ [บท 1-01](../01-env-schema/README.md) และ [บท 1-02](../02-llm-config/README.md) เสร็จแล้ว ใช้ API key ของโมเดลที่เลือกใน `.env` และเชื่อมต่ออินเทอร์เน็ต ใน playground ให้แทน import ของ `fakeToolLLM` และบรรทัด `const llm = ...` ด้วย import นี้
+
+```ts
+import { llm } from "@lessons/level-1-basics/02-llm-config/llm";
+```
+
+รัน `pnpm play 1-13` อีกครั้งแล้วดู `answer` เนื้อหาที่ได้ขึ้นกับโมเดลที่ตั้งไว้
+
+[บทถัดไป 1-14](../14-sequence/README.md) จะส่งผลจาก node แรกให้ node ที่สองผ่าน State

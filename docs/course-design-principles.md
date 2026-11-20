@@ -1,6 +1,6 @@
 # Course design principles
 
-Read this before adding or revising a lesson in the LangGraph TypeScript course. Every level uses single-file exercises. `pnpm lint:lessons:strict` checks the file structure. [Lesson 2-05](../lessons/level-2-practical/05-trim-messages/README.md) is the reference for the example-first format used across Level 2.
+Read this before adding or revising a lesson in the LangGraph TypeScript course. Every level uses single-file exercises. `pnpm lint:lessons:strict` checks the file structure. [Lesson 2-05](../lessons/level-2-practical/05-trim-messages/README.md) is the reference for the example-first format used across Levels 0–2.
 
 ## 1. Audience and goal
 
@@ -19,8 +19,8 @@ Read this before adding or revising a lesson in the LangGraph TypeScript course.
 
 - **Lesson text is Thai** (README, comments marking gaps, hints).
 - **Code, identifiers, commit messages and repository docs are English.**
-- Lesson text **never names an LLM or embedding provider**. It says "the model set in `.env`" and "the embedding provider set in `.env`". Switching provider must not require editing a lesson.
-- Level 1 lesson 02 (`02-llm-config/llm.ts`) is where learners select their model provider. Later lessons that call a live model use the shared course configuration. Embeddings go through `getEmbeddings()` in `src/embeddings.ts`. Level 0 reads the provider through `describeProvider()` and uses raw `fetch`.
+- Refer to "the model set in `.env`" and "the embedding provider set in `.env`" in examples. Name providers when explaining configuration or compatibility. Switching among supported providers should require only a configuration change.
+- Learners choose `LLM_PROVIDER` and optionally `LLM_MODEL` in `.env`. Lesson 1-02 exports the chat model through `getLLM()`. Later lessons can import that model or use the shared factory to demonstrate an option. Embeddings go through `getEmbeddings()` in `src/embeddings.ts`. Level 0 reads the provider through `describeProvider()` and uses raw `fetch`.
 
 ## 4. Lesson anatomy
 
@@ -44,10 +44,10 @@ Rules for this format:
 - Keep the main exercise local when the concept is local. Use fixed `AIMessage` objects for reducers, a scripted model for a predictable tool loop or stream, and the actual graph or checkpointer the lesson teaches. Use a live model when the concept depends on provider behavior or the lesson is an integration exercise. Tell the learner what requires a key beside the run command.
 - Lessons that need a service say so at the top of the file: Postgres (4-24, 5-02, 5-03, 5-10, 5-11, 5-13, 5-14, 5-23) stops with a message when `DATABASE_URL` is missing; embeddings (5-01..5-03, 5-23) need the embedding key; serving lessons (5-15..5-17) start `langgraph dev` themselves through `@src/devServer` and stop it in `finally`; 5-09 and 5-18 open a local HTTP server inside the script.
 - Run each changed solution directly. The `check:solutions` and `check:starters` scripts skip single-file lessons. `pnpm typecheck` and `pnpm lint:lessons:strict` still cover them.
-- Level 0 uses the same format but reads its provider through `describeProvider()` from `src/llm.ts` and calls it with raw `fetch` (works with groq, google and deepseek; its failure lesson 0-02 causes real 401/404/network errors on purpose).
+- For raw HTTP lessons, keep `fetch` in the request flow. Use local `Response` values or a local stream for exercises about status codes, response shapes and stream parsing. Label the command that calls the live endpoint and identify the provider configuration it uses.
 - For exercises that import the model from 1-02, the starter imports the learner's `llm.ts` and the solution imports its counterpart in `solution/`. Live checks use message types, state, tool results, or schema fields. Keep scripted examples in local modules so the offline path can run before provider setup.
 
-**Playground.** `pnpm play <id>` runs `<lesson>/playground.ts`. The generator copies the imports used by the solution and adds Thai experiments from `scripts/playground-ideas.ts`. It rewrites relative imports to `@lessons/...` and drops the check import. For Level 2 solutions that import the 1-02 model, the generated playground points to the learner's own 1-02 configuration. The runner generates the playground when missing, and `--reset` regenerates it. Config lessons 1-01 and 1-02 do not have a playground. `pnpm playground:build` regenerates all playgrounds.
+**Playground.** `pnpm play <id>` runs `<lesson>/playground.ts`. The generator copies the imports used by the solution and adds Thai experiments from `scripts/playground-ideas.ts`. It rewrites relative imports to `@lessons/...` and drops the check import. For Level 1 and 2 solutions that import the 1-02 model, the generated playground points to the learner's own 1-02 configuration. The runner generates the playground when missing, and `--reset` regenerates it. Config lessons 1-01 and 1-02 do not have a playground. `pnpm playground:build` regenerates all playgrounds.
 
 Lesson ids always carry the level: `<level>-<lesson>` (`0-01`, `1-08`, `2-05`, `5-12`). A bare number is rejected.
 
@@ -119,7 +119,7 @@ These recur across levels, so teach them by example rather than lecture:
 
 ## 12. Checklist for a new lesson
 
-- [ ] One concept, 1–3 gaps, Thai text, no provider name in the lesson text
+- [ ] One concept, 1–3 gaps, Thai text, provider names used only for configuration and compatibility
 - [ ] README has the smallest example, command, prerequisites, observed output, accepted options, and a comparison with a changed value
 - [ ] Lesson links include the starter, solution and the next lesson where applicable
 - [ ] Starter has `todo(N)` gaps with Thai hints; solution has the same file names

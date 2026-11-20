@@ -31,8 +31,8 @@ describe("buildPlayground", () => {
     expect(out).not.toContain("ส่วนตรวจคำตอบ");
   });
 
-  test("import แบบ relative ถูกแปลงเป็น alias @lessons", () => {
-    expect(build()).toContain('from "@lessons/level-1-basics/02-llm-config/solution/llm"');
+  test("import แบบ relative ใน Level 1 ชี้ไปยังโมเดลที่ผู้เรียนตั้งไว้", () => {
+    expect(build()).toContain('from "@lessons/level-1-basics/02-llm-config/llm"');
   });
 
   test("คำสั่งรันเป็น pnpm play", () => {

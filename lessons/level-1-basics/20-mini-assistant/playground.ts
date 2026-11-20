@@ -2,15 +2,14 @@
 // รันด้วย: pnpm play 1-20   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 1-20 --watch)
 // เริ่มใหม่: pnpm play 1-20 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) สร้างผู้ช่วยที่จัดหมวดข้อความก่อน (structured output) แล้วใช้ conditional edge เลือกทางตอบ
-//   2) เพิ่มหมวดที่สาม เช่น "thanks" พร้อม node ตอบสำเร็จรูป
-//   3) ลองถามหลายแบบแล้วดูว่าถูกจัดหมวดไหน
+//   1) จำลอง greeting กับ question โดยใช้ข้อความเดิม
+//   2) เปลี่ยนคำตอบตายตัวของ smallTalk แล้วสังเกต State
+//   3) ลองใช้โมเดลที่ตั้งไว้ในบท 1-02 หลังฝึกเส้นทางแล้ว
 
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { fakeToolLLM } from "@src/fakeToolLLM";
 
 // เขียนโค้ดของคุณตรงนี้

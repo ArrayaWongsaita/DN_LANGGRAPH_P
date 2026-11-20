@@ -1,44 +1,59 @@
-# บทที่ 15: conditional edge (เลือกทางเดินใน graph)
+# บทที่ 1-15 เลือกทางด้วย `addConditionalEdges`
 
-## แนวคิด
-graph ใน LangGraph ประกอบด้วย **node** (ขั้นตอน) และ **edge** (เส้นเชื่อมว่าหลังจากนี้ไปไหนต่อ) ที่ผ่านมาเส้นเชื่อมมีทางเดียวเสมอ แต่งานจริงมักต้อง "เลือก" เช่น คำถามสั้นให้ตอบเร็ว คำถามยาวให้คิดละเอียด
+ส่งคำถามสั้นไปที่ `short` และคำถามยาวไปที่ `long` เส้นตรงจาก [บท 1-12](../12-edges/README.md) ใช้ต่อทางออกของทั้งสอง node ส่วนเส้นจากจุดเริ่มให้ router เลือกตามคำถาม
 
-**conditional edge** คือเส้นเชื่อมที่ให้ฟังก์ชันตัดสินใจว่าจะไปทางไหน ฟังก์ชันนั้นเรียกว่า **router**: รับ state แล้วคืน "ชื่อ node ที่จะไปต่อ"
+## 1. ให้ Router เลือกทางจากความยาวคำถาม
 
-```
-            ┌──► short ──┐
-START ──?───┤            ├──► END
-            └──► long  ──┘
-   (routeByLength เลือกทาง)
+เปิด [`route.ts`](./route.ts) แล้วเติมข้อ 1 ให้ Graph ใช้ `routeByLength` เลือกจาก `START` ว่าจะไป `short` หรือ `long` หลังติดตั้ง dependencies ด้วย `pnpm install` ให้รันจากโฟลเดอร์หลักของโปรเจกต์ ตัวอย่างนี้รันในเครื่องได้โดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 1-15
 ```
 
-## ดูตัวอย่าง
-เปิด `route.ts`:
-- `State` คือข้อมูลที่ไหลใน graph: `question` (คำถาม) และ `path` (ทางที่เดินผ่าน)
-- `routeByLength` คือ router (ให้มาแล้ว): ถ้าคำถามยาวไม่เกิน 20 ตัวอักษรคืน `"short"` ไม่งั้นคืน `"long"`
-- node `short` และ `long` เขียนค่าลง `path` เพื่อบอกว่าเดินผ่านทางไหน
-- ข้อควรระวัง: **ชื่อ node ห้ามซ้ำกับชื่อ field ใน state** (ที่นี่ field คือ `question`, `path` จึงตั้ง node ชื่อ `short`, `long` ได้)
+`State` และ `graph` มาจากไฟล์ Graph มีทั้งสอง node และมีเส้นจากแต่ละ node ไป `END` แล้ว
 
-## โจทย์
-เติมช่อง `// 👉 ข้อ N` ใน `route.ts` ให้ครบ แล้วรัน:
+```ts
+function routeByLength(state: typeof State.State): "short" | "long" {
+  return state.question.length <= 20 ? "short" : "long";
+}
 
-    pnpm lesson 1-15
+graph.addConditionalEdges(START, routeByLength, ["short", "long"]);
 
-ถ้ายังเติมไม่ครบจะเห็น `ยังไม่ได้ทำข้อ N` เติมครบแล้วจะเห็นเส้นทางที่แต่ละคำถามเดินผ่าน (ไม่ใช้ LLM จึงไม่ต้องมี key) และบรรทัด `✅` ทุกข้อ
+const app = graph.compile();
+const short = await app.invoke({ question: "สวัสดี" });
+const long = await app.invoke({ question: "ช่วยอธิบายเรื่อง LangGraph ให้หน่อย" });
+console.log(`"${short.question}" (${short.question.length}) -> ${short.path}`);
+console.log(`"${long.question}" (${long.question.length}) -> ${long.path}`);
+```
 
-ถ้าลืมต่อเส้นของ node ใด LangGraph จะฟ้องว่า node นั้น **is not reachable** (เข้าถึงไม่ได้) แปลว่ามี node ที่ไม่มีเส้นไปถึง ให้ตรวจว่าต่อครบแล้วหรือยัง
+```text
+"สวัสดี" (6) -> short
+"ช่วยอธิบายเรื่อง LangGraph ให้หน่อย" (35) -> long
+✅ คำถามสั้นไปทาง short
+✅ คำถามยาวไปทาง long
+✅ ความยาว 20 ไปทาง short
+✅ ความยาว 21 ไปทาง long
+```
 
-## คุณทำได้แล้ว
-- สร้าง graph ที่ "เลือกทาง" ตามข้อมูลใน state ได้ด้วย `addConditionalEdges`
-- อ่านข้อความ "not reachable" ออกว่า graph ต่อเส้นไม่ครบ
+Router อ่าน `question` แล้วคืนชื่อปลายทาง Node ที่ถูกเลือกเขียนชื่อของตัวเองลง `path` ให้เราอ่านจากผลลัพธ์ได้
 
-## ข้อควรจำ
-- router คือฟังก์ชันธรรมดา: รับ state คืนชื่อ node
-- `addConditionalEdges(จากไหน, router, [ปลายทางที่เป็นไปได้])` ต้องบอกรายชื่อปลายทางให้ครบ
-- ทุก node ต้องมีเส้นเข้าและมีทางออกไปถึง END
+## 2. ต้นทาง Router และปลายทาง
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 1-15` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+| ค่าที่ส่งให้ `addConditionalEdges` | ความหมายในตัวอย่าง |
+|---|---|
+| `START` | ให้เลือกทางทันทีเมื่อ Graph เริ่มทำงาน ใช้ชื่อ node เป็นต้นทางได้ด้วย |
+| `routeByLength` | ฟังก์ชันที่รับ State และคืน `"short"` หรือ `"long"` |
+| `["short", "long"]` | รายชื่อปลายทางที่ router อาจคืน JavaScript API ละอาร์กิวเมนต์นี้ได้ ตัวอย่างระบุไว้ให้เห็นปลายทางครบ |
 
-## บทถัดไป
-บทต่อไปจะเอา LLM มาเป็นตัวตัดสินว่าจะไปทางไหน แทนการนับตัวอักษร
+`question` เป็น `string` ที่ต้องส่ง ส่วน `path` เริ่มที่ `""` ความยาวใช้ `.length` ของ JavaScript ซึ่งนับหน่วย UTF-16 เช่น `"สวัสดี".length` ได้ `6`
+
+## 3. เปลี่ยนเส้นแบ่งแล้วใช้คำถามเดิม
+
+คัดลอกโค้ดก่อนส่วนตรวจคำตอบจาก [เฉลย `route.ts`](./solution/route.ts) ไปที่ [`playground.ts`](./playground.ts) เก็บ import ไว้ชุดเดียว แล้วรัน `pnpm play 1-15` ด้วยคำถามเดิม `"สวัสดี"` เปลี่ยนเฉพาะจำนวนที่นำไปเทียบกับ `state.question.length`
+
+| เงื่อนไขใน router | เส้นทางสำหรับ `"สวัสดี"` |
+|---|---|
+| `length <= 20` | `short` |
+| `length <= 5` | `long` |
+
+[บทถัดไป 1-16](../16-loop/README.md) จะให้ router เลือกว่าจะวนกลับมาที่ node เดิมหรือจบ Graph

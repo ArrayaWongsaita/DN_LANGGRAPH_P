@@ -1,53 +1,34 @@
-import { END, ReducedValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
+import { END, START, StateGraph, StateSchema, type StreamMode } from "@langchain/langgraph";
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 1-19  (ไม่ใช้ LLM)
-const State = new StateSchema({
-  log: new ReducedValue(z.array(z.string()).default(() => []), {
-    inputSchema: z.string(),
-    reducer: (current: string[], next: string) => [...current, next],
-  }),
-});
-
+const State = new StateSchema({ text: z.string(), length: z.number().default(0) });
 const graph = new StateGraph(State)
-  .addNode("first", () => ({ log: "first" }))
-  .addNode("second", () => ({ log: "second" }))
-  .addEdge(START, "first")
-  .addEdge("first", "second")
-  .addEdge("second", END)
+  .addNode("clean", ({ text }) => ({ text: text.trim() }))
+  .addNode("measure", ({ text }) => ({ length: text.length }))
+  .addEdge(START, "clean")
+  .addEdge("clean", "measure")
+  .addEdge("measure", END)
   .compile();
 
-// streamMode "updates": ทุกครั้งที่ node ทำงานเสร็จ ได้ { ชื่อ node: สิ่งที่ node นั้นอัปเดต }
-const updates: { node: string; update: unknown }[] = [];
-
-// ข้อ 1: เปิด stream ด้วย { streamMode: "updates" } แล้ววนอ่านด้วย for await
-//        แต่ละชิ้นเป็น object ที่มี key เดียวคือชื่อ node ให้เก็บ { node, update } ลง updates
-for await (const chunk of await graph.stream({}, { streamMode: "updates" })) {
-  for (const [node, update] of Object.entries(chunk)) updates.push({ node, update });
+const input = { text: "  abc  " };
+const diffMode: StreamMode = "updates";
+const updates: unknown[] = [];
+for await (const chunk of await graph.stream(input, { streamMode: diffMode })) {
+  updates.push(chunk);
 }
 
-// streamMode "values": ทุกก้าวได้ "state ทั้งก้อน" (ชิ้นแรกคือ state เริ่มต้นก่อน node ใดทำงาน)
 const values: unknown[] = [];
-
-// ข้อ 2: เหมือนข้อ 1 แต่ใช้ { streamMode: "values" } และเก็บ chunk ทั้งก้อนลง values
-for await (const chunk of await graph.stream({ log: "start" }, { streamMode: "values" })) {
+for await (const chunk of await graph.stream(input, { streamMode: "values" })) {
   values.push(chunk);
 }
 
-console.log("updates:", JSON.stringify(updates));
-console.log("values: ", JSON.stringify(values));
+console.log("updates", JSON.stringify(updates));
+console.log("values", JSON.stringify(values));
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("updates มีเฉพาะค่าที่แต่ละ node คืน", JSON.stringify(updates) === '[{"clean":{"text":"abc"}},{"measure":{"length":3}}]');
 check(
-  "updates: ได้ชิ้นละ 1 node เรียงตามที่ทำงาน พร้อมสิ่งที่ node นั้นอัปเดต",
-  JSON.stringify(updates.map((u) => u.node)) === '["first","second"]' && JSON.stringify(updates[0]?.update) === '{"log":"first"}',
-  'ใช้ { streamMode: "updates" } แล้วเก็บ { node, update }',
-);
-check(
-  "values: ได้ state เต็มหลังแต่ละก้าว รวม state เริ่มต้น (2 node = 3 ชิ้น)",
-  values.length === 3 && JSON.stringify(values[0]) === '{"log":["start"]}' && JSON.stringify(values[2]) === '{"log":["start","first","second"]}',
-  'ใช้ { streamMode: "values" } แล้วเก็บ chunk ทั้งก้อน',
+  "values มี State เริ่มต้นและ State หลังแต่ละ node",
+  JSON.stringify(values) === '[{"text":"  abc  ","length":0},{"text":"abc","length":0},{"text":"abc","length":3}]',
 );

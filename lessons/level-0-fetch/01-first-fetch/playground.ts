@@ -3,9 +3,9 @@
 // เริ่มใหม่: pnpm play 0-01 --reset
 //
 // ลองทำดู:
-//   1) ส่ง request ด้วย fetch ถามคำถามของคุณเอง แล้วพิมพ์ข้อความคำตอบจาก choices[0].message.content
-//   2) พิมพ์ JSON ที่ตอบกลับมาทั้งก้อนเพื่อดูว่ามี field อะไรบ้าง
-//   3) เปลี่ยน temperature หรือ max_tokens ใน body แล้วดูผล
+//   1) เปลี่ยนคำถามใน messages
+//   2) พิมพ์ status และชื่อฟิลด์ใน response JSON
+//   3) ลองเพิ่ม max_tokens เพื่อจำกัดคำตอบ
 
 import { describeProvider } from "@src/llm";
 

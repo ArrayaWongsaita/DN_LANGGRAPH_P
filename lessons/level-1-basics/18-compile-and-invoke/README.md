@@ -1,51 +1,52 @@
-# บทที่ 18: compile, invoke และการกัน graph วนไม่จบ
+# บทที่ 1-18 รัน graph ด้วย `compile()` และ `invoke()`
 
-## แนวคิด
-ตลอดหลายบทที่ผ่านมาเราเรียก `.compile()` และ `.invoke(...)` ไปโดยไม่ได้อธิบายเต็ม ๆ บทนี้สรุปให้ชัด:
+จาก [บท 1-16](../16-loop/README.md) เราควบคุมได้ว่า graph จะวนกลับหรือจบ ในบทนี้ใช้ graph ตัวเดียวรันหลายครั้ง และเปลี่ยนงบการทำงานของแต่ละรอบด้วย `recursionLimit`
 
+## 1. ลอง compile ครั้งเดียวแล้วรันสามรอบ
+
+เติมข้อ 1 ใน [`compileAndInvoke.ts`](./compileAndInvoke.ts) ให้ `builder.compile()` สร้าง graph ที่เรียก `invoke()` ได้ แล้วรันโดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 1-18
 ```
-new StateGraph(State)  ──►  .addNode / .addEdge ...   ← "แบบแปลน" (builder)
-          │
-          ▼  .compile()      ตรวจความถูกต้อง (เช่น node ที่เข้าไม่ถึง) ถ้าผิด error ตอนนี้
-   graph ที่รันได้
-          │
-          ▼  .invoke(input)   รันตั้งแต่ START ถึง END  ได้ "State สุดท้าย" กลับมา
-```
-- `compile()` ทำครั้งเดียว ได้ graph ที่ `invoke` ซ้ำได้กี่ครั้งก็ได้
-- `invoke` รับ input (field ของ State) และคืน State สุดท้าย
-- `invoke` รับ **config** เป็นพารามิเตอร์ตัวที่สอง สิ่งที่ใช้บ่อยคือ `recursionLimit`
 
-### กัน graph วนไม่จบด้วย recursionLimit
-บทที่แล้วเราทำ loop ถ้า router ผิดพลาดแล้ววนไม่จบ LangGraph จะหยุดให้เองเมื่อครบ **limit** (ค่าเริ่มต้น 25 ก้าว) โดยโยน error ชื่อ `GraphRecursionError` เราตั้ง limit เองได้:
+แต่ละก้าว node `increment` เพิ่ม `n` ทีละ 1 แล้ววนต่อจนถึง `target` ตัวอย่างส่งทั้ง State ตั้งต้นและ config การรัน
 
 ```ts
-await graph.invoke(input, { recursionLimit: 10 });
+const graph = builder.compile();
+const result = await graph.invoke({ n: 1, target: 3 }, { recursionLimit: 5 });
+console.log(result);
 ```
-แล้วจับ error นี้เพื่อบอกผู้ใช้อย่างสุภาพ แทนที่จะให้โปรแกรมพังทั้งตัว (อย่าลืมโยน error ชนิดอื่นต่อ เพราะเป็นบั๊กจริงที่ต้องรู้)
 
-## ดูตัวอย่าง
-เปิด `compileAndInvoke.ts`: ส่วนแรกสร้าง graph เล็ก ๆ จากแบบแปลน แล้ว `compile` (ข้อ 1) ส่วนที่สองมี graph ที่วนไม่จบให้มาแล้ว คุณต้องรันด้วย `recursionLimit` (ข้อ 2) และจัดการเมื่อวนเกิน (ข้อ 3)
+ไฟล์พิมพ์อินพุต งบ และผลของทั้งสามรอบ
 
-## โจทย์
-เติมช่อง `// 👉 ข้อ N` (ตอนนี้เป็น `todo(N)`) ให้ครบ แล้วรัน:
+```text
+{"input":{"n":1,"target":3},"recursionLimit":5,"result":{"n":3,"target":3}}
+{"input":{"n":1,"target":10},"recursionLimit":3,"error":"GraphRecursionError"}
+{"input":{"n":1,"target":10},"recursionLimit":12,"result":{"n":10,"target":10}}
+```
 
-    pnpm lesson 1-18
+ในรอบสอง graph ใช้งบหมดก่อนถึงเป้า การเรียกครั้งถัดไปเริ่มตามอินพุตใหม่และใช้งบ 12 จึงถึง `target: 10`
 
-ถ้ายังเติมไม่ครบจะเห็น `ยังไม่ได้ทำข้อ N` บอกว่าช่องไหนค้างอยู่ เติมครบแล้วจะเห็นผลที่พิมพ์ออกมา และบรรทัด `✅` ทุกข้อ ถ้ามี `❌` ให้ดูคำใบ้ในวงเล็บท้ายบรรทัด
+## 2. ค่าที่ส่งให้ graph
 
-(ไม่ใช้ LLM จึงไม่ต้องมี key)
+| โค้ด | ค่า | ผล |
+|---|---|---|
+| `builder.compile()` | เรียกหลังประกอบ node และ edge | ได้ graph ที่รันซ้ำได้ |
+| `graph.invoke(input, config)` | อาร์กิวเมนต์แรกเป็น State ตั้งต้น บทนี้ใช้ `{ n, target }` | คืน State ตอนจบผ่าน Promise |
+| `config.recursionLimit` | จำนวนเต็มบวก เช่น `3`, `5`, `12` เวอร์ชันในคอร์สมีค่าเริ่มต้น `25` | จำกัดจำนวนก้าวการทำงานของรอบนั้น |
+| `GraphRecursionError` | จับใน `catch` ด้วย `instanceof` | ระบุว่า graph จบไม่ได้ในงบที่ตั้งไว้ ไฟล์โยน error ชนิดอื่นต่อ |
 
-## คุณทำได้แล้ว
-- แยกออกว่า builder กับ graph ที่ compile แล้วต่างกัน
-- ตั้ง `recursionLimit` และจับ `GraphRecursionError` ได้ถูกวิธี
+## 3. เปลี่ยนงบโดยใช้เป้าเดิม
 
-## ข้อควรจำ
-- ต้อง `compile()` ก่อน `invoke()` เสมอ
-- graph ที่มี loop ควรมีทั้งเงื่อนไขหยุดและ `recursionLimit`
-- จับเฉพาะ error ที่รู้จัก error อื่นโยนต่อ
+| อินพุต | `recursionLimit` | ผล |
+|---|---:|---|
+| `{ n: 1, target: 10 }` | 3 | `GraphRecursionError` |
+| `{ n: 1, target: 10 }` | 12 | `{ n: 10, target: 10 }` |
+| `{ n: 8, target: 10 }` | 5 | `{ n: 10, target: 10 }` |
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 1-18` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+คัดลอกโค้ดหลัง import จาก [เฉลย](./solution/compileAndInvoke.ts) จนถึงก่อนส่วนตรวจ ลงใน [`playground.ts`](./playground.ts) เปลี่ยนค่า `n` หรือ `recursionLimit` แล้วรัน `pnpm play 1-18`
 
 ## บทถัดไป
-บทที่ 19 จะดูระหว่างทางที่ graph ทำงาน ด้วย streaming ของ graph
+
+[บท 1-19 อ่านผลระหว่าง graph ทำงานด้วย stream](../19-stream/README.md)

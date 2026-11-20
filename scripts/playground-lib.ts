@@ -81,7 +81,8 @@ export function buildPlayground({ id, lessonDir, source, ideas }: PlaygroundInpu
     .map((stmt) =>
       stmt.replace(/(from\s+["']|^import\s+["'])(\.{1,2}\/[^"']+)(["'])/m, (_m, a: string, rel: string, b: string) => {
         const path = posix.normalize(posix.join(solutionDir, rel)).replace(/^lessons\//, "");
-        const playgroundPath = id.startsWith("2-") && path === `${MODEL_LESSON}/solution/llm`
+        const usesLearnerModel = id.startsWith("1-") || id.startsWith("2-");
+        const playgroundPath = usesLearnerModel && path === `${MODEL_LESSON}/solution/llm`
           ? `${MODEL_LESSON}/llm`
           : path;
         return `${a}@lessons/${playgroundPath}${b}`;

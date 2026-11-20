@@ -3,9 +3,8 @@
 // เริ่มใหม่: pnpm play 1-10 --reset
 //
 // ลองทำดู:
-//   1) สร้าง StateSchema ของตัวเอง (เช่น โปรไฟล์ หรือรายการสินค้า) ให้บาง field มีค่าเริ่มต้น
-//   2) สร้าง graph ที่มี node เดียวแล้ว invoke ด้วยข้อมูลไม่ครบ ดูค่าเริ่มต้น
-//   3) ส่งค่าที่ชนิดผิด แล้วดู error
+//   1) เปลี่ยนค่าเริ่มต้นของ age จาก 0 เป็น 18
+//   2) ส่งเฉพาะ name แล้วเทียบกับการส่ง age เอง
 
 import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";

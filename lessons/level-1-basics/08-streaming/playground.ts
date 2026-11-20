@@ -2,13 +2,11 @@
 // รันด้วย: pnpm play 1-08   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 1-08 --watch)
 // เริ่มใหม่: pnpm play 1-08 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) ใช้ llm.stream ให้ LLM เล่าเรื่อง แล้วพิมพ์ทีละชิ้นด้วย process.stdout.write
-//   2) นับจำนวน chunk และดูว่าแต่ละชิ้นยาวเท่าไร
-//   3) จับเวลาจนได้ชิ้นแรก เทียบกับรอคำตอบทั้งหมดด้วย invoke
+//   1) เปลี่ยนจำนวนหรือเนื้อหาของ AIMessageChunk
+//   2) ใช้ fixture เดียวกันเทียบ stream กับ invoke
 
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { AIMessageChunk } from "@langchain/core/messages";
+import { FakeStreamingChatModel } from "@langchain/core/utils/testing";
 
 // เขียนโค้ดของคุณตรงนี้
