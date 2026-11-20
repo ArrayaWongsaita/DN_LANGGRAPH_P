@@ -5,12 +5,13 @@
 // ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
 //
 // ลองทำดู:
-//   1) ผูก tools เข้ากับ llm ด้วย bindTools แล้วถามคำถามที่ต้องใช้ tool
-//   2) พิมพ์ tool_calls ที่ LLM ขอ
-//   3) รัน tool ตามที่ขอเองด้วยมือ
+//   1) พิมพ์ name และ args ของ tool_calls
+//   2) ลองถามให้โมเดลใช้ add หรือ getWeather
+//   3) เทียบกับ AIMessage ตัวอย่างใน README
 
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { makeAddTool, makeWeatherTool } from "@src/sampleTools";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { llm } from "@lessons/level-1-basics/02-llm-config/llm";
 
 // เขียนโค้ดของคุณตรงนี้

@@ -2,15 +2,12 @@
 // รันด้วย: pnpm play 2-27   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-27 --watch)
 // เริ่มใหม่: pnpm play 2-27 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) ใส่ withRetry ให้โมเดลหลัก
-//   2) เพิ่มตัวสำรองด้วย withFallbacks
-//   3) จำลองโมเดลหลักที่ล้มแล้วดูว่าสลับไปตัวสำรอง
+//   1) เปลี่ยนจำนวนครั้งที่ให้ตัวหลักลอง
+//   2) ให้ตัวหลักสำเร็จในการเรียกครั้งที่สองแล้วดู calls
+//   3) ลองกำหนดรายการตัวสำรองหลายตัว
 
-import type { AIMessageChunk } from "@langchain/core/messages";
-import { RunnableLambda } from "@langchain/core/runnables";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { AIMessage } from "@langchain/core/messages";
+import { RunnableLambda, type Runnable } from "@langchain/core/runnables";
 
 // เขียนโค้ดของคุณตรงนี้

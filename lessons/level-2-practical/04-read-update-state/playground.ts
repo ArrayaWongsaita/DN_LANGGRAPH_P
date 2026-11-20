@@ -2,16 +2,12 @@
 // รันด้วย: pnpm play 2-04   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-04 --watch)
 // เริ่มใหม่: pnpm play 2-04 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) อ่าน state ของ thread ด้วย graph.getState แล้วพิมพ์ข้อความทั้งหมด
-//   2) แก้ state ด้วย updateState เช่น ลบข้อความแรก
-//   3) คุยต่อแล้วดูว่า LLM เห็นข้อความที่แก้แล้ว
+//   1) อ่าน values.messages ของ thread ที่ยังไม่มีประวัติ
+//   2) เปลี่ยน id ที่ส่งให้ RemoveMessage
+//   3) ส่ง HumanMessage ที่ใช้ id เดิมเพื่อแก้ข้อความ
 
-import { HumanMessage, RemoveMessage } from "@langchain/core/messages";
-import type { BaseMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, RemoveMessage, type BaseMessage } from "@langchain/core/messages";
 import { END, MemorySaver, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
 
 // เขียนโค้ดของคุณตรงนี้

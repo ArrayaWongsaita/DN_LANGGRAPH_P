@@ -1,34 +1,59 @@
-# บทที่ 2-07: เก็บความจำลงไฟล์ (SqliteSaver)
+# บทที่ 2-07 เก็บ checkpoint ลงไฟล์ด้วย `SqliteSaver`
 
-## แนวคิด
-`MemorySaver` เก็บใน RAM: ปิดโปรแกรมแล้วหายหมด ถ้าอยากให้บอทจำข้ามการ "รีสตาร์ต" ต้องใช้ checkpointer ที่เก็บลงดิสก์ ตัวหนึ่งที่ง่ายคือ `SqliteSaver` (แพ็กเกจ `@langchain/langgraph-checkpoint-sqlite` ติดตั้งไว้แล้ว) เก็บลงไฟล์ SQLite:
+[บท 2-02](../02-checkpointer/README.md) เก็บ checkpoint ไว้ใน `MemorySaver` ของโปรแกรม เมื่ออยากปิดแล้วกลับมาคุยต่อ ให้เก็บ checkpoint ลงไฟล์ SQLite และเปิดไฟล์เดิมด้วย `thread_id` เดิม
+
+## 1. ลองปิดแล้วเปิดฐานข้อมูลเดิม
+
+เปิด [`persistent.ts`](./persistent.ts) แล้วเติมข้อ 1 ให้สร้าง saver จาก `storage` ของแต่ละรอบ รันได้ในเครื่องโดยไม่ต้องมี API key ไฟล์ตัวอย่างสร้างฐานข้อมูลในโฟลเดอร์ชั่วคราวที่จัดให้เฉพาะรอบนี้
+
+```sh
+pnpm lesson 2-07
+```
+
+ในแต่ละรอบ โค้ดจะสร้าง saver และ graph จากนั้นเรียก graph แล้วปิดการเชื่อมต่อ
 
 ```ts
-import { SqliteSaver } from "@langchain/langgraph-checkpoint-sqlite";
-const saver = SqliteSaver.fromConnString("memory.db"); // ชื่อไฟล์ (หรือ ":memory:" = RAM)
-const graph = builder.compile({ checkpointer: saver });
+const saver = SqliteSaver.fromConnString(storage);
+try {
+  const graph = builder.compile({ checkpointer: saver });
+  const result = await graph.invoke({ messages: [new HumanMessage(text)] }, config);
+  console.log(label, result.messages.length);
+} finally {
+  saver.db.close();
+}
 ```
-ขอให้ **ชื่อไฟล์และ `thread_id` เดิม** แล้วบอทจะอ่านประวัติเดิมกลับมาได้ แม้จะสร้าง graph ใหม่ทั้งตัว (เหมือนรีสตาร์ตโปรแกรม)
 
-## ดูตัวอย่าง
-`persistent.ts` มีฟังก์ชัน `buildChat(saver)` และฉาก "รีสตาร์ต" ที่สร้าง graph ใหม่จากไฟล์เดิม ที่ขาดคือ การสร้าง saver จากไฟล์ และการติด saver เข้ากับ graph
+```text
+เปิดไฟล์ครั้งแรก 2
+เปิดไฟล์เดิมใหม่ 4
+เปิดฐานข้อมูลใน RAM 2
+```
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+รอบสองได้ graph ตัวใหม่และเปิดการเชื่อมต่อใหม่ ประวัติรอบแรกยังอยู่ในไฟล์เดิม จึงอ่านมาต่อได้ 4 ข้อความ
 
-    pnpm lesson 2-07
+## 2. ค่าที่ใช้เลือกประวัติ
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+| โค้ด | ตัวอย่างค่า | ผล |
+|---|---|---|
+| `SqliteSaver.fromConnString(storage)` | path ไปยังไฟล์ เช่น `"./memory.db"` | เปิดไฟล์เดิมหรือสร้างฐานข้อมูลใหม่เมื่อยังไม่มีไฟล์ |
+| `SqliteSaver.fromConnString(storage)` | `":memory:"` | สร้างฐานข้อมูลใน RAM สำหรับการเชื่อมต่อนั้น |
+| `builder.compile({ checkpointer: saver })` | อินสแตนซ์ `SqliteSaver` | ใช้ฐานข้อมูลนี้บันทึกและอ่าน State |
+| `configurable.thread_id` | `"mali"` | เลือกบทสนทนาภายในฐานข้อมูลที่เปิดอยู่ |
 
-## คุณทำได้แล้ว
-- เก็บความจำข้ามการรีสตาร์ตด้วย `SqliteSaver`
+อ่านรายละเอียดของตัวสร้าง saver ได้ใน [อ้างอิง `SqliteSaver.fromConnString`](https://reference.langchain.com/javascript/langchain-langgraph-checkpoint-sqlite/SqliteSaver/fromConnString)
 
-## ข้อควรจำ
-- ไฟล์ `.db` เก็บบทสนทนาจริงของผู้ใช้ ห้าม commit ขึ้น git
-- งานจริงที่มีหลายเซิร์ฟเวอร์มักใช้ฐานข้อมูลกลาง (เช่น Postgres) ผ่าน checkpointer ตัวอื่น แต่รูปแบบการใช้เหมือนกัน
+## 3. ลองเปลี่ยนไฟล์หรือรหัสบทสนทนา
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-07` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+สมมติว่าไฟล์ `memory.db` มี 2 ข้อความของห้อง `"mali"` อยู่แล้ว
+
+| ที่เก็บตอนเรียกครั้งถัดไป | `thread_id` | ข้อความหลัง graph ตอบ |
+|---|---|---:|
+| `memory.db` | `"mali"` เดิม | 4 |
+| `memory.db` | `"somchai"` ห้องใหม่ | 2 |
+| ไฟล์ใหม่หรือ `":memory:"` ตัวใหม่ | `"mali"` | 2 |
+
+คัดลอกโค้ดหลัง import จาก [เฉลย](./solution/persistent.ts) จนถึงก่อนส่วนตรวจ ลงใน [`playground.ts`](./playground.ts) แล้วแก้ค่ารอบที่สองและรัน `pnpm play 2-07`
 
 ## บทถัดไป
-บท 2-08: นิยาม tool (โปรเจกต์เล็กอยู่ที่บท 2-17)
+
+[บท 2-08 สร้าง tool ด้วย schema ที่ตรวจอินพุตได้](../08-define-tool/README.md)

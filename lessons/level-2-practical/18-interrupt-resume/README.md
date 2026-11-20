@@ -1,41 +1,61 @@
-# บทที่ 2-18: หยุดรอมนุษย์ (interrupt) แล้วทำต่อ (resume)
+# บทที่ 2-18 หยุด graph รอคำตอบแล้วทำต่อด้วย `interrupt`
 
-## แนวคิด
-บางงาน agent ไม่ควรตัดสินใจเอง (ลบข้อมูล ส่งเงิน ส่งอีเมล) เราอยากให้ graph **หยุดรอคนตอบ** แล้วทำต่อจากจุดเดิม นี่คือ human-in-the-loop ใน LangGraph ใช้ 2 อย่าง:
+ก่อนเผยแพร่รายงาน กราฟต้องขอคำตอบจากคน `interrupt` ส่งคำถามออกมาแล้วพักการทำงานไว้ เมื่อคนตอบ ให้เรียกกราฟอีกครั้งด้วย `Command({ resume: ... })` และ `thread_id` เดิม กราฟจะเริ่ม node ที่หยุดใหม่และ `interrupt` จะคืนคำตอบนั้น
 
-- ใน node เรียก `interrupt(ข้อมูลที่อยากแสดงให้คนเห็น)` graph จะหยุดตรงนั้นและเก็บ State ไว้ (**ต้องมี checkpointer** และ `thread_id`)
-- ฝั่งภายนอกตอบกลับด้วย `new Command({ resume: คำตอบ })` ใน `invoke` ถัดไป (thread เดียวกัน) แล้วค่า `resume` จะกลายเป็น **ค่าที่ `interrupt(...)` คืนออกมา**
+## 1. หยุดแล้วตอบ `"yes"`
+
+เติมข้อ 1 ใน [`pause.ts`](./pause.ts) ให้กราฟทำต่อด้วย `Command({ resume: reply })` และ `config` เดิม จากนั้นรันจากโฟลเดอร์หลัก แล้วดูให้ครบทั้งผลตอนหยุดและผลตอนทำต่อ
+
+```sh
+pnpm lesson 2-18
+```
+
+[`pause.ts`](./pause.ts) มี node `ask` เพียงตัวเดียว ใช้ `MemorySaver` เก็บจุดที่พักไว้ตาม [บท 2-02](../02-checkpointer/README.md) โค้ดส่วนหลักหลังเติมข้อ 1 มีดังนี้
 
 ```ts
-// node
-const answer = interrupt({ question: "อนุมัติไหม?" }); // หยุดตรงนี้ รอบหน้าได้ค่า resume
+const graph = new StateGraph(State)
+  .addNode("ask", (state) => {
+    const answer: unknown = interrupt({ question: "อนุมัติไหม?", action: state.action });
+    return { decision: String(answer) };
+  })
+  .addEdge(START, "ask")
+  .addEdge("ask", END)
+  .compile({ checkpointer: new MemorySaver() });
 
-// ภายนอก
-const r = await graph.invoke(input, cfg);      // หยุด: r มี __interrupt__ (ตรวจด้วย isInterrupted(r))
-await graph.invoke(new Command({ resume: "yes" }), cfg); // ทำต่อ
+const config = { configurable: { thread_id: "report" } };
+const started = await graph.invoke({ action: "เผยแพร่รายงาน" }, config);
+const reply = "yes";
+const finished = await graph.invoke(new Command({ resume: reply }), config);
 ```
-สังเกต: ตอน resume **node ที่หยุดไว้จะรันใหม่ตั้งแต่ต้น node** แต่คราวนี้ `interrupt` คืนค่าที่ resume มาแทนการหยุด (เรื่องนี้สำคัญ บท 2-21)
 
-## ดูตัวอย่าง
-`pause.ts` มี graph สองโหนด: `ask` (ขออนุมัติ) แล้ว `act` (ทำตามคำตอบ) ขาดการเรียก `interrupt` และการ resume บทนี้ไม่ใช้ LLM
+สคริปต์พิมพ์ค่าตอนหยุดและหลังทำต่อ ใช้ได้โดยไม่ต้องตั้ง API key
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+```text
+{"pending":true,"request":{"question":"อนุมัติไหม?","action":"เผยแพร่รายงาน"}}
+{"pending":false,"decision":"yes"}
+```
 
-    pnpm lesson 2-18
+`isInterrupted(started)` คืน `true` เมื่อผลจาก `invoke` มี interrupt ที่รออยู่ ตัวอย่างอ่านข้อมูลใน `started.__interrupt__[0]?.value` หลังตรวจค่านี้แล้ว รอบที่สองจบที่ `END` จึงได้ `pending: false`
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+## 2. ค่าในคำถามกับค่าในคำตอบ
 
-## คุณทำได้แล้ว
-- หยุด graph เพื่อรอคน และทำต่อด้วย `Command({ resume })`
+| จุดที่ใส่ค่า | ชนิดและตัวอย่าง | ผล |
+|---|---|---|
+| `interrupt(value)` | ค่าที่แปลงเป็น JSON ได้ เช่น `{ question, action }` | ส่งข้อมูลให้ผู้เรียกนำไปแสดงตอนพัก |
+| `new Command({ resume: reply })` | ส่งคำตอบ เช่น `"yes"`, `"no"` หรือค่า boolean | ทำให้ `interrupt` ที่พักอยู่คืนคำตอบใน node |
+| `checkpointer` และ `thread_id` | ตัวเก็บสถานะและ `string` เช่น `"report"` | ระบุว่าจะบันทึกและเปิดงานใด `MemorySaver` เก็บในโปรเซสที่กำลังรัน |
 
-## ข้อควรจำ
-- ไม่มี checkpointer = `interrupt` ใช้ไม่ได้
-- ข้อมูลที่ส่งใน `interrupt(...)` ต้องแปลงเป็น JSON ได้ (ถูกเก็บลง checkpoint)
-- ข้อมูลที่หยุดอยู่ดูได้จาก `r.__interrupt__[0].value` หรือ `getState().tasks[0].interrupts[0].value`
+ค่าที่ส่งออกจาก `interrupt` เป็นข้อมูลให้คนอ่าน ส่วนค่าที่ node ได้กลับมามาจาก `resume`
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-18` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+## 3. เปลี่ยนคำตอบแล้วดู State
 
-## บทถัดไป
-บท 2-19: อนุมัติหรือปฏิเสธ แล้วแยกทางตามคำตอบ
+คัดลอกโค้ดส่วนหลัง import จากเฉลยลง [`playground.ts`](./playground.ts) ตัดส่วนตรวจออก แล้วใช้ `pnpm play 2-18` เปลี่ยนค่า `reply` หนึ่งค่าและรันซ้ำ
+
+| `reply` | ค่าจาก `invoke` รอบสอง |
+|---|---|
+| `"yes"` | `{"pending":false,"decision":"yes"}` |
+| `"no"` | `{"pending":false,"decision":"no"}` |
+
+ทั้งสองรอบมาถึง `END` เหมือนกัน บทถัดไปจะใช้คำตอบเลือก node ที่จะไปต่อ
+
+[ดูเฉลย](./solution/pause.ts) · [บทก่อนหน้า 2-17 ผู้ช่วยจดโน้ต](../17-mini-project/README.md) · [บทถัดไป 2-19 แยกทางตามผลอนุมัติ](../19-approve-reject/README.md)

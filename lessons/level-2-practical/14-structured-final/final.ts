@@ -1,50 +1,42 @@
-import { HumanMessage } from "@langchain/core/messages";
+// รันด้วย pnpm lesson 2-14 ใช้ API key จากบท 1-02
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { END, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { todo } from "@src/todo";
 import { z } from "zod";
-import { makeWeatherTool } from "@src/sampleTools";
 import { llm } from "../../level-1-basics/02-llm-config/llm";
 import { check } from "@src/check";
+import { todo } from "@src/todo";
 
-// รันด้วย: pnpm lesson 2-14
-// agent ที่ตอบเป็นข้อความอิสระ เอาไปใช้ต่อในโปรแกรมยาก: ขั้นสุดท้ายให้ LLM "จัดคำตอบเป็นโครงสร้าง" ตาม schema
-// 👉 ข้อ 1: schema ของคำตอบสุดท้าย { city: string, tempC: number, summary: string }
-// แนวทาง: z.object({ city: z.string(), tempC: z.number(), summary: z.string() })
-const AnswerSchema: z.ZodObject<{ city: z.ZodString; tempC: z.ZodNumber; summary: z.ZodString }> = todo(1);
-
+const AnswerSchema = z.object({ city: z.string(), tempC: z.number(), summary: z.string() });
 const State = new StateSchema({ messages: MessagesValue, answer: AnswerSchema.optional() });
-const tools = [makeWeatherTool()];
-const llmWithTools = llm.bindTools!(tools);
 
 const graph = new StateGraph(State)
-  .addNode("agent", async (state) => ({ messages: [await llmWithTools.invoke(state.messages)] }))
-  .addNode("tools", new ToolNode(tools))
   .addNode("format", async (state) => {
-    // 👉 ข้อ 2: ใช้ llm.withStructuredOutput(AnswerSchema, { method: "functionCalling" }) แล้วเรียก .invoke(state.messages)
-    //        คืน { answer: ผลที่ได้ }
-    return todo(2);
+    const formatter = llm.withStructuredOutput(AnswerSchema, { method: "functionCalling" });
+    const input = [...state.messages, new HumanMessage("จัดคำตอบอากาศตาม schema โดยคงชื่อเมืองเดิม")];
+    // 👉 ข้อ 1 เรียก formatter ด้วย input แล้วคืนผลใน field answer
+    return todo(1);
   })
-  .addEdge(START, "agent")
-  .addConditionalEdges(
-    "agent",
-    (state) => {
-      const last = state.messages[state.messages.length - 1];
-      return "tool_calls" in last && Array.isArray(last.tool_calls) && last.tool_calls.length > 0 ? "tools" : "format";
-    },
-    ["tools", "format"],
-  )
-  .addEdge("tools", "agent")
+  .addEdge(START, "format")
   .addEdge("format", END)
   .compile();
 
-const result = await graph.invoke({ messages: [new HumanMessage("อากาศที่เชียงใหม่เป็นอย่างไร")] });
-console.log("answer:", result.answer);
+// ใช้ประวัติที่ agent ตอบเสร็จแล้วเป็นอินพุตของ node format
+const result = await graph.invoke({
+  messages: [
+    new HumanMessage("อากาศที่เชียงใหม่เป็นอย่างไร"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        { name: "getWeather", args: { city: "เชียงใหม่" }, id: "weather", type: "tool_call" },
+      ],
+    }),
+    new ToolMessage({ content: "อากาศเย็น 22 องศา", tool_call_id: "weather", name: "getWeather" }),
+    new AIMessage("เชียงใหม่อากาศเย็น 22 องศา"),
+  ],
+});
+console.log(JSON.stringify(result.answer));
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("ได้ answer ที่เป็น object", typeof result.answer === "object" && result.answer !== null, "node format ต้องคืน { answer }");
-check("city เป็นข้อความที่ไม่ว่าง", typeof result.answer?.city === "string" && result.answer.city.length > 0);
-check("tempC เป็นตัวเลข 22 (มาจาก tool)", result.answer?.tempC === 22, "tempC ต้องเป็นตัวเลข ไม่ใช่ข้อความ");
-check("summary เป็นข้อความที่ไม่ว่าง", typeof result.answer?.summary === "string" && result.answer.summary.length > 0);
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("ได้ answer ที่ตรงกับ schema", AnswerSchema.safeParse(result.answer).success);
+check("อ่านอุณหภูมิ 22 จากผล tool", result.answer?.tempC === 22);
+check("ประวัติยังครบ 4 ข้อความ", result.messages.length === 4);

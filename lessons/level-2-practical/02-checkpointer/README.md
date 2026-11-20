@@ -1,39 +1,55 @@
-# บทที่ 2-02: checkpointer ทำให้ graph "จำ"
+# บทที่ 2-02 ใช้ checkpointer เก็บประวัติข้ามรอบ
 
-## แนวคิด
-บท 2-01 graph ลืมทุกอย่างหลังจบแต่ละ `invoke` ถ้าอยากให้จำข้ามรอบต้องมีที่เก็บ State ไว้ระหว่างการเรียก ที่เก็บนี้เรียกว่า **checkpointer** มันบันทึก State ทุกครั้งที่จบ step
+ใน [บท 2-01](../01-messages-state/README.md) การเรียก graph แต่ละครั้งมี State ของตัวเอง ถ้าต้องการให้รอบถัดไปอ่านการสนทนาเดิม ให้ compile graph พร้อม checkpointer แล้วใช้รหัสบทสนทนาเดิมในการเรียกแต่ละรอบ
 
-ตัวที่ง่ายที่สุดคือ `MemorySaver` เก็บไว้ใน RAM (หายเมื่อปิดโปรแกรม บท 2-07 จะสอนตัวที่เก็บลงไฟล์):
+## 1. ลองคุยสองรอบในบทสนทนาเดียว
+
+เติมข้อ 1 ใน [`memory.ts`](./memory.ts) ให้ `compile()` ใช้ `MemorySaver` แล้วรัน ตัวอย่างใช้คำตอบที่กำหนดไว้เองและไม่ต้องมี API key
+
+```sh
+pnpm lesson 2-02
+```
+
+ต่อจาก builder ของ graph ที่มี node `chat` ให้ทำดังนี้
 
 ```ts
-const graph = builder.compile({ checkpointer: new MemorySaver() });
+const checkpointer = new MemorySaver();
+const graph = builder.compile({ checkpointer });
+const config = { configurable: { thread_id: "mali" } };
+
+const first = await graph.invoke({ messages: [new HumanMessage("ฉันชื่อมาลี")] }, config);
+const second = await graph.invoke({ messages: [new HumanMessage("ฉันชอบแมว")] }, config);
+const snapshot = await graph.getState(config);
+const savedMessages: BaseMessage[] = snapshot.values.messages ?? [];
 ```
-แต่ทุกครั้งที่ `invoke` ต้องบอกว่า "เก็บ/อ่านที่ช่องไหน" ผ่าน config ที่มี `thread_id`:
 
-```ts
-await graph.invoke(input, { configurable: { thread_id: "บทสนทนา-1" } });
+```text
+จำนวนข้อความแต่ละรอบ [ 2, 4 ]
+ใน checkpoint [ 'ฉันชื่อมาลี', 'รับทราบ', 'ฉันชอบแมว', 'รับทราบ' ]
 ```
-ข้อความใหม่จะถูกต่อท้ายประวัติของ thread นั้น ข้อความตอบกลับเลยรวมประวัติเก่าอัตโนมัติ (รายละเอียดของ `thread_id` อยู่บท 2-03 ในบทนี้ใช้ค่าคงที่ให้ก่อน)
 
-## ดูตัวอย่าง
-`memory.ts` มี graph แชตและ `config` ที่ส่ง `thread_id` คงที่ให้แล้ว สิ่งที่ขาดคือการ "ติด" checkpointer ให้ graph ตอนยัง compile
+รอบแรกมีผู้ใช้กับ AI รวม 2 ข้อความ เมื่อรอบสองใช้ `config` เดิม graph จะอ่าน 2 ข้อความนั้นก่อนเพิ่มคำถามและคำตอบใหม่ จึงได้ 4 ข้อความ
 
-## โจทย์
-เติม 1 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+## 2. ค่าที่เชื่อมกัน
 
-    pnpm lesson 2-02
+| ตำแหน่ง | ตัวอย่างค่า | ทำหน้าที่อะไร |
+|---|---|---|
+| `compile({ checkpointer })` | `new MemorySaver()` | เก็บ checkpoint ในหน่วยความจำของโปรแกรม |
+| `configurable.thread_id` ใน `invoke()` | `"mali"` หรือสตริงอื่นที่ตั้งเอง | เลือกบทสนทนาที่จะอ่านและเขียน |
+| `getState(config)` | ส่ง config ของบทสนทนาเดิม | คืน snapshot ล่าสุดที่มีข้อมูลใน `values` |
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+`MemorySaver` มีอายุเท่ากับอินสแตนซ์ที่สร้างไว้ หากเปิดโปรแกรมใหม่จะได้ saver ตัวใหม่ [เอกสาร LangGraph เรื่อง persistence](https://docs.langchain.com/oss/javascript/langgraph/persistence)
 
-## คุณทำได้แล้ว
-- เพิ่มความจำให้ graph ด้วย `MemorySaver`
+## 3. เปรียบเทียบจำนวนข้อความ
 
-## ข้อควรจำ
-- ไม่มี checkpointer = ไม่จำ; มี checkpointer แต่ไม่ส่ง `thread_id` = error
-- `MemorySaver` เหมาะกับทดลอง ไม่ใช่งานจริง (หายเมื่อปิดโปรแกรม)
+| การตั้งค่า | รอบแรก | รอบสอง |
+|---|---:|---:|
+| `compile()` เหมือนบทก่อน | 2 | 2 |
+| `MemorySaver` และใช้ thread `"mali"` ทั้งสองรอบ | 2 | 4 |
+| `MemorySaver` และเปลี่ยนเป็น thread ใหม่ในรอบสอง | 2 | 2 |
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-02` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+คัดลอกโค้ดหลัง import จาก [เฉลย](./solution/memory.ts) จนถึงก่อนส่วนตรวจ ลงใน [`playground.ts`](./playground.ts) ลองแก้ `thread_id` ของรอบสองแล้วรัน `pnpm play 2-02`
 
 ## บทถัดไป
-บท 2-03: `thread_id` แยกบทสนทนาของแต่ละคน
+
+[บท 2-03 ใช้ thread_id แยกบทสนทนา](../03-thread-id/README.md)

@@ -1,35 +1,59 @@
-# บทที่ 2-12: กัน agent วนไม่รู้จบ (recursion limit)
+# บทที่ 2-12 จำกัดจำนวน step ด้วย `recursionLimit`
 
-## แนวคิด
-agent ตัดสินใจเองว่าจะเรียก tool อีกไหม ถ้า LLM "ติดลูป" (เรียก tool ซ้ำไม่หยุด) ค่า API จะพุ่งและโปรแกรมไม่จบ LangGraph จึงมีเพดานจำนวน step ต่อการ `invoke` หนึ่งครั้ง ค่าเริ่มต้นคือ 25 เกินเมื่อไรจะ throw `GraphRecursionError` ตั้งเองได้ที่ config:
+วง [ReAct จากบท 2-11](../11-react-loop/README.md) จะเดินจาก `agent` ไป `tools` แล้วกลับมาได้หลายรอบ ถ้า agent ขอ tool ต่อเนื่อง เราใช้ `recursionLimit` จำกัดจำนวน step ของกราฟต่อการรันหนึ่งครั้ง เมื่อใช้งบหมดก่อนถึงทางออก กราฟจะโยน `GraphRecursionError`
+
+## 1. ให้งบพอสำหรับการใช้ tool สองรอบ
+
+เปิด [`limit.ts`](./limit.ts) แล้วเติมข้อ 1 ให้ `recursionLimit` คำนวณจาก `maxToolRounds` ตัวอย่างใช้ node `agent` ที่ขอ tool ตามจำนวนรอบที่ตั้งไว้ จึงรันจากโฟลเดอร์หลักได้โดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 2-12
+```
+
+โค้ดคำนวณงบและส่งค่าให้กราฟ
 
 ```ts
-await graph.invoke(input, { recursionLimit: 10 });
+const maxToolRounds = 2;
+const recursionLimit = 2 * maxToolRounds + 2;
+
+const result = await graph.invoke({ messages: [], wantedRounds: 2 }, { recursionLimit });
+console.log(result.messages.at(-1)?.text);
 ```
-- นับเป็น "step" ของ graph (agent 1 step, tools 1 step ฯลฯ) ไม่ใช่จำนวน tool
-- วงวน agent ที่ใช้ tool ครบ N รอบแล้วตอบ ใช้ประมาณ `2N + 1` step (ตั้งเพดานเผื่อไว้ `2N + 2`)
 
-โค้ดจริงควรจับ error นี้แล้วบอกผู้ใช้ดี ๆ แทนที่จะปล่อยให้โปรแกรมล่ม
+ในกราฟตัวอย่าง หนึ่งรอบใช้ 2 step สำหรับ `agent` ที่ขอ tool และ `tools` ที่รัน tool เผื่ออีก 2 step สำหรับจุดเริ่มต้นและ `agent` ที่ตอบครั้งสุดท้าย สคริปต์เต็มรันด้วยงบเดียวกันทั้งกรณีที่ขอ 2 รอบและ 100 รอบ [ดูเฉลย](./solution/limit.ts)
 
-## ดูตัวอย่าง
-`limit.ts` มี agent จำลองที่ขอ tool ตามจำนวนรอบที่กำหนด (ไม่เรียก LLM จริงเพื่อให้ผลแน่นอน) ขาดการคำนวณและตั้ง limit กับการจับ error
+```text
+recursionLimit = 6
+ขอ tool 2 รอบ → เสร็จแล้ว
+ขอ tool 100 รอบ → GraphRecursionError
+✅ งบครบสำหรับ 2 รอบ
+✅ ทำงานครบได้ 2 รอบ
+✅ หยุดเมื่อจะทำ 100 รอบ
+```
 
-## โจทย์
-เติม 3 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+## 2. กำหนดงบที่ไหน
 
-    pnpm lesson 2-12
+| ค่า | ชนิดหรือตัวอย่าง | ใช้ทำอะไร |
+|---|---|---|
+| `wantedRounds` | ตัวเลข เช่น `2` หรือ `100` | ค่า State ที่ใช้กำหนดว่า agent ตัวอย่างอยากขอ tool กี่รอบ |
+| `maxToolRounds` | ตัวเลข เช่น `2` | ตัวแปรในบท ใช้คำนวณงบของกราฟตัวอย่าง |
+| `recursionLimit` | จำนวนเต็มบวก เช่น `6` | ส่งผ่านออบเจ็กต์ตัวที่สองของ `graph.invoke(input, { recursionLimit })` |
+| `GraphRecursionError` | คลาส error จาก `@langchain/langgraph` | ใช้ `instanceof` เพื่อจัดการเฉพาะกรณีหมดงบ ส่วน error อื่นส่งต่อด้วย `throw error` |
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+สูตร `2 * maxToolRounds + 2` ใช้กับเส้นทางนี้ ถ้ากราฟเพิ่ม node ต้องเผื่องบให้เส้นทางใหม่ หลาย tool call ใน `ToolNode` เดียวกันยังเป็นการเข้า node `tools` เพียงครั้งเดียว
 
-## คุณทำได้แล้ว
-- จำกัดจำนวน step ของ agent และจัดการกรณีวนเกิน
+## 3. เปลี่ยนงบแล้วเทียบผล
 
-## ข้อควรจำ
-- ตั้ง limit ให้เหมาะกับงาน: ต่ำไปงานปกติจะขาด สูงไปติดลูปแล้วเสียเงิน
-- ผู้ใช้ควรได้ข้อความที่เข้าใจ ไม่ใช่ stack trace
+ย้ายโค้ดในเฉลยลง [`playground.ts`](./playground.ts) โดยใช้ import เพียงชุดเดียวและตัดส่วนตรวจออก จากนั้นแทนบรรทัดคำนวณด้วย `const recursionLimit = 5;` แล้วรัน `pnpm play 2-12` ลองทำซ้ำด้วยค่า 6 และ 7
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-12` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+| `recursionLimit` | เมื่อ `wantedRounds` เป็น `2` | เมื่อ `wantedRounds` เป็น `100` |
+|---:|---|---|
+| 5 | `GraphRecursionError` | `GraphRecursionError` |
+| 6 | `เสร็จแล้ว` | `GraphRecursionError` |
+| 7 | `เสร็จแล้ว` | `GraphRecursionError` |
 
-## บทถัดไป
-บท 2-13: เมื่อ tool พัง
+## การบ้าน
+
+กำหนดงบให้ขอ tool ได้ 3 รอบ จากนั้นเปลี่ยนรายการในลูปเป็น `[3, 4]` แล้วรัน `pnpm play 2-12` งบ `8` ควรทำให้กรณี 3 รอบตอบ `เสร็จแล้ว` และกรณี 4 รอบได้ `GraphRecursionError`
+
+[บทก่อนหน้า 2-11 ต่อวง ReAct](../11-react-loop/README.md) · [บทถัดไป 2-13 จัดการ tool error](../13-tool-errors/README.md)

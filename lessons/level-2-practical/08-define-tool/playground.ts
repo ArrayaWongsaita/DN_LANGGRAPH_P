@@ -3,11 +3,11 @@
 // เริ่มใหม่: pnpm play 2-08 --reset
 //
 // ลองทำดู:
-//   1) สร้าง tool ของตัวเองด้วย tool() และ schema ของ zod
-//   2) เรียก tool ตรง ๆ ด้วย .invoke เพื่อดูผล
-//   3) ลองส่งอาร์กิวเมนต์ผิดชนิดแล้วดู error
+//   1) เปลี่ยนตัวเลขที่ส่งให้ add แล้วสังเกตชนิดผลลัพธ์
+//   2) ลองส่งสตริงแทนตัวเลขให้ schema
+//   3) สร้าง tool คูณด้วย schema เดิม
 
-import { tool } from "@langchain/core/tools";
+import { tool, ToolInputParsingException } from "@langchain/core/tools";
 import { z } from "zod";
 
 // เขียนโค้ดของคุณตรงนี้

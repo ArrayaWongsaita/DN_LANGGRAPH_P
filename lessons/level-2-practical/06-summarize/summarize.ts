@@ -1,59 +1,54 @@
 import { HumanMessage, RemoveMessage, SystemMessage } from "@langchain/core/messages";
 import { END, MemorySaver, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { todo } from "@src/todo";
 import { z } from "zod";
-import { llm } from "../../level-1-basics/02-llm-config/llm";
 import { check } from "@src/check";
+import { todo } from "@src/todo";
+import { fakeLLM } from "@src/fakeLLM";
+import { fakeToolLLM } from "@src/fakeToolLLM";
 
-// รันด้วย: pnpm lesson 2-06
-// ประวัติยาวเกินไป: ให้ LLM "สรุป" เนื้อหาเก่าเก็บไว้ แล้วลบข้อความเก่าทิ้ง เหลือแต่ข้อความล่าสุด
-const State = new StateSchema({
-  messages: MessagesValue,
-  summary: z.string().default(""),
-});
+const State = new StateSchema({ messages: MessagesValue, summary: z.string().default("") });
+const MAX_MESSAGES = 4;
+const KEEP_LAST = 2;
 
-const MAX_MESSAGES = 4; // ยาวกว่านี้ให้สรุป
-const KEEP_LAST = 2; // เก็บข้อความล่าสุดไว้กี่ข้อความหลังสรุป
+const chatModel = fakeToolLLM(["รับทราบ", "รับทราบ", "รับทราบ", "คุณชื่อมาลี"]);
+const summaryModel = fakeLLM(["ผู้ใช้ชื่อมาลีและชอบแมว"]);
 
 const graph = new StateGraph(State)
   .addNode("chat", async (state) => {
-    const head = state.summary ? [new SystemMessage(`สรุปบทสนทนาก่อนหน้า: ${state.summary}`)] : [];
-    return { messages: [await llm.invoke([...head, ...state.messages])] };
+    const context = state.summary ? [new SystemMessage(state.summary)] : [];
+    const reply = await chatModel.invoke([...context, ...state.messages]);
+    return { messages: [reply] };
   })
   .addNode("summarize", async (state) => {
-    const head = state.summary ? [new SystemMessage(`สรุปบทสนทนาก่อนหน้า: ${state.summary}`)] : [];
-    // 👉 ข้อ 2: ขอให้ llm สรุปบทสนทนาใน state.messages แล้วเก็บ .text ไว้ในตัวแปร summaryText
-    // แนวทาง: const reply = await llm.invoke([...head, ...state.messages, new HumanMessage("สรุปบทสนทนาข้างต้นสั้น ๆ")]);
-    const summaryText: string = todo(2);
-    // 👉 ข้อ 3: สร้าง RemoveMessage ให้ทุกข้อความ ยกเว้น KEEP_LAST ข้อความสุดท้าย
-    // แนวทาง: state.messages.slice(0, -KEEP_LAST).map((m) => new RemoveMessage({ id: m.id! }))
-    const removals: RemoveMessage[] = todo(3);
-    return { summary: summaryText, messages: removals };
+    const context = state.summary ? [new SystemMessage(state.summary)] : [];
+    const result = await summaryModel.invoke([
+      ...context,
+      ...state.messages,
+      new HumanMessage("สรุปบทสนทนาสั้น ๆ"),
+    ]);
+
+    const oldCount = Math.max(0, state.messages.length - KEEP_LAST);
+    // 👉 ข้อ 1 สร้าง RemoveMessage สำหรับ oldCount ข้อความแรก
+    const removals: RemoveMessage[] = todo(1);
+    return { summary: result.text, messages: removals };
   })
   .addEdge(START, "chat")
-  .addConditionalEdges(
-    "chat",
-    (state) => {
-      // 👉 ข้อ 1: คืน "summarize" ถ้า state.messages ยาวกว่า MAX_MESSAGES ไม่เช่นนั้นคืน END
-      return todo(1);
-    },
-    ["summarize", END],
-  )
+  .addConditionalEdges("chat", (state) => state.messages.length > MAX_MESSAGES ? "summarize" : END, ["summarize", END])
   .addEdge("summarize", END)
   .compile({ checkpointer: new MemorySaver() });
 
-const config = { configurable: { thread_id: "t" } };
-const snapshots: { messages: number; summary: string }[] = [];
-for (const text of ["ฉันชื่อมาลี ชอบแมว", "ฉันอยู่เชียงใหม่", "ฉันทำงานเป็นครู", "ฉันชื่ออะไร"]) {
-  const result = await graph.invoke({ messages: [new HumanMessage(text)] }, config);
-  snapshots.push({ messages: result.messages.length, summary: result.summary });
-  console.log(`หลังถาม "${text}": ข้อความใน State = ${result.messages.length}, สรุป = "${result.summary}"`);
-}
-const lastAnswer = (await graph.getState(config)).values.messages.at(-1)?.text ?? "";
+const config = { configurable: { thread_id: "mali" } };
+const rounds: { messages: number; summary: string }[] = [];
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("สองรอบแรกยังไม่ยาวเกินเกณฑ์: ไม่สรุป และเก็บครบ 4 ข้อความ", snapshots[1].messages === 4 && snapshots[1].summary === "", "เงื่อนไข: ยาวกว่า MAX_MESSAGES จึงสรุป");
-check("รอบที่ 3 ยาวเกินเกณฑ์: มีสรุป และเหลือ KEEP_LAST ข้อความ", snapshots[2].summary.length > 0 && snapshots[2].messages === KEEP_LAST, "สรุปแล้วต้องลบข้อความเก่า");
-check("หลังสรุป LLM ยังจำชื่อ 'มาลี' ได้จากสรุป", lastAnswer.includes("มาลี"), "รอบถัดไปต้องส่งสรุปนำหน้า (node chat ทำให้แล้ว)");
+for (const text of ["ฉันชื่อมาลีและชอบแมว", "ฉันอยู่เชียงใหม่", "ฉันเป็นครู", "ฉันชื่ออะไร"]) {
+  const result = await graph.invoke({ messages: [new HumanMessage(text)] }, config);
+  rounds.push({ messages: result.messages.length, summary: result.summary });
+}
+
+console.log(JSON.stringify(rounds, null, 2));
+console.log("ข้อความแรกที่ส่งให้โมเดลรอบ 4", chatModel.calls.at(-1)?.[0].text);
+
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("สรุปเมื่อต้องเก็บมากกว่า 4 ข้อความ", rounds[1].summary === "" && rounds[2].summary.length > 0);
+check("เก็บ 2 ข้อความล่าสุดหลังสรุป", rounds[2].messages === KEEP_LAST);
+check("รอบถัดไปได้รับสรุปใน SystemMessage", chatModel.calls.at(-1)?.[0].type === "system" && chatModel.calls.at(-1)?.[0].text === rounds[2].summary);

@@ -5,15 +5,13 @@
 // ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
 //
 // ลองทำดู:
-//   1) กำหนด zod schema ของคำตอบสุดท้าย แล้วใช้ withStructuredOutput หลัง agent ทำงานเสร็จ
-//   2) เพิ่ม field ใหม่ในคำตอบ
-//   3) ลองถามคำถามที่ข้อมูลไม่ครบ
+//   1) ลอง schema กับ tempC ที่เป็นตัวเลขและสตริง
+//   2) เพิ่มฟิลด์ unit แล้วตรวจด้วย safeParse
+//   3) ดูโครงสร้าง answer ที่คืนจาก node format
 
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { END, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { z } from "zod";
-import { makeWeatherTool } from "@src/sampleTools";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { llm } from "@lessons/level-1-basics/02-llm-config/llm";
 
 // เขียนโค้ดของคุณตรงนี้

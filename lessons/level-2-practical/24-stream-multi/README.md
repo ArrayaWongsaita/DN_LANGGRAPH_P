@@ -1,35 +1,68 @@
-# บทที่ 2-24: สตรีมหลายโหมดพร้อมกัน
+# บทที่ 2-24 รับหลายโหมดจากสตรีมเดียว
 
-## แนวคิด
-จะเอาทั้งความคืบหน้า (`custom`) และผลของแต่ละ node (`updates`) ในสตรีมเดียวก็ได้ ส่ง **array** ให้ `streamMode` แล้วแต่ละชิ้นที่ได้เป็นคู่ `[ชื่อโหมด, ข้อมูล]`:
+จาก [บท 2-23](../23-stream-custom/README.md) เราอ่านความคืบหน้าจาก `custom` ได้แล้ว ถ้าหน้าจอเดียวกันต้องแสดงผลสรุปตอน node จบ ให้ขอ `updates` เพิ่มในการเรียก `graph.stream()` ครั้งเดียว
+
+## 1. รับทั้งความคืบหน้าและผลจาก node `crawl`
+
+เปิด [`multi.ts`](./multi.ts) แล้วเติมข้อ 1 ให้ `streamMode` เป็นอาร์เรย์ที่มี `"updates"` และ `"custom"` จากนั้นรันจากโฟลเดอร์หลักของโปรเจกต์ ใช้ได้โดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 2-24
+```
 
 ```ts
-for await (const [mode, data] of await graph.stream(input, { streamMode: ["updates", "custom"] })) {
-  if (mode === "custom") ...   // ความคืบหน้า
-  if (mode === "updates") ...  // { ชื่อ node: update }
+import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
+import { z } from "zod";
+
+const State = new StateSchema({
+  pages: z.number().default(0),
+  done: z.string().default(""),
+});
+const graph = new StateGraph(State)
+  .addNode("crawl", ({ pages }, config) => {
+    for (let page = 1; page <= pages; page++) config.writer?.({ page });
+    return { done: `ครบ ${pages} หน้า` };
+  })
+  .addEdge(START, "crawl")
+  .addEdge("crawl", END)
+  .compile();
+
+const stream = await graph.stream({ pages: 2 }, { streamMode: ["updates", "custom"] });
+for await (const [mode, data] of stream) {
+  console.log(JSON.stringify([mode, data]));
 }
 ```
-โหมดที่ใช้บ่อย: `values` (State เต็มทุก step), `updates` (ส่วนที่เปลี่ยน), `messages` (token ของ LLM), `custom` (ที่เราส่งเอง) และโหมดสำหรับดีบักอย่าง `debug` กับ `tools` (เหตุการณ์ของ tool ใน agent) แต่รูปแบบการใช้เหมือนกันหมด
 
-## ดูตัวอย่าง
-`multi.ts` ใช้ graph จากบท 2-23 (ย่อไว้ให้) ขาดการเปิด stream แบบหลายโหมดและการแปลงชิ้นเป็นข้อความ บทนี้ไม่ใช้ LLM
+```text
+["custom",{"page":1}]
+["custom",{"page":2}]
+["updates",{"crawl":{"done":"ครบ 2 หน้า"}}]
+✅ ได้ custom ตามด้วย updates ของ crawl
+```
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+`custom` มาก่อนเพราะ node เรียก `writer` ระหว่างลูป ส่วน `updates` มาจากค่าที่ `crawl` คืนเมื่อจบ โปรแกรมฝั่งรับใช้ `if (mode === "custom")` เพื่อเลือกอัปเดตแถบความคืบหน้าได้ ดูโค้ดพร้อมส่วนตรวจใน [`solution/multi.ts`](./solution/multi.ts)
 
-    pnpm lesson 2-24
+## 2. รูปแบบของ `streamMode` เปลี่ยนค่าที่อ่านได้
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+| ค่า `streamMode` | แต่ละรายการที่อ่านได้ |
+|---|---|
+| `"updates"` | ข้อมูลของโหมดนั้นโดยตรง เช่น `{ crawl: { done: "ครบ 2 หน้า" } }` |
+| `["updates"]` | คู่ `["updates", data]` แม้มีโหมดเดียวในอาร์เรย์ |
+| `["updates", "custom"]` | คู่ `[mode, data]` ที่ `mode` เป็น `"updates"` หรือ `"custom"` |
 
-## คุณทำได้แล้ว
-- รวมหลายโหมดสตรีมไว้ในลูปเดียว
+`updates` ส่งส่วนที่ node อัปเดตใน State โดยมีชื่อ node เป็นคีย์ `custom` ส่งข้อมูลจาก `writer` และ `values` ส่ง State ทั้งก้อน เลือกโหมดตามข้อมูลที่โปรแกรมฝั่งรับต้องใช้ ส่วน `"messages"` จาก [บท 2-22](../22-stream-messages/README.md) ให้ `data` เป็นคู่ `[chunk, meta]` [เอกสาร LangGraph เรื่อง stream modes](https://docs.langchain.com/oss/javascript/langgraph/streaming)
 
-## ข้อควรจำ
-- ลำดับของชิ้นต่างโหมดเรียงตามเวลาที่เกิด
-- เลือกโหมดเท่าที่ใช้ เพราะทุกโหมดมีต้นทุน
+## 3. เปลี่ยนโหมดแล้วเทียบรูปร่างข้อมูล
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-24` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+คัดลอกโค้ดหัวข้อ 1 ไปไว้ใน [`playground.ts`](./playground.ts) โดยเก็บ import ไว้ชุดเดียว เปลี่ยนลูปเป็น `for await (const event of stream) { console.log(JSON.stringify(event)); }` เพื่อพิมพ์ข้อมูลดิบทั้งแบบสตริงและอาร์เรย์ แล้วรัน `pnpm play 2-24` ในแต่ละครั้ง
+
+| `streamMode` | สิ่งที่ได้เมื่อ `pages: 2` |
+|---|---|
+| `["custom", "updates"]` | เหมือนหัวข้อ 1 เพราะสตรีมส่งตามจังหวะที่เหตุการณ์เกิด |
+| `"updates"` | `{"crawl":{"done":"ครบ 2 หน้า"}}` |
+| `["updates"]` | `["updates",{"crawl":{"done":"ครบ 2 หน้า"}}]` |
+| `["custom", "values"]` | `["values",{"pages":2,"done":""}]` → `["custom",{"page":1}]` → `["custom",{"page":2}]` → `["values",{"pages":2,"done":"ครบ 2 หน้า"}]` |
 
 ## บทถัดไป
-บท 2-25: few-shot (เรียก LLM ให้ได้ผลดีและทนทาน)
+
+[บท 2-25 ให้โมเดลเห็นตัวอย่างคำตอบด้วย few-shot](../25-few-shot/README.md)

@@ -1,39 +1,35 @@
-import { HumanMessage, trimMessages } from "@langchain/core/messages";
-import { END, MemorySaver, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { todo } from "@src/todo";
-import { llm } from "../../level-1-basics/02-llm-config/llm";
+// รันด้วย pnpm lesson 2-05
+import { AIMessage, HumanMessage, SystemMessage, trimMessages } from "@langchain/core/messages";
+import type { BaseMessage } from "@langchain/core/messages";
 import { check } from "@src/check";
+import { todo } from "@src/todo";
 
-// รันด้วย: pnpm lesson 2-05
-// ประวัติยิ่งยาว ยิ่งแพงและช้า: ก่อนส่งให้ LLM เราตัดให้เหลือแค่ข้อความล่าสุด (ส่วน State ยังเก็บครบทุกข้อความ)
-const State = new StateSchema({ messages: MessagesValue });
-const KEEP = 3; // จำนวนข้อความล่าสุดสูงสุดที่ส่งให้ LLM
-const seen: string[][] = []; // ไว้ตรวจว่า LLM ได้รับข้อความชนิดไหนบ้างในแต่ละรอบ (ไม่ต้องแก้)
+const history = [
+  new SystemMessage({ id: "S", content: "ตอบสั้น ๆ" }),
+  new HumanMessage({ id: "H1", content: "ฉันชื่อมาลี" }),
+  new AIMessage({ id: "A1", content: "สวัสดีมาลี" }),
+  new HumanMessage({ id: "H2", content: "ฉันชอบแมว" }),
+  new AIMessage({ id: "A2", content: "แมวน่ารักดีนะ" }),
+  new HumanMessage({ id: "H3", content: "ฉันอยู่เชียงใหม่" }),
+  new AIMessage({ id: "A3", content: "เชียงใหม่น่าเที่ยว" }),
+];
 
-const graph = new StateGraph(State)
-  .addNode("chat", async (state) => {
-    // 👉 ข้อ 1: ตัด state.messages ด้วย trimMessages (maxTokens: KEEP, strategy: "last",
-    //        tokenCounter: (msgs) => msgs.length, startOn: "human") ใช้ await
-    const recent = todo(1);
-    seen.push(recent.map((m) => m.type));
-    // 👉 ข้อ 2: ส่ง recent (ไม่ใช่ state.messages) ให้ llm.invoke แล้วคืนคำตอบเข้า messages
-    // แนวทาง: return { messages: [await llm.invoke(recent)] };
-    return todo(2);
-  })
-  .addEdge(START, "chat")
-  .addEdge("chat", END)
-  .compile({ checkpointer: new MemorySaver() });
+const budget = {
+  maxTokens: 3,
+  // 👉 ข้อ 1 ให้ tokenCounter คืนจำนวนข้อความใน messages
+  tokenCounter: (messages: BaseMessage[]): number => todo(1),
+};
 
-const config = { configurable: { thread_id: "t" } };
-let result;
-for (const text of ["ฉันชื่อมาลี", "ฉันชอบแมว", "ฉันอยู่เชียงใหม่", "ฉันชื่ออะไร"]) {
-  result = await graph.invoke({ messages: [new HumanMessage(text)] }, config);
-}
-console.log("ข้อความที่ LLM เห็นในแต่ละรอบ:", seen.map((s) => s.length));
+const recent = await trimMessages(history, {
+  ...budget,
+  strategy: "last",
+  startOn: "human",
+});
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check(`ทุกรอบ LLM เห็นไม่เกิน ${KEEP} ข้อความ`, seen.every((s) => s.length <= KEEP), "ส่ง recent ที่ตัดแล้วให้ llm");
-check("ข้อความที่ LLM เห็นขึ้นต้นด้วยข้อความผู้ใช้เสมอ", seen.every((s) => s[0] === "human"), 'ใส่ startOn: "human"');
-check("State ยังเก็บครบทุกข้อความ (8 ข้อความ ไม่ถูกตัด)", result!.messages.length === 8, "ตัดเฉพาะที่ส่งให้ LLM ไม่ใช่ที่เก็บใน State");
+const recentIds = recent.map((message) => message.id);
+console.log(recentIds);
+console.log(JSON.stringify(recent.map(({ type, content }) => ({ type, content })), null, 2));
+
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("นับ 1 หน่วยต่อข้อความ", budget.tokenCounter(history) === 7 && budget.tokenCounter([]) === 0, "คืน messages.length");
+check("ได้ H3 และ A3 ตามลำดับ", recentIds.join(",") === "H3,A3", "ให้ tokenCounter คืน messages.length");

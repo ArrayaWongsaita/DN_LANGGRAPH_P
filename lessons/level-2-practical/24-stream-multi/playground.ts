@@ -3,11 +3,10 @@
 // เริ่มใหม่: pnpm play 2-24 --reset
 //
 // ลองทำดู:
-//   1) สตรีมหลายโหมดพร้อมกัน เช่น ["updates", "custom"]
-//   2) แยกผลตามโหมดที่ได้
-//   3) เพิ่มโหมด "values" แล้วดูความต่าง
+//   1) ขอ custom อย่างเดียวด้วยสตริงและอาร์เรย์
+//   2) ขอ custom พร้อม updates แล้วเทียบลำดับ
 
-import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
+import { END, START, StateGraph, StateSchema, type StreamMode } from "@langchain/langgraph";
 import { z } from "zod";
 
 // เขียนโค้ดของคุณตรงนี้

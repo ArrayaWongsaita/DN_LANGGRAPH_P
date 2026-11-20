@@ -1,36 +1,64 @@
-# บทที่ 2-19: อนุมัติหรือปฏิเสธ แล้วแยกทางตามคำตอบ
+# บทที่ 2-19 แยกทางตามคำตอบอนุมัติ
 
-## แนวคิด
-บท 2-18 ค่าที่ resume เป็นสตริง ในงานจริงมักเป็น **ค่าที่ graph เอาไปตัดสินใจเส้นทาง** (บท 14) เช่น อนุมัติ → ทำจริง, ปฏิเสธ → ข้ามไป:
+ต่อจาก [บท 2-18](../18-interrupt-resume/README.md) คราวนี้กราฟใช้คำตอบเพื่อเลือกว่าจะเผยแพร่รายงานหรือยกเลิก ในระหว่างรอคำตอบ แอปอ่านคำถามที่ค้างจาก checkpoint ของ thread เพื่อนำไปแสดงได้
 
+## 1. ส่ง `true` กับ `false` ให้กราฟเดียวกัน
+
+เติมข้อ 1 ใน [`approval.ts`](./approval.ts) ให้ router คืน `"execute"` เมื่ออนุมัติ และ `"cancelled"` เมื่อปฏิเสธ แล้วรันจากโฟลเดอร์หลักเพื่อดูว่าทั้งสองคำตอบไปถึงปลายทางของตัวเอง
+
+```sh
+pnpm lesson 2-19
 ```
-START → request ─(approved?)─ ใช่ → execute → END
-                       └─ ไม่ → cancelled → END
+
+ใน [`approval.ts`](./approval.ts) node `request` พักด้วย `interrupt` แล้วคืน `{ approved: answer === true }` เมื่อคนตอบ จากนั้น `addConditionalEdges` เลือกทางตาม `approved` โดยแต่ละทางคืนข้อความจำลองใน `result`
+
+```ts
+.addConditionalEdges(
+  "request",
+  (state) => state.approved ? "execute" : "cancelled",
+  ["execute", "cancelled"],
+)
 ```
-`resume` ส่งค่าอะไรก็ได้ที่ JSON ได้ เช่น `true` / `false` หรืออ็อบเจ็กต์ และใน State เก็บไว้ใน field `approved`
 
-อีกเรื่องที่ต้องรู้: **ผู้ใช้อ่านคำถามที่ค้างอยู่ได้จากข้างนอก** เพื่อไปแสดงบนหน้าจอ ดึงจาก `getState` ผ่าน `tasks[0].interrupts[0].value`
+ตอนรอคำตอบ อ่าน `value` จาก task ที่หยุด เมื่อได้คำตอบจึงส่ง `Command` กับ config เดิม
 
-## ดูตัวอย่าง
-`approval.ts` มี graph `request / execute / cancelled` ขาดการเลือกเส้นทาง การอ่านคำถามที่ค้าง และการ resume บทนี้ไม่ใช้ LLM
+```ts
+await graph.invoke({ action: "รายงานประจำเดือน" }, config);
+const snapshot = await graph.getState(config);
+const request: unknown = snapshot.tasks[0]?.interrupts[0]?.value;
 
-## โจทย์
-เติม 3 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+const finished = await graph.invoke(new Command({ resume: answer }), config);
+console.log(JSON.stringify({ answer, request, result: finished.result }));
+```
 
-    pnpm lesson 2-19
+ไฟล์ทดลองสอง thread และพิมพ์ผลดังนี้ ใช้ได้โดยไม่ต้องตั้ง API key
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+```text
+{"answer":true,"request":{"question":"อนุมัติไหม?","action":"รายงานประจำเดือน"},"result":"เผยแพร่แล้ว: รายงานประจำเดือน"}
+{"answer":false,"request":{"question":"อนุมัติไหม?","action":"รายงานประจำเดือน"},"result":"ยกเลิก: รายงานประจำเดือน"}
+```
 
-## คุณทำได้แล้ว
-- ใช้คำตอบของมนุษย์เลือกเส้นทางของ graph
-- อ่านสิ่งที่ graph รออยู่จากภายนอก
+## 2. ค่าไหนใช้แสดง ค่าไหนใช้เลือกทาง
 
-## ข้อควรจำ
-- ปฏิเสธไม่ใช่ error ต้องมีเส้นทางรองรับ
-- ผู้ที่เรียก graph ต้องเก็บ `thread_id` ไว้เพื่อ resume ถูกงาน
+| ค่า | ชนิดหรือรูปแบบ | การใช้ |
+|---|---|---|
+| `snapshot.tasks[0]?.interrupts[0]?.value` | ออบเจ็กต์ `{ question, action }` ในบทนี้ หรือ `undefined` ถ้ายังไม่มี interrupt | นำรายละเอียดของคำขอไปแสดง |
+| `resume` | ปุ่มอนุมัติส่ง `true` ปุ่มปฏิเสธส่ง `false` | ถูกคืนจาก `interrupt` ให้ node `request` |
+| `approved` | `boolean` จาก `answer === true` | ตัวเลือกทางจะอ่านหลัง `request` เขียนลงใน State |
+| ค่าที่ router คืน | `"execute"` หรือ `"cancelled"` | ชื่อ node ที่กราฟจะเรียกต่อ |
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-19` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+`tasks[0]` และ `interrupts[0]` ใช้ได้กับตัวอย่างนี้ที่รอคำตอบเพียงรายการเดียว ถ้าแอปมีหลาย task ให้หา task ที่ต้องการใน `snapshot.tasks` ก่อน
 
-## บทถัดไป
-บท 2-20: ให้มนุษย์ตรวจและแก้ไขร่างก่อนไปต่อ
+## 3. ลองส่งสตริงที่สะกดเหมือน boolean
+
+คัดลอกโค้ดส่วนหลัง import จากเฉลยลง [`playground.ts`](./playground.ts) ตัดส่วนตรวจออก แล้วใช้ `pnpm play 2-19` เปลี่ยนค่าใน `["approve", true]` เพื่อเทียบผล
+
+| ค่าที่ resume | เส้นทาง | `result` |
+|---|---|---|
+| `true` | `request → execute → END` | `"เผยแพร่แล้ว: รายงานประจำเดือน"` |
+| `false` | `request → cancelled → END` | `"ยกเลิก: รายงานประจำเดือน"` |
+| `"true"` | `request → cancelled → END` | `"ยกเลิก: รายงานประจำเดือน"` |
+
+เงื่อนไข `answer === true` ยอมรับเฉพาะ boolean `true` ถ้าค่ามาจากแบบฟอร์มที่ส่งสตริง ให้แปลงเป็น boolean ก่อน resume ตามสัญญาที่ตั้งไว้
+
+[ดูเฉลย](./solution/approval.ts) · [บทก่อนหน้า 2-18 หยุดรอคำตอบและทำต่อ](../18-interrupt-resume/README.md) · [บทถัดไป 2-20 ตรวจและแก้ร่าง](../20-review-edit/README.md)

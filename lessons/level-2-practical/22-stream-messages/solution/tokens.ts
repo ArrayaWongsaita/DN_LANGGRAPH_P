@@ -1,41 +1,36 @@
-import { HumanMessage } from "@langchain/core/messages";
+// รันแบบออฟไลน์ ใช้แชตโมเดลจำลองที่ส่งชิ้นข้อความตามที่กำหนด
+import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { FakeStreamingChatModel } from "@langchain/core/utils/testing";
 import { END, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { llm } from "../../../level-1-basics/02-llm-config/solution/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 2-22
-// streamMode "messages" = ได้ข้อความจาก LLM ทีละ token ระหว่างที่ graph ทำงาน (ทุก node ที่เรียก LLM) พร้อม metadata บอกว่ามาจาก node ไหน
-const State = new StateSchema({ messages: MessagesValue });
+const draftModel = new FakeStreamingChatModel({
+  chunks: [new AIMessageChunk("ขอเสนอ "), new AIMessageChunk("ไปทะเล")],
+});
+const polishModel = new FakeStreamingChatModel({
+  chunks: [new AIMessageChunk("ไปทะเล"), new AIMessageChunk("กันเถอะ!")],
+});
 
+const State = new StateSchema({ messages: MessagesValue });
 const graph = new StateGraph(State)
-  .addNode("draft", async (state) => ({ messages: [await llm.invoke(state.messages)] }))
-  .addNode("polish", async (state) => ({ messages: [await llm.invoke([...state.messages, new HumanMessage("ปรับให้กระชับขึ้น")])] }))
+  .addNode("draft", async (state) => ({ messages: [await draftModel.invoke(state.messages)] }))
+  .addNode("polish", async (state) => ({ messages: [await polishModel.invoke(state.messages)] }))
   .addEdge(START, "draft")
   .addEdge("draft", "polish")
   .addEdge("polish", END)
   .compile();
 
-let all = ""; // ข้อความจากทุก node ต่อกัน
-let fromPolish = ""; // เฉพาะข้อความจาก node "polish"
-const nodes = new Set<string>();
-
-for await (const [chunk, meta] of await graph.stream(
-  { messages: [new HumanMessage("เขียนประโยคชวนไปเที่ยวทะเลหนึ่งประโยค")] },
+const visibleNode = "polish";
+let answer = "";
+const stream = await graph.stream(
+  { messages: [new HumanMessage("ชวนไปเที่ยวทะเล")] },
   { streamMode: "messages" },
-)) {
-  nodes.add(meta.langgraph_node);
-  // ข้อ 1: ต่อ chunk.text เข้า all (ทุก node)
-  all += chunk.text;
-  // ข้อ 2: ต่อ chunk.text เข้า fromPolish เฉพาะเมื่อ meta.langgraph_node === "polish"
-  if (meta.langgraph_node === "polish") fromPolish += chunk.text;
+);
+for await (const [chunk, meta] of stream) {
+  console.log(meta.langgraph_node, JSON.stringify(chunk.text));
+  if (meta.langgraph_node === visibleNode) answer += chunk.text;
 }
-console.log("จาก node ไหนบ้าง:", [...nodes]);
-console.log("ทั้งหมด:", all);
-console.log("เฉพาะ polish:", fromPolish);
+console.log("คำตอบที่แสดง", JSON.stringify(answer));
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("ได้ข้อความจากสอง node (draft และ polish)", nodes.has("draft") && nodes.has("polish"), 'streamMode: "messages" ให้ meta.langgraph_node');
-check("all มีข้อความทั้งสอง node (ยาวกว่าเฉพาะ polish)", all.length > fromPolish.length && fromPolish.length > 0, "all ต่อทุก chunk, fromPolish ต่อเฉพาะ polish");
-check("ข้อความของ polish อยู่ท้าย all (polish ทำงานหลัง draft)", all.endsWith(fromPolish));
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("ต่อเฉพาะชิ้นข้อความจาก polish", answer === "ไปทะเลกันเถอะ!", "กรองด้วย meta.langgraph_node แล้วต่อ chunk.text ทุกชิ้นที่ผ่าน");

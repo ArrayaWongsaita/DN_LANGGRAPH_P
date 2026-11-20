@@ -2,15 +2,12 @@
 // รันด้วย: pnpm play 2-22   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-22 --watch)
 // เริ่มใหม่: pnpm play 2-22 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) สตรีม streamMode "messages" แล้วพิมพ์ chunk ทีละชิ้น
-//   2) กรองเฉพาะ node ที่สนใจจาก metadata
-//   3) ต่อ chunk เป็นข้อความเต็ม
+//   1) กรองข้อความจาก node draft หรือ polish
+//   2) เทียบผลเมื่อต่อทุก chunk กับต่อเฉพาะ node เดียว
 
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { FakeStreamingChatModel } from "@langchain/core/utils/testing";
 import { END, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
 
 // เขียนโค้ดของคุณตรงนี้

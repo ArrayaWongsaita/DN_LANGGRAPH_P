@@ -12,6 +12,7 @@ export interface PlaygroundInput {
 }
 
 const BANNER = "ส่วนตรวจคำตอบ";
+const MODEL_LESSON = "level-1-basics/02-llm-config";
 
 /** Split the source into import statements (possibly multi-line) and the remaining lines. */
 function splitImports(lines: string[]): { imports: string[]; rest: string[] } {
@@ -55,7 +56,7 @@ function needs(source: string, imports: string[]): string[] {
   if (/DATABASE_URL/.test(source)) out.push("Postgres ของคอร์ส (docker compose up -d --wait) และ DATABASE_URL ใน .env");
   if (/startDevServer/.test(source)) out.push("langgraph dev (เริ่มให้เองผ่าน startDevServer)");
   if (/getEmbeddings/.test(source)) out.push("key ของ embedding ใน .env");
-  if (imports.some((i) => /02-llm-config\/solution\/llm/.test(i))) out.push("key ของ LLM ที่ตั้งไว้ในบท 1-02");
+  if (imports.some((i) => /02-llm-config\/(?:solution\/)?llm/.test(i))) out.push("key ของ LLM ที่ตั้งไว้ในบท 1-02");
   return out;
 }
 
@@ -79,8 +80,11 @@ export function buildPlayground({ id, lessonDir, source, ideas }: PlaygroundInpu
     })
     .map((stmt) =>
       stmt.replace(/(from\s+["']|^import\s+["'])(\.{1,2}\/[^"']+)(["'])/m, (_m, a: string, rel: string, b: string) => {
-        const abs = posix.normalize(posix.join(solutionDir, rel));
-        return `${a}@lessons/${abs.replace(/^lessons\//, "")}${b}`;
+        const path = posix.normalize(posix.join(solutionDir, rel)).replace(/^lessons\//, "");
+        const playgroundPath = id.startsWith("2-") && path === `${MODEL_LESSON}/solution/llm`
+          ? `${MODEL_LESSON}/llm`
+          : path;
+        return `${a}@lessons/${playgroundPath}${b}`;
       }),
     );
   const need = needs(source, kept);

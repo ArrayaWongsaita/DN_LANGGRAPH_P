@@ -1,45 +1,32 @@
-import { Command, END, MemorySaver, START, StateGraph, StateSchema, interrupt, isInterrupted } from "@langchain/langgraph";
+// รันด้วย pnpm lesson 2-18
+import { Command, END, START, MemorySaver, StateGraph, StateSchema, interrupt, isInterrupted } from "@langchain/langgraph";
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 2-18  (ไม่ใช้ LLM)
-// interrupt() = หยุด graph กลางทางเพื่อรอคำตอบจากมนุษย์ (ต้องมี checkpointer) แล้วค่อยเดินต่อด้วย Command({ resume })
 const State = new StateSchema({
-  action: z.string().default(""),
+  action: z.string(),
   decision: z.string().default(""),
-  result: z.string().default(""),
 });
 
 const graph = new StateGraph(State)
   .addNode("ask", (state) => {
-    // ข้อ 1: เรียก interrupt({ question: "อนุมัติไหม?", action: state.action }) แล้วเก็บค่าที่ได้เป็น decision
-    const answer = interrupt({ question: "อนุมัติไหม?", action: state.action });
+    const answer: unknown = interrupt({ question: "อนุมัติไหม?", action: state.action });
     return { decision: String(answer) };
   })
-  .addNode("act", (state) => ({
-    result: state.decision === "yes" ? `ทำแล้ว: ${state.action}` : `ยกเลิก: ${state.action}`,
-  }))
   .addEdge(START, "ask")
-  .addEdge("ask", "act")
-  .addEdge("act", END)
+  .addEdge("ask", END)
   .compile({ checkpointer: new MemorySaver() });
 
-const paused: boolean[] = [];
-const results: string[] = [];
-for (const [threadId, reply] of [["a", "yes"], ["b", "no"]]) {
-  const config = { configurable: { thread_id: threadId } };
-  // เริ่มงาน: graph จะหยุดที่ interrupt
-  const started = await graph.invoke({ action: "ลบไฟล์ทั้งหมด" }, config);
-  paused.push(isInterrupted(started));
-  // ข้อ 2: ตอบกลับคำถามที่ค้างอยู่ด้วย new Command({ resume: reply }) และ config ของ thread นี้ ได้ state สุดท้าย
-  const finished = await graph.invoke(new Command({ resume: reply }), config);
-  results.push(finished.result);
-}
-console.log({ paused, results });
+const config = { configurable: { thread_id: "report" } };
+const started = await graph.invoke({ action: "เผยแพร่รายงาน" }, config);
+const pending = isInterrupted(started);
+console.log(JSON.stringify({ pending, request: pending ? started.__interrupt__[0]?.value : undefined }));
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("เริ่มงานแล้ว graph หยุดรออนุมัติ (ทั้งสอง thread)", paused.every(Boolean), "ต้องเรียก interrupt() ใน node ask");
-check("ตอบ yes -> ทำแล้ว", results[0] === "ทำแล้ว: ลบไฟล์ทั้งหมด", "ค่าที่ resume กลับมาคือค่าที่ interrupt() คืน");
-check("ตอบ no -> ยกเลิก", results[1] === "ยกเลิก: ลบไฟล์ทั้งหมด");
+const reply = "yes";
+const finished = await graph.invoke(new Command({ resume: reply }), config);
+console.log(JSON.stringify({ pending: isInterrupted(finished), decision: finished.decision }));
+
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("กราฟหยุดและส่งคำถามพร้อมชื่องาน", pending &&
+  JSON.stringify(started.__interrupt__[0]?.value) === JSON.stringify({ question: "อนุมัติไหม?", action: "เผยแพร่รายงาน" }));
+check("กราฟทำต่อและบันทึกคำตอบ", !isInterrupted(finished) && finished.decision === reply, "ใช้ Command({ resume: reply }) พร้อม config เดิม");

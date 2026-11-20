@@ -1,55 +1,50 @@
+// รันด้วย pnpm lesson 2-15
 import { HumanMessage } from "@langchain/core/messages";
-import type { StructuredToolInterface } from "@langchain/core/tools";
 import { END, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { todo } from "@src/todo";
+import { z } from "zod";
+import { fakeToolLLM } from "@src/fakeToolLLM";
 import { makeAddTool, makeWeatherTool } from "@src/sampleTools";
-import { llm } from "../../level-1-basics/02-llm-config/llm";
 import { check } from "@src/check";
+import { todo } from "@src/todo";
 
-// รันด้วย: pnpm lesson 2-15
-// เลือก "โมเดล" และ "tool" ตามคำถามแต่ละครั้ง: คำถามง่ายใช้โมเดลถูก คำถามยากใช้โมเดลแรง และเปิดเผย tool เฉพาะที่เกี่ยวข้อง
-// (ในบทนี้สองโมเดลคือตัวเดียวกันคือ llm เพื่อให้รันง่าย งานจริงให้ "cheap" เป็นโมเดลเล็ก "strong" เป็นโมเดลใหญ่)
-const models = { cheap: llm, strong: llm };
+const models = {
+  cheap: fakeToolLLM(["คำตอบจาก cheap", "คำตอบจาก cheap"]),
+  strong: fakeToolLLM(["คำตอบจาก strong", "คำตอบจาก strong"]),
+};
 const allTools = [makeAddTool(), makeWeatherTool()];
 
-// คำถามยาวกว่า 30 ตัวอักษรใช้ "strong" ไม่เช่นนั้นใช้ "cheap"
-function pickModel(question: string): "cheap" | "strong" {
-  // 👉 ข้อ 1: คืน "strong" ถ้า question.length > 30 ไม่เช่นนั้นคืน "cheap"
+function choose(question: string): { model: "cheap" | "strong"; tools: typeof allTools } {
+  // 👉 ข้อ 1 คืน model เป็น "strong" เมื่อยาวกว่า 30 ตัว และส่ง getWeather เฉพาะเมื่อมีคำว่า "อากาศ"
   return todo(1);
 }
 
-// ให้เห็น tool "getWeather" เฉพาะเมื่อคำถามมีคำว่า "อากาศ" ส่วน tool อื่นเห็นเสมอ
-function pickTools(question: string, tools: StructuredToolInterface[]): StructuredToolInterface[] {
-  // 👉 ข้อ 2: กรอง tools: ตัด getWeather ออกถ้า question ไม่มีคำว่า "อากาศ"
-  // แนวทาง: tools.filter((t) => t.name !== "getWeather" || question.includes("อากาศ"))
-  return todo(2);
-}
-
-const State = new StateSchema({ messages: MessagesValue });
-const picks: { model: string; tools: string[] }[] = [];
+const State = new StateSchema({
+  messages: MessagesValue,
+  model: z.enum(["cheap", "strong"]).optional(),
+  tools: z.array(z.string()).default([]),
+});
 
 const graph = new StateGraph(State)
-  .addNode("agent", async (state) => {
-    const question = state.messages[0].text;
-    const which = pickModel(question);
-    const tools = pickTools(question, allTools);
-    picks.push({ model: which, tools: tools.map((t) => t.name) });
-    const bound = tools.length ? models[which].bindTools!(tools) : models[which];
-    return { messages: [await bound.invoke(state.messages)] };
+  .addNode("chat", async (state) => {
+    const { model, tools } = choose(state.messages[0].text);
+    const reply = await models[model].bindTools(tools).invoke(state.messages);
+    return { model, tools: tools.map((tool) => tool.name), messages: [reply] };
   })
-  .addEdge(START, "agent")
-  .addEdge("agent", END)
+  .addEdge(START, "chat")
+  .addEdge("chat", END)
   .compile();
 
 for (const question of ["สวัสดี", "ช่วยบอกอากาศของกรุงเทพวันนี้ให้หน่อยว่าร้อนแค่ไหน"]) {
   const result = await graph.invoke({ messages: [new HumanMessage(question)] });
-  console.log(`"${question}" ->`, picks[picks.length - 1], result.messages[result.messages.length - 1].text.slice(0, 60));
+  console.log(JSON.stringify({
+    question,
+    model: result.model,
+    tools: result.tools,
+    reply: result.messages.at(-1)?.text,
+  }));
 }
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("คำถามสั้นใช้ cheap", pickModel("สวัสดี") === "cheap", "ยาวกว่า 30 ตัวอักษรถึงใช้ strong");
-check("คำถามยาวใช้ strong", pickModel("ช่วยบอกอากาศของกรุงเทพวันนี้ให้หน่อยว่าร้อนแค่ไหน") === "strong");
-check("คำถามที่ไม่มีคำว่า 'อากาศ' ไม่เห็น getWeather แต่เห็น add", JSON.stringify(picks[0].tools) === '["add"]', "ใช้ filter กับ t.name");
-check("คำถามเรื่องอากาศเห็นทั้งสอง tool", picks[1].tools.includes("getWeather") && picks[1].tools.includes("add"));
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("คำถามยาว 30 ตัวใช้ cheap ส่วน 31 ตัวใช้ strong", choose("a".repeat(30)).model === "cheap" && choose("a".repeat(31)).model === "strong");
+check("คำถามสั้นทั่วไปส่ง add ให้ cheap", models.cheap.boundToolNames.join(",") === "add");
+check("คำถามยาวเรื่องอากาศส่งทั้งสอง tool ให้ strong", models.strong.boundToolNames.join(",") === "add,getWeather");

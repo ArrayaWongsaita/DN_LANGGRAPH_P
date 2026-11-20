@@ -2,14 +2,12 @@
 // รันด้วย: pnpm play 2-26   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-26 --watch)
 // เริ่มใหม่: pnpm play 2-26 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) ปรับพารามิเตอร์ของโมเดลแล้วอ่าน usage_metadata
-//   2) รวม token ของหลายคำถาม
-//   3) เทียบคำถามสั้นกับยาว
+//   1) เพิ่ม usage_metadata ให้คำตอบที่เดิมไม่มีค่า
+//   2) ลองรวม input_tokens กับ output_tokens แยกกัน
+//   3) เทียบสองค่า temperature ในตัวอย่าง live
 
-import type { AIMessage } from "@langchain/core/messages";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { AIMessage } from "@langchain/core/messages";
+import { getLLM } from "@src/llm";
 
 // เขียนโค้ดของคุณตรงนี้

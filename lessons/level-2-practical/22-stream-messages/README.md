@@ -1,35 +1,81 @@
-# บทที่ 2-22: สตรีมข้อความจาก LLM ทีละชิ้น (`messages`)
+# บทที่ 2-22 สตรีมข้อความจาก node ด้วย `messages`
 
-## แนวคิด
-บท 19 ของ Level 1 สอน `updates` และ `values` (ผลทีละ node) แต่แชตบอตอยากให้ผู้ใช้เห็นคำตอบ **ค่อย ๆ พิมพ์ออกมา** (token ต่อ token) ใช้โหมด `messages`:
+แชตบอตที่มี node ร่างคำตอบและ node เกลาคำสามารถทยอยแสดงเฉพาะข้อความจากขั้นเกลาคำได้ บทนี้ต่อจาก [บท 1-19 ที่สตรีมการเปลี่ยนแปลงของ State](../../level-1-basics/19-stream/README.md) โดยอ่านชิ้นข้อความและชื่อ node ผ่าน `streamMode: "messages"`
+
+## 1. รับชิ้นข้อความจาก `draft` และ `polish`
+
+เปิด [`tokens.ts`](./tokens.ts) แล้วเติมข้อ 1 ให้ต่อ `chunk.text` เข้า `answer` เมื่อ `meta.langgraph_node` ตรงกับ `visibleNode` รันจากโฟลเดอร์หลักของโปรเจกต์ ตัวอย่างใช้โมเดลจำลองจึงรันได้โดยไม่ใช้ API key
+
+```sh
+pnpm lesson 2-22
+```
 
 ```ts
-for await (const [chunk, meta] of await graph.stream(input, { streamMode: "messages" })) {
-  process.stdout.write(chunk.text);   // ชิ้นของข้อความ
-  meta.langgraph_node                 // ชิ้นนี้มาจาก node ชื่ออะไร
+import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { FakeStreamingChatModel } from "@langchain/core/utils/testing";
+import { END, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
+
+const draftModel = new FakeStreamingChatModel({
+  chunks: [new AIMessageChunk("ขอเสนอ "), new AIMessageChunk("ไปทะเล")],
+});
+const polishModel = new FakeStreamingChatModel({
+  chunks: [new AIMessageChunk("ไปทะเล"), new AIMessageChunk("กันเถอะ!")],
+});
+
+const State = new StateSchema({ messages: MessagesValue });
+const graph = new StateGraph(State)
+  .addNode("draft", async (state) => ({ messages: [await draftModel.invoke(state.messages)] }))
+  .addNode("polish", async (state) => ({ messages: [await polishModel.invoke(state.messages)] }))
+  .addEdge(START, "draft")
+  .addEdge("draft", "polish")
+  .addEdge("polish", END)
+  .compile();
+
+const visibleNode = "polish";
+let answer = "";
+const stream = await graph.stream(
+  { messages: [new HumanMessage("ชวนไปเที่ยวทะเล")] },
+  { streamMode: "messages" },
+);
+for await (const [chunk, meta] of stream) {
+  console.log(meta.langgraph_node, JSON.stringify(chunk.text));
+  if (meta.langgraph_node === visibleNode) answer += chunk.text;
 }
+console.log("คำตอบที่แสดง", JSON.stringify(answer));
 ```
-ทุกครั้งที่ LLM ภายใน graph ผลิตชิ้นข้อความ จะถูกส่งออกมาพร้อม `meta` ที่บอกว่ามาจาก node ไหน เมื่อ graph มี LLM หลาย node (เช่น ร่าง แล้ว ขัดเกลา) เรากรองเอาเฉพาะ node ที่อยากให้ผู้ใช้เห็นได้ด้วย `meta.langgraph_node`
 
-## ดูตัวอย่าง
-`tokens.ts` มี graph สอง node ที่เรียก LLM: `draft` (ร่างภายใน) และ `polish` (ฉบับที่ผู้ใช้ควรเห็น) สคริปต์เปิด stream ไว้ให้แล้ว ขาดการต่อข้อความและการกรองตาม node
+```text
+draft "ขอเสนอ "
+draft "ไปทะเล"
+polish "ไปทะเล"
+polish "กันเถอะ!"
+คำตอบที่แสดง "ไปทะเลกันเถอะ!"
+✅ ต่อเฉพาะชิ้นข้อความจาก polish
+```
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+สี่บรรทัดแรกแสดงทุกชิ้นที่ graph ส่งมา ส่วน `answer` มีเฉพาะสองชิ้นจาก `polish` ถ้าต้องการทยอยแสดงในแอป ให้อัปเดตหน้าจอในเงื่อนไขเดียวกับที่ต่อ `answer` ดูโค้ดพร้อมส่วนตรวจได้ใน [`solution/tokens.ts`](./solution/tokens.ts)
 
-    pnpm lesson 2-22
+## 2. แต่ละชิ้นมีข้อมูลอะไร
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+| ค่า | ชนิดและวิธีใช้ |
+|---|---|
+| `streamMode` | ใช้สตริง `"messages"` เพื่ออ่านแต่ละรายการเป็นคู่ `[chunk, meta]` |
+| `chunk` | ออบเจ็กต์ข้อความ เช่น `AIMessageChunk` ในตัวอย่างนี้ อ่านส่วนที่เป็นข้อความด้วย `chunk.text` |
+| `meta.langgraph_node` | ชื่อ node เช่น `"draft"` หรือ `"polish"` ใช้เลือกแหล่งข้อความที่ต้องการ |
+| `meta.langgraph_step` | หมายเลข step ของ graph ในตัวอย่างนี้ `draft` อยู่ step 1 และ `polish` อยู่ step 2 |
 
-## คุณทำได้แล้ว
-- สตรีมข้อความของ LLM ใน graph และเลือกเฉพาะ node ที่ต้องการ
+ตัวอย่างกำหนดขอบเขตชิ้นไว้ล่วงหน้า โมเดลจริงอาจแบ่งชิ้นกลางคำหรือส่งชิ้นที่ `text` ว่างพร้อมข้อมูลอื่น การต่อข้อความจึงใช้ `+= chunk.text` โดยเก็บช่องว่างที่มากับชิ้นไว้ [เอกสาร LangGraph เรื่องสตรีมข้อความ](https://docs.langchain.com/oss/javascript/langgraph/streaming)
 
-## ข้อควรจำ
-- สตรีมได้ต่อเมื่อโมเดลรองรับ streaming (โมเดลที่ตั้งไว้ในบท 1-02 รองรับ)
-- ชิ้นที่ได้เป็นชิ้นย่อย ต้องต่อกันเองเพื่อได้ข้อความเต็ม
+## 3. เปลี่ยน node ที่แสดงแล้วเทียบผล
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-22` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+คัดลอกโค้ดหัวข้อ 1 ไปไว้ใน [`playground.ts`](./playground.ts) โดยเก็บ import ไว้ชุดเดียว เปลี่ยน `visibleNode` แล้วรัน `pnpm play 2-22` ในแต่ละครั้ง
+
+| `visibleNode` | `answer` ที่ได้ | ชิ้นที่นำมาต่อ |
+|---|---|---|
+| `"polish"` | `"ไปทะเลกันเถอะ!"` | `"ไปทะเล"` และ `"กันเถอะ!"` |
+| `"draft"` | `"ขอเสนอ ไปทะเล"` | `"ขอเสนอ "` และ `"ไปทะเล"` |
+| `"review"` | `""` | graph ชุดนี้ไม่มี node ชื่อ `review` |
 
 ## บทถัดไป
-บท 2-23: ส่งความคืบหน้าของเราเองด้วย `custom`
+
+[บท 2-23 ส่งความคืบหน้าด้วย `custom`](../23-stream-custom/README.md)

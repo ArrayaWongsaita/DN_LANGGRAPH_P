@@ -3,13 +3,14 @@
 // เริ่มใหม่: pnpm play 2-12 --reset
 //
 // ลองทำดู:
-//   1) สร้าง agent ที่วนไม่จบ แล้วใส่ recursionLimit
-//   2) จับ GraphRecursionError แล้วแสดงข้อความที่เป็นมิตร
-//   3) คำนวณ limit จากจำนวนรอบ tool ที่ยอมรับ
+//   1) เทียบ recursionLimit 5, 6 และ 7
+//   2) คำนวณงบสำหรับ tool 3 รอบ
+//   3) แยกการจัดการ GraphRecursionError จาก error อื่น
 
-import { AIMessage, type BaseMessage } from "@langchain/core/messages";
+import { AIMessage } from "@langchain/core/messages";
 import { END, GraphRecursionError, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { ToolNode, toolsCondition } from "@langchain/langgraph/prebuilt";
+import { z } from "zod";
 import { makeAddTool } from "@src/sampleTools";
 
 // เขียนโค้ดของคุณตรงนี้

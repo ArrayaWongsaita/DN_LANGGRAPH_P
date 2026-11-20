@@ -2,7 +2,7 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** every level (0-5) uses the single-file format. Level 1 (lessons 01-20) is ready for review; every solution was run against the real model. **Level 0** (raw `fetch`, lessons 0-01..0-06, single-file format like Level 1) is ready for review; every solution was run against a real model. **Level 2** (2-01..2-27: memory, tools/agents, human-in-the-loop, streaming, reliability, single-file format like Level 1) is ready for review; every solution was run against a real model; the rest is planned in `docs/superpowers/plans/2026-11-17-langgraph-course-level-2.md`. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is ready for review (single-file format like Levels 1 and 2); plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; every solution was run against a real model. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) and **Level 5** (5-01..5-26: real retrieval with pgvector and embeddings, event streaming, `langgraph dev` serving, checkpoint housekeeping/encryption, Functional API depth, SQL agent, MCP over HTTP, more middleware, context engineering, integration testing, Pregel runtime, capstone knowledge assistant, custom stream channels and framework-agnostic frontend stream state) are in the same single-file format; every solution was run (real model, real Postgres and real `langgraph dev` where a lesson uses them). Designs: `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md` and `...-level-5-design.md`. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. `legacy/` holds an earlier build kept only for reuse.
+**Status:** every level (0-5) uses the single-file format. Level 1 (lessons 01-20) is ready for review; every solution was run against the real model. **Level 0** (raw `fetch`, lessons 0-01..0-06, single-file format like Level 1) is ready for review; every solution was run against a real model. **Level 2** (2-01..2-27: memory, tools and agents, human-in-the-loop, streaming, reliability) starts each lesson with a small example and shows how changing an input affects the result. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is ready for review (single-file format like Levels 1 and 2); plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; every solution was run against a real model. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) and **Level 5** (5-01..5-26: real retrieval with pgvector and embeddings, event streaming, `langgraph dev` serving, checkpoint housekeeping/encryption, Functional API depth, SQL agent, MCP over HTTP, more middleware, context engineering, integration testing, Pregel runtime, capstone knowledge assistant, custom stream channels and framework-agnostic frontend stream state) are in the same single-file format; every solution was run (real model, real Postgres and real `langgraph dev` where a lesson uses them). Designs: `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md` and `...-level-5-design.md`. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. `legacy/` holds an earlier build kept only for reuse.
 
 ## Levels at a glance
 
@@ -26,21 +26,21 @@ pnpm install
 cp .env.example .env      # then put your GROQ_API_KEY in .env
 pnpm lesson 1-01         # Level 1, lesson 01 (single file: fill the gaps, then run it)
 pnpm lesson 0-01       # Level 0, lesson 01 (raw fetch; single file)
-pnpm lesson 2-01       # Level 2, lesson 01 (chat memory; single file, like Level 1)
+pnpm lesson 2-01       # Level 2, lesson 01 (message state, no API key)
 pnpm lesson 3-01       # Level 3, lesson 01 (input/output schemas; single file)
 pnpm lesson 4-01       # Level 4, lesson 01 (node timeout; single file)
 pnpm lesson 5-01       # Level 5, lesson 01 (embedding contract; single file)
 ```
 
-Every lesson is a single file that you run with `pnpm lesson <level>-<NN>`. Most call the real LLM, so you need a key; lessons that do not (for example 2-08, most of Level 3's graph mechanics and several in Levels 4-5) run offline. Level 5 lessons that use Postgres need Docker (see below), and 5-01..5-03 and 5-23 need an embedding key.
+Every lesson is a single file that you run with `pnpm lesson <level>-<NN>`. The command in each Level 2 README specifies whether the exercise needs an API key. Start with 2-01 to try message state locally. Level 5 lessons that use Postgres need Docker (see below), and 5-01..5-03 and 5-23 need an embedding key.
 
 ## How a lesson works
 
-You write the code; the lesson tells you whether it works. Open the one `.ts` file in the lesson, fill the `// 👉 ข้อ N` gaps (stubbed with `todo(N)`), and run it. It prints the result and `✅` / `❌` checks. The checks sit at the bottom of the file under a banner. The model comes from `lessons/level-1-basics/02-llm-config/llm.ts` (you choose the provider there) and the validated `.env` values from lesson 01. Level 0 reads the provider through `describeProvider()` and calls it with raw `fetch`.
+You write the code; the lesson tells you whether it works. Open the one `.ts` file in the lesson, fill the `// 👉 ข้อ N` gaps (stubbed with `todo(N)`), and run it. It prints the result and `✅` / `❌` checks. The checks sit at the bottom of the file under a banner. For exercises that use the model configured in 1-02, it comes from `lessons/level-1-basics/02-llm-config/llm.ts` (you choose the provider there) and the validated `.env` values from lesson 01. Level 0 reads the provider through `describeProvider()` and calls it with raw `fetch`.
 
 | File | What it is |
 |---|---|
-| `README.md` | teaches the concept (Thai) |
+| `README.md` | explains the concept with inputs and outputs in Thai |
 | `<topic>.ts` | the file you edit and run, with gaps marked `// 👉 ข้อ N` |
 | `solution/<topic>.ts` | the finished version, peek only when stuck |
 
@@ -51,11 +51,13 @@ pnpm lesson 5-09       # run Level 5 lesson 09
 
 **Playground (every lesson except the config lessons 1-01 and 1-02):** each lesson folder has a `playground.ts` (only the imports the lesson uses, plus ideas to try at the top; you write the code); `pnpm play 1-03` runs it. It is yours to edit. `pnpm play 1-03 --watch` re-runs on every save; `--reset` starts over from the original.
 
+See the [course design principles](docs/course-design-principles.md) when writing or updating a lesson.
+
 ## Switching LLM provider or model
 
-Levels 1-5 pick the provider in `lessons/level-1-basics/02-llm-config/llm.ts` (uncomment one block). The rest of this section describes `src/llm.ts` (`getLLM()`), which Level 0 and the helper scripts use.
+Levels 1-5 pick the provider in `lessons/level-1-basics/02-llm-config/llm.ts` (uncomment one block). The rest of this section describes `src/llm.ts` (`getLLM()`), which Level 0 and the helper scripts use. Some optional live examples also use this helper.
 
-`src/env.ts` reads and validates `.env` once with zod (`import { env } from "@src/env"`; a wrong value gives one Thai message listing every problem). Every lesson gets its model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`, built from that validated env). Change provider or model in `.env` only:
+`src/env.ts` reads and validates `.env` once with zod (`import { env } from "@src/env"`; a wrong value gives one Thai message listing every problem). Callers of the shared helper get their model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`, built from that validated env). Change provider or model in `.env` only:
 
 | Variable | Meaning |
 |---|---|

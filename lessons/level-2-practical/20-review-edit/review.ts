@@ -1,25 +1,20 @@
-import { Command, END, MemorySaver, START, StateGraph, StateSchema, interrupt } from "@langchain/langgraph";
-import { todo } from "@src/todo";
+// รันด้วย pnpm lesson 2-20
+import { Command, END, START, MemorySaver, StateGraph, StateSchema, interrupt, isInterrupted } from "@langchain/langgraph";
 import { z } from "zod";
-import { llm } from "../../level-1-basics/02-llm-config/llm";
 import { check } from "@src/check";
+import { todo } from "@src/todo";
 
-// รันด้วย: pnpm lesson 2-20
-// ให้มนุษย์ "ตรวจและแก้" ผลของ LLM ก่อนใช้จริง: LLM ร่างอีเมล -> หยุดรอคน -> คนแก้ (หรือกดใช้ตามร่าง) -> ได้ฉบับสุดท้าย
 const State = new StateSchema({
-  topic: z.string().default(""),
+  topic: z.string(),
   draft: z.string().default(""),
   final: z.string().default(""),
 });
 
 const graph = new StateGraph(State)
-  .addNode("write", async (state) => ({
-    draft: (await llm.invoke(`ร่างอีเมลสั้น ๆ เรื่อง ${state.topic}`)).text,
-  }))
+  .addNode("write", (state) => ({ draft: `เรียนทุกท่าน ขอแจ้ง${state.topic}` }))
   .addNode("review", (state) => {
-    // 👉 ข้อ 1: เรียก interrupt({ draft: state.draft }) ได้ค่า edited กลับมา
-    //        ถ้า edited เป็นสตริงที่ไม่ว่าง ใช้เป็น final ไม่เช่นนั้นใช้ state.draft เป็น final
-    // แนวทาง: const edited = interrupt({ draft: state.draft }); return { final: typeof edited === "string" && edited ? edited : state.draft };
+    const edited: unknown = interrupt({ draft: state.draft });
+    // 👉 ข้อ 1 ให้ final ใช้ edited เมื่อเป็นสตริงที่มีข้อความ หรือใช้ draft เมื่อได้สตริงว่าง
     return todo(1);
   })
   .addEdge(START, "write")
@@ -27,28 +22,21 @@ const graph = new StateGraph(State)
   .addEdge("review", END)
   .compile({ checkpointer: new MemorySaver() });
 
-// เริ่มงานสองรอบ (สอง thread): รอบ a คนแก้ร่าง รอบ b กดใช้ตามร่าง
-const pendingDraft = async (config: { configurable: { thread_id: string } }) => {
-  const r = (await graph.invoke({ topic: "นัดประชุมวันจันทร์" }, config)) as { __interrupt__?: { value: { draft: string } }[] };
-  return r.__interrupt__![0].value.draft;
-};
-const a = { configurable: { thread_id: "a" } };
-const b = { configurable: { thread_id: "b" } };
-const draftA = await pendingDraft(a);
-const draftB = await pendingDraft(b);
-console.log("ร่างที่รอตรวจ:", draftA.slice(0, 80));
-
+const outcomes: { request: unknown; draft: string; final: string }[] = [];
 const edited = "เรียนทุกท่าน ขอเลื่อนประชุมเป็นวันอังคาร";
-// 👉 ข้อ 2: ส่งฉบับที่แก้แล้ว: resume ด้วย new Command({ resume: edited }) และ config a ได้ state สุดท้าย
-const resultA: { final: string } = todo(2);
 
-// 👉 ข้อ 3: กด "ใช้ตามร่าง": resume ด้วยสตริงว่าง "" และ config b ได้ state สุดท้าย
-const resultB: { final: string } = todo(3);
-console.log({ finalA: resultA.final, finalB: resultB.final.slice(0, 80) });
+for (const [threadId, answer] of [["edit", edited], ["keep", ""]] as const) {
+  const config = { configurable: { thread_id: threadId } };
+  const started = await graph.invoke({ topic: "นัดประชุมวันจันทร์" }, config);
+  const request = isInterrupted(started) ? started.__interrupt__[0]?.value : undefined;
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("LLM ร่างอีเมลที่ไม่ว่างมาให้ตรวจ", draftA.length > 0 && draftB.length > 0);
-check("แก้ร่าง -> ฉบับสุดท้ายคือฉบับที่แก้", resultA.final === edited, "resume ด้วยข้อความที่แก้");
-check("ใช้ตามร่าง (สตริงว่าง) -> ฉบับสุดท้ายคือร่างเดิม", resultB.final === draftB, 'resume ด้วย ""');
+  const finished = await graph.invoke(new Command({ resume: answer }), config);
+  console.log(JSON.stringify({ answer, request, final: finished.final }));
+  outcomes.push({ request, draft: finished.draft, final: finished.final });
+}
+
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("หยุดพร้อมร่างให้ตรวจทั้งสองรอบ", outcomes.every(({ request, draft }) =>
+  draft.length > 0 && JSON.stringify(request) === JSON.stringify({ draft })));
+check("ส่งฉบับแก้แล้วได้ฉบับนั้นใน final", outcomes[0].final === edited);
+check("ส่งสตริงว่างแล้ว final ใช้ร่าง", outcomes[1].final === outcomes[1].draft);

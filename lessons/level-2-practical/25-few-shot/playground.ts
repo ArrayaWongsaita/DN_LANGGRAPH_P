@@ -2,14 +2,10 @@
 // รันด้วย: pnpm play 2-25   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-25 --watch)
 // เริ่มใหม่: pnpm play 2-25 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) สร้างรายการตัวอย่าง (few-shot) เป็นคู่ Human/AI แล้วส่งก่อนคำถามจริง
-//   2) เทียบผลมีและไม่มีตัวอย่าง
-//   3) เพิ่มตัวอย่างที่เป็นกรณีขอบ
+//   1) เทียบ prompt ที่มีตัวอย่าง 0, 1 และ 2 คู่
+//   2) เปลี่ยนรีวิวจริงแล้วดูตำแหน่งของข้อความสุดท้าย
 
-import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { AIMessage, HumanMessage, SystemMessage, type BaseMessage } from "@langchain/core/messages";
 
 // เขียนโค้ดของคุณตรงนี้

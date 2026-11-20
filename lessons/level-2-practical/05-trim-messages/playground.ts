@@ -2,15 +2,12 @@
 // รันด้วย: pnpm play 2-05   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-05 --watch)
 // เริ่มใหม่: pnpm play 2-05 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) ตัดประวัติด้วย trimMessages ก่อนส่งให้ llm ด้วยค่า maxTokens ต่าง ๆ
-//   2) คุยหลายรอบแล้วดูว่าข้อความไหนหายไป
-//   3) ลอง strategy อื่นและดูผลต่าง
+//   1) ลองตั้ง maxTokens เป็น 1, 3 และ 5 แล้วดูว่าเหลือข้อความไหน
+//   2) สลับ strategy ระหว่าง first กับ last แล้วเทียบผล
+//   3) ลองเก็บ SystemMessage ด้วย includeSystem: true
 
-import { HumanMessage, trimMessages } from "@langchain/core/messages";
-import { END, MemorySaver, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { AIMessage, HumanMessage, SystemMessage, trimMessages } from "@langchain/core/messages";
+import type { BaseMessage } from "@langchain/core/messages";
 
 // เขียนโค้ดของคุณตรงนี้

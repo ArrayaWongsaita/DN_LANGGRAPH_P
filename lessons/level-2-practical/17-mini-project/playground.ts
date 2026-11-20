@@ -5,18 +5,17 @@
 // ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
 //
 // ลองทำดู:
-//   1) สร้างผู้ช่วยจดโน้ตด้วย tool เพิ่มและอ่านโน้ต
-//   2) เพิ่ม tool ลบโน้ต
-//   3) รันซ้ำเพื่อดูว่าโน้ตยังอยู่
+//   1) จดโน้ตสองรายการและพิมพ์ผลจาก listNotes
+//   2) เทียบจำนวนข้อความเมื่อเปิดไฟล์เดิมด้วย thread เดิมกับ thread ใหม่
 
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, type BaseMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { SqliteSaver } from "@langchain/langgraph-checkpoint-sqlite";
 import { createAgent } from "langchain";
 import { z } from "zod";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { llm } from "@lessons/level-1-basics/02-llm-config/llm";
 
 // เขียนโค้ดของคุณตรงนี้

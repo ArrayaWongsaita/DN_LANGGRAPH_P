@@ -3,11 +3,10 @@
 // เริ่มใหม่: pnpm play 2-10 --reset
 //
 // ลองทำดู:
-//   1) สร้าง ToolNode จาก tools ของคุณ
-//   2) ส่งข้อความที่มี tool call เข้า node แล้วดู ToolMessage
-//   3) ลองส่ง tool call ที่ชื่อไม่มี
+//   1) เทียบผลจาก tool call หนึ่งรายการ สองรายการ และรายการว่าง
+//   2) สลับลำดับ tool call แล้วเทียบ tool_call_id
 
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, type ToolMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { makeAddTool, makeWeatherTool } from "@src/sampleTools";
 

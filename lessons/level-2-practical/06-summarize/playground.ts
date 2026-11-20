@@ -2,16 +2,15 @@
 // รันด้วย: pnpm play 2-06   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-06 --watch)
 // เริ่มใหม่: pnpm play 2-06 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) สรุปข้อความเก่าด้วย llm แล้วลบของเดิมด้วย RemoveMessage
-//   2) เพิ่มเงื่อนไขว่าเมื่อไรจึงสรุป (conditional edge)
-//   3) ถามเรื่องในประวัติที่ถูกสรุปไปแล้ว
+//   1) เปลี่ยน MAX_MESSAGES เป็น 2 หรือ 6 แล้วดูว่ารอบไหนเริ่มสรุป
+//   2) เปลี่ยน KEEP_LAST เป็น 4 แล้วนับข้อความหลังสรุป
+//   3) พิมพ์ข้อความที่ส่งเข้าโมเดลจำลองในรอบถัดไป
 
 import { HumanMessage, RemoveMessage, SystemMessage } from "@langchain/core/messages";
 import { END, MemorySaver, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { fakeLLM } from "@src/fakeLLM";
+import { fakeToolLLM } from "@src/fakeToolLLM";
 
 // เขียนโค้ดของคุณตรงนี้

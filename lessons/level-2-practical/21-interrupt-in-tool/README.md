@@ -1,41 +1,63 @@
-# บทที่ 2-21: interrupt ใน tool และกฎที่ต้องรู้
+# บทที่ 2-21 ขออนุมัติในเครื่องมือด้วย `interrupt`
 
-## แนวคิด
-ที่ปลอดภัยที่สุดในการขออนุมัติ agent คือ **ในตัว tool ที่อันตราย**: ก่อนส่งอีเมลหรือลบข้อมูลจริง tool เรียก `interrupt` ถามคนก่อน agent ทั้งตัวจะหยุดรอ และ resume ด้วย `Command({ resume })` เหมือนเดิม (ใช้ได้กับ `createAgent` ด้วย)
+เมื่อ agent ขอใช้ `sendEmail` เครื่องมือรู้แล้วว่าจะส่งถึงใคร จึงขออนุมัติพร้อมชื่อผู้รับตรงจุดนั้นได้ บทนี้ใช้ `createAgent` จาก [บท 2-16](../16-create-agent/README.md) กับโมเดลตามสคริปต์ การส่งอีเมลจำลองด้วยการเพิ่มผู้รับลงใน array `sent`
+
+## 1. หยุดใน `sendEmail` ก่อนเพิ่มผู้รับ
+
+เติมข้อ 1 ใน [`gate.ts`](./gate.ts) ให้ tool ส่ง `action` และ `to` ด้วย `interrupt` ก่อนเพิ่มผู้รับ แล้วรันจากโฟลเดอร์หลัก ตรวจว่า `sent` มีเฉพาะผู้รับที่ได้รับอนุมัติ
+
+```sh
+pnpm lesson 2-21
+```
+
+[`gate.ts`](./gate.ts) มี tool `sendEmail` ที่รับ `{ to }` โค้ดส่วนฟังก์ชันของ tool หลังเติมข้อ 1 มีดังนี้
 
 ```ts
-const sendEmail = tool(({ to }) => {
-  const ok = interrupt({ action: "sendEmail", to }); // หยุด รอคนตอบ
-  if (!ok) return "ยกเลิกแล้ว";
-  /* ...ส่งจริง... */
-}, ...);
+({ to }) => {
+  console.log(`เข้า sendEmail(${to})`);
+  const approved: unknown = interrupt({ action: "sendEmail", to });
+  if (approved !== true) return "ยกเลิกแล้ว";
+  sent.push(to);
+  return `ส่งอีเมลถึง ${to} แล้ว`;
+}
 ```
-**กฎของ interrupt** (ผิดแล้วเจอบั๊กแปลก ๆ):
-1. ตอน resume โหนด/tool ที่หยุดไว้ **รันใหม่ตั้งแต่ต้น** ดังนั้นโค้ดที่อยู่ *ก่อน* `interrupt` จะรันซ้ำ → อย่าทำสิ่งที่มีผลข้างเคียง (ส่งอีเมล เขียนฐานข้อมูล) ก่อน `interrupt` ให้ขออนุมัติก่อนเป็นอย่างแรก
-2. ห้ามห่อ `interrupt` ด้วย `try/catch` เปล่า ๆ เพราะ interrupt ทำงานโดย throw พิเศษ ถ้าจับทิ้งจะไม่หยุด
-3. ถ้ามี `interrupt` หลายครั้งในโหนดเดียว ลำดับต้องคงที่ (จับคู่ตามลำดับ)
-4. ค่าที่ส่งต้องแปลงเป็น JSON ได้
-5. การกระทำที่มีผลข้างเคียงหลัง `interrupt` ควรทำซ้ำได้ปลอดภัย (idempotent) เผื่อเกิดการรันซ้ำ
 
-## ดูตัวอย่าง
-`gate.ts` มี tool `sendEmail` และ agent ที่ใช้มัน ขาดส่วนขออนุมัติและส่งจริง
+สำหรับผู้รับแต่ละคน สคริปต์เริ่ม agent ด้วย `thread_id` ของผู้รับ พิมพ์คำขอที่ค้าง แล้วส่งผลอนุมัติด้วย `new Command({ resume: answer })` ใน thread เดิม ผลจาก tool อยู่ในข้อความชนิด `tool` รันได้โดยไม่ต้องตั้ง API key
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+```text
+เข้า sendEmail(mali@example.com)
+{"request":{"action":"sendEmail","to":"mali@example.com"},"sent":[]}
+เข้า sendEmail(mali@example.com)
+{"answer":true,"result":"ส่งอีเมลถึง mali@example.com แล้ว","sent":["mali@example.com"]}
+เข้า sendEmail(somchai@example.com)
+{"request":{"action":"sendEmail","to":"somchai@example.com"},"sent":["mali@example.com"]}
+เข้า sendEmail(somchai@example.com)
+{"answer":false,"result":"ยกเลิกแล้ว","sent":["mali@example.com"]}
+```
 
-    pnpm lesson 2-21
+บรรทัด `เข้า sendEmail(...)` ปรากฏสองครั้งต่อผู้รับ เพราะเมื่อ resume การรันเริ่มจากต้น tool อีกครั้ง
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+## 2. ค่าที่ส่งไปกลับและตำแหน่งที่ทำงานจริง
 
-## คุณทำได้แล้ว
-- กั้น tool อันตรายด้วยการขออนุมัติ และรู้กฎของ interrupt
+| จุด | ชนิดและตัวอย่าง | ผล |
+|---|---|---|
+| อินพุตของ tool | `{ to: string }` โดย schema ตรวจรูปแบบอีเมล | ระบุผู้รับ |
+| `interrupt(value)` | ข้อมูล JSON เช่น `{ action: "sendEmail", to }` | แสดงให้คนเห็นว่าจะทำอะไรกับผู้รับคนไหน |
+| `resume` | `true` หรือ `false` ตามข้อกำหนดของ tool นี้ | เฉพาะ boolean `true` ผ่านไปถึง `sent.push(to)` |
+| `checkpointer` | `new MemorySaver()` | เก็บจุดที่ agent พักและเปิดต่อด้วย `thread_id` เดิม |
 
-## ข้อควรจำ
-- ขออนุมัติ "ก่อน" ทำสิ่งที่ย้อนกลับไม่ได้ เสมอ
-- agent ทั้งตัวหยุดอยู่ (เก็บใน checkpointer) จึง resume ข้ามเวลา/ข้ามโปรเซสได้ (ถ้าใช้ checkpointer แบบเก็บลงไฟล์)
+วางการส่งจริงหรือการเขียนข้อมูลหลังตรวจผลอนุมัติ เพราะโค้ดก่อน `interrupt` รันซ้ำได้ ถ้าต้องรองรับการลองใหม่หลังส่งไปแล้ว ให้ใช้รหัสคำขอเดียวกันเพื่อตรวจว่าการส่งครั้งนั้นเกิดขึ้นแล้วหรือยัง
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-21` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+`interrupt` ส่งสัญญาณหยุดโดย throw `GraphInterrupt` เมื่อมี `try/catch` ครอบ ให้โยนสัญญาณนี้ต่อถึง graph ถ้าเรียก `interrupt` หลายครั้งใน node เดียว ให้คงลำดับการเรียกไว้เพื่อให้คำตอบจับคู่กับจุดที่พักตามลำดับ
 
-## บทถัดไป
-บท 2-22: สตรีมผลลัพธ์ทีละชิ้น
+## 3. เปลี่ยนการตอบของสมชายแล้วดูผู้รับใน `sent`
+
+คัดลอกโค้ดส่วนหลัง import จากเฉลยลง [`playground.ts`](./playground.ts) ตัดส่วนตรวจออก แล้วใช้ `pnpm play 2-21` คง `true` ของมาลีไว้ เปลี่ยนค่าในคู่ `["somchai@example.com", false]` แล้วเทียบบรรทัดสุดท้าย
+
+| `answer` ของสมชาย | `result` | `sent` หลัง resume |
+|---|---|---|
+| `false` | `"ยกเลิกแล้ว"` | `["mali@example.com"]` |
+| `true` | `"ส่งอีเมลถึง somchai@example.com แล้ว"` | `["mali@example.com","somchai@example.com"]` |
+| `"true"` | `"ยกเลิกแล้ว"` | `["mali@example.com"]` |
+
+[ดูเฉลย](./solution/gate.ts) · [บทก่อนหน้า 2-20 ตรวจและแก้ร่าง](../20-review-edit/README.md) · [บทถัดไป 2-22 สตรีมข้อความจากโมเดล](../22-stream-messages/README.md)

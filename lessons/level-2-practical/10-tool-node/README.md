@@ -1,38 +1,68 @@
-# บทที่ 2-10: ToolNode รัน tool call ให้อัตโนมัติ
+# บทที่ 2-10 รันคำขอจากโมเดลด้วย `ToolNode`
 
-## แนวคิด
-บท 2-09 เรารัน tool เอง ซึ่งต้องหา tool ตามชื่อ จับคู่ id และห่อผลเป็นข้อความเอง LangGraph มี **`ToolNode`** ทำให้ทั้งหมด:
+ใน [บท 2-09](../09-bind-tools/README.md) เราอ่านชื่อ tool แล้วเรียกเอง เมื่อ `AIMessage` ขอใช้หลาย tool ใช้ `ToolNode` ให้หาและรันแต่ละตัว แล้วส่งผลกลับเป็น `ToolMessage` ตาม ID ของคำขอ
+
+## 1. ส่งคำขอบวกเลขหนึ่งรายการ
+
+เปิด [`toolNode.ts`](./toolNode.ts) แล้วเติมข้อ 1 ให้ `node` เป็น `new ToolNode(tools)` ตัวอย่างสร้างคำขอเอง ใช้ได้โดยไม่ต้องมี API key รันจากโฟลเดอร์หลักของโปรเจกต์
+
+```sh
+pnpm lesson 2-10
+```
 
 ```ts
+import { AIMessage, type ToolMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { makeAddTool, makeWeatherTool } from "@src/sampleTools";
 
-const node = new ToolNode([add, getWeather]);
-const result = await node.invoke({ messages: [aiMessageThatHasToolCalls] });
-result.messages // [ToolMessage, ...] หนึ่งข้อความต่อหนึ่ง tool call
+const tools = [makeAddTool(), makeWeatherTool()];
+const node = new ToolNode(tools);
+const request = new AIMessage({
+  content: "",
+  tool_calls: [
+    { name: "add", args: { a: 1, b: 1 }, id: "x", type: "tool_call" },
+  ],
+});
+
+const { messages }: { messages: ToolMessage[] } = await node.invoke({ messages: [request] });
+console.log(JSON.stringify(messages.map(({ tool_call_id, content }) => ({ tool_call_id, content }))));
 ```
-- รับ State ที่ข้อความสุดท้ายเป็น `AIMessage` ที่มี `tool_calls`
-- รัน **ทุก** tool call (ขนานกัน) แล้วคืน `ToolMessage` ที่มี `tool_call_id` ตรงกับคำขอ (LLM ใช้ id นี้จับคู่คำตอบกับคำขอ)
-- ใช้เป็น node ใน graph ได้ตรง ๆ (บทหน้า)
 
-## ดูตัวอย่าง
-`toolNode.ts` สร้าง `AIMessage` ที่ขอ tool สองตัวพร้อมกันไว้ให้แล้ว ขาดการสร้าง `ToolNode` และการรันคำขอผ่าน node บทนี้ไม่ใช้ LLM
+`ToolNode` พบ `add` แล้วส่ง `{ a: 1, b: 1 }` ให้ tool ผลที่พิมพ์แสดงเฉพาะ `tool_call_id` และ `content` [ดูเฉลย](./solution/toolNode.ts)
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+```text
+[{"tool_call_id":"x","content":"2"}]
+✅ ได้ผล 1 ข้อความสำหรับ 1 คำขอ
+✅ คำขอ x ได้ผลบวก 2
+```
 
-    pnpm lesson 2-10
+## 2. คำขอกับผลลัพธ์มีรูปร่างอย่างไร
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+| ค่า | ชนิดหรือตัวอย่าง | ใช้ทำอะไร |
+|---|---|---|
+| `new ToolNode(tools)` | อาร์เรย์ของ tool เช่น `[makeAddTool(), makeWeatherTool()]` | ระบุว่ามี tool ตัวไหนให้รัน |
+| `node.invoke(input)` | `{ messages: BaseMessage[] }` หรือ `BaseMessage[]` | หา `AIMessage` ล่าสุดในประวัติ แล้วอ่าน `tool_calls` |
+| `tool_calls` | `[{ name, args, id, type: "tool_call" }]` | `name` เลือก tool, `args` ส่งค่า, `id` ระบุคำขอ |
+| ผลจาก `.invoke()` | `{ messages: ToolMessage[] }` เมื่อส่งออบเจ็กต์ หรือ `ToolMessage[]` เมื่อส่งอาร์เรย์ | ในตัวอย่าง tool แต่ละตัวคืนข้อความผลลัพธ์หนึ่งรายการ |
 
-## คุณทำได้แล้ว
-- ใช้ `ToolNode` รัน tool call แทนการรันเอง
+เมื่อข้อความขอหลาย tool ตัว node เริ่มรันพร้อมกันและเก็บผลตามลำดับใน `tool_calls` ใช้ ID ต่างกันในแต่ละคำขอ เพื่อให้ผลลัพธ์จับคู่กับคำขอได้ชัดเจน
 
-## ข้อควรจำ
-- ผลของ tool กลับมาเป็น `ToolMessage` ไม่ใช่สตริงเปล่า
-- `tool_call_id` ต้องตรงกับคำขอ ไม่เช่นนั้น LLM งง
+## 3. เปลี่ยนรายการคำขอแล้วเทียบผล
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-10` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+แทนเนื้อหาใน [`playground.ts`](./playground.ts) ด้วยโค้ดจากหัวข้อ 1 แล้วรัน `pnpm play 2-10` ทดลองเพิ่มรายการนี้ท้าย `tool_calls`
 
-## บทถัดไป
-บท 2-11: ประกอบเป็นวงวน ReAct เต็มรูปแบบ
+```ts
+{ name: "getWeather", args: { city: "เชียงใหม่" }, id: "y", type: "tool_call" },
+```
+
+| ค่า `tool_calls` | ผลที่พิมพ์ |
+|---|---|
+| มีแค่ `add` ID `"x"` | `[{"tool_call_id":"x","content":"2"}]` |
+| `add` แล้วตามด้วย `getWeather` | `[{"tool_call_id":"x","content":"2"},{"tool_call_id":"y","content":"อากาศเย็น 22 องศา"}]` |
+| `[]` | `[]` |
+
+## การบ้าน
+
+สลับสองรายการใน `tool_calls` แล้วรัน `pnpm play 2-10` ตรวจว่าผลเรียงเป็น `y` แล้ว `x` และดูว่า ID ของแต่ละผลยังตรงกับคำขอเดิม
+
+[บทก่อนหน้า 2-09 ผูก tools กับโมเดล](../09-bind-tools/README.md) · [บทถัดไป 2-11 ต่อวง ReAct](../11-react-loop/README.md)

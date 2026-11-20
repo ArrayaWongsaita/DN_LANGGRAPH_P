@@ -58,6 +58,12 @@ describe("buildPlayground", () => {
 describe("buildPlayground: import handling", () => {
   const make = (source: string) => buildPlayground({ id: "2-01", lessonDir: "lessons/level-2-x/01-a", source, ideas: ["x"] });
 
+  test("playground ของ Level 2 ใช้โมเดลที่ผู้เรียนตั้งในบท 1-02", () => {
+    const out = make(`import { llm } from "../../../level-1-basics/02-llm-config/solution/llm";\nawait llm.invoke("สวัสดี");\n`);
+    expect(out).toContain('from "@lessons/level-1-basics/02-llm-config/llm"');
+    expect(out).toContain("ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02");
+  });
+
   test("import หลายบรรทัดถูกเก็บครบ", () => {
     const out = make(`import {\n  START,\n  END,\n} from "@langchain/langgraph";\nconst a = START;\n// ส่วนตรวจคำตอบ\n`);
     expect(out).toContain('  START,\n  END,\n} from "@langchain/langgraph";');

@@ -1,34 +1,76 @@
-# บทที่ 2-26: ปรับพารามิเตอร์และอ่านการใช้ token
+# บทที่ 2-26 ตั้ง temperature และอ่านการใช้ token
 
-## แนวคิด
-**temperature** คุมความ "สุ่ม" ของคำตอบ: 0 = คงที่ ตอบเหมือนเดิม (เหมาะกับงานจัดประเภท/ดึงข้อมูล), ค่าสูง = หลากหลาย สร้างสรรค์ (เหมาะกับเขียนเรื่อง) ในคอร์สนี้ตั้งผ่าน `getLLM({ temperature: 0 })`
+งานหนึ่งอาจเรียกโมเดลหลายครั้ง เราดูจำนวน token ที่แต่ละครั้งรายงานผ่าน `usage_metadata` แล้วรวมเป็นยอดของงานได้ บทนี้ต่อจาก [บท 1-04 เรื่อง temperature](../../level-1-basics/04-temperature/README.md) และ [บท 1-05 เรื่องออบเจ็กต์คำตอบ](../../level-1-basics/05-message-object/README.md) โดยลองอ่านยอดก่อน แล้วค่อยเปลี่ยนการตั้งค่าของโมเดลจริง
 
-อีกเรื่องที่ต้องดูคือ **ต้นทุน**: ผู้ให้บริการคิดเงินตามจำนวน token คำตอบของ LLM ทุกครั้งแนบ `usage_metadata` มาให้:
+## 1. รวม token จากคำตอบสามรายการ
+
+เปิด [`usage.ts`](./usage.ts) แล้วเติมข้อ 1 ให้ `totalTokens` คืนค่าจาก `message.usage_metadata?.total_tokens` ถ้าไม่มีข้อมูลให้คืน `0` รันจากโฟลเดอร์หลักของโปรเจกต์ ตัวอย่างสร้าง `AIMessage` สามรายการไว้ล่วงหน้า จึงใช้ได้โดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 2-26
+```
 
 ```ts
-reply.usage_metadata // { input_tokens: 81, output_tokens: 59, total_tokens: 140 }
+import { AIMessage } from "@langchain/core/messages";
+
+function totalTokens(message: AIMessage): number {
+  return message.usage_metadata?.total_tokens ?? 0;
+}
+
+const replies = [
+  new AIMessage({
+    content: "โมจิ",
+    usage_metadata: { input_tokens: 12, output_tokens: 5, total_tokens: 17 },
+  }),
+  new AIMessage("นิล"),
+  new AIMessage({
+    content: "ทองม้วน",
+    usage_metadata: { input_tokens: 11, output_tokens: 4, total_tokens: 15 },
+  }),
+];
+
+const perCall = replies.map(totalTokens);
+const knownTotal = perCall.reduce((sum, count) => sum + count, 0);
+console.log(JSON.stringify({ perCall, knownTotal }));
 ```
-เราเอาตัวเลขนี้มาบันทึก คำนวณค่าใช้จ่าย หรือเตือนเมื่อใช้เกินงบได้ (เคยเห็นแล้วในบท 05 ของ Level 1)
 
-## ดูตัวอย่าง
-`usage.ts` มีฟังก์ชัน `totalTokens` ที่ต้องเติม และลูปถาม LLM หลายคำถามที่ต้องสะสม token
+```text
+{"perCall":[17,0,15],"knownTotal":32}
+✅ อ่านยอดที่รายงานและใช้ 0 เมื่อไม่มีข้อมูล
+```
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+ข้อความ `"นิล"` ไม่มี metadata ยอดที่ทราบจึงมาจาก `17 + 15` ถ้าทำรายงานการใช้งานจริง ให้เก็บด้วยว่าคำตอบใดไม่มีข้อมูล ดูโค้ดพร้อมส่วนตรวจได้ใน [`solution/usage.ts`](./solution/usage.ts)
 
-    pnpm lesson 2-26
+## 2. ค่าที่ตั้งให้โมเดลและค่าที่อ่านจากคำตอบ
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+| ค่า | ชนิดและความหมาย |
+|---|---|
+| `temperature` | ตัวเลขที่ส่งให้ `getLLM({ temperature })` ตอนสร้างโมเดล เช่น `0` หรือ `0.8` ค่าต่ำมักทำให้คำตอบแปรผันน้อยลง ความเปลี่ยนแปลงที่เห็นและช่วงค่าที่รองรับขึ้นกับโมเดล |
+| `usage_metadata` | ออบเจ็กต์ที่อาจไม่มี ถ้าเป็น `undefined` บทนี้แทนด้วย `0` เฉพาะตอนรวมยอดที่ทราบ |
+| `input_tokens` | จำนวน token ของอินพุตที่รายงาน |
+| `output_tokens` | จำนวน token ของเอาต์พุตที่รายงาน |
+| `total_tokens` | ยอดรวมที่รายงานสำหรับการเรียกครั้งนั้น |
 
-## คุณทำได้แล้ว
-- อ่านการใช้ token และรวมเป็นต้นทุนของงาน
+ถ้าต้องคำนวณค่าใช้จ่าย ให้เก็บยอดเข้าและยอดออกแยกกัน เพราะอัตราของแต่ละฝั่งอาจต่างกัน [เอกสาร LangChain เรื่องโมเดล](https://docs.langchain.com/oss/javascript/langchain/models) [เอกสาร LangChain เรื่องข้อความและ token usage](https://docs.langchain.com/oss/javascript/langchain/messages)
 
-## ข้อควรจำ
-- `usage_metadata` อาจเป็น `undefined` ในบาง provider ต้องรองรับ
-- agent เรียก LLM หลายรอบต่องาน ต้องรวมทุกรอบ
+## 3. เปลี่ยนข้อมูลแล้วเทียบผล
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-26` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+คัดลอกโค้ดหัวข้อ 1 ไปไว้ใน [`playground.ts`](./playground.ts) โดยเก็บ import ไว้ชุดเดียว เปลี่ยนเฉพาะข้อความที่สองแล้วรัน `pnpm play 2-26`
+
+| ข้อความที่สอง | ผลที่พิมพ์ |
+|---|---|
+| `new AIMessage("นิล")` | `{"perCall":[17,0,15],"knownTotal":32}` |
+| `new AIMessage({ content: "นิล", usage_metadata: { input_tokens: 8, output_tokens: 3, total_tokens: 11 } })` | `{"perCall":[17,11,15],"knownTotal":43}` |
+| เปลี่ยนเฉพาะ `content` เป็น `"นิลชอบนอนบนโซฟา"` โดยเก็บ metadata ของแถวก่อน | ยังคงได้ `{"perCall":[17,11,15],"knownTotal":43}` เพราะฟังก์ชันอ่านยอดที่รายงานจาก metadata |
+
+เมื่อตั้งผู้ให้บริการและ API key ใน `.env` แล้ว ให้รันคำสั่งนี้เพื่อส่ง prompt เดียวกันไปยังโมเดลที่ตั้ง `temperature` เป็น `0` และ `0.8` อย่างละหนึ่งครั้ง
+
+```sh
+LESSON_LIVE=1 pnpm lesson 2-26
+```
+
+คำสั่งนี้เพิ่มผล JSON สองบรรทัด แต่ละบรรทัดมี `temperature`, `text` และ `usage` ตามด้วยบรรทัด `liveKnownTotal` ถ้าคำตอบไม่มี metadata ช่อง `usage` จะเป็น `null` ลองรันซ้ำด้วย prompt เดิมเพื่อเปรียบเทียบคำตอบของแต่ละค่า แล้วลองเพิ่มเงื่อนไขใน prompt เพื่อสังเกต `input_tokens` ค่า `temperature: 0` ก็อาจให้คำตอบต่างกันระหว่างรอบ
 
 ## บทถัดไป
-บท 2-27: เมื่อ LLM ล่ม ลองใหม่และสลับตัวสำรอง
+
+[บท 2-27 ลองเรียกใหม่และสลับไปตัวสำรอง](../27-retry-fallback/README.md)

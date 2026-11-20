@@ -1,43 +1,57 @@
-# บทที่ 2-04: อ่านและแก้ไข State ของ thread
+# บทที่ 2-04 อ่านและแก้ไข State ของ thread
 
-## แนวคิด
-checkpointer เก็บ State ไว้ เราจึง **ดูย้อนหลัง** และ **แก้ไข** ได้จากนอก graph:
+ใน [บท 2-03](../03-thread-id/README.md) เราใช้รหัสเลือกห้องแชต คราวนี้จะอ่านประวัติของห้องนั้นจากนอก graph แล้วใช้ ID ลบข้อความหนึ่งรายการจาก State ล่าสุด
+
+## 1. ลองลบข้อความตาม ID
+
+เปิด [`state.ts`](./state.ts) แล้วเติมข้อ 1 ให้ลบข้อความ `h1` จาก thread `"mali"` จากนั้นรันโดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 2-04
+```
+
+ไฟล์สร้างประวัติไว้แล้ว ข้อความ `h1` คือ `"ฉันชอบแมว"` และ `h2` คือ `"ฉันชอบสุนัข"` แต่ละรอบมีคำตอบตัวอย่าง `"รับทราบ"`
 
 ```ts
-const snapshot = await graph.getState(config);
-snapshot.values.messages   // ข้อความทั้งหมดของ thread นี้
-snapshot.next              // node ที่จะทำต่อ ([] = จบแล้ว)
+const config = { configurable: { thread_id: "mali" } };
 
-await graph.updateState(config, { messages: [...] }); // เขียน update เหมือน node หนึ่งตัวเขียน
+const before: BaseMessage[] = (await graph.getState(config)).values.messages ?? [];
+const removal = new RemoveMessage({ id: "h1" });
+await graph.updateState(config, { messages: [removal] });
+const after: BaseMessage[] = (await graph.getState(config)).values.messages ?? [];
 ```
-`updateState` ผ่าน reducer เหมือนเดิม ดังนั้นการ "ลบข้อความ" ทำได้ด้วย `RemoveMessage` ที่ระบุ `id` ของข้อความที่จะลบ:
 
-```ts
-new RemoveMessage({ id: message.id })
+```text
+ก่อนลบ [ 'ฉันชอบแมว', 'รับทราบ', 'ฉันชอบสุนัข', 'รับทราบ' ]
+หลังลบ [ 'รับทราบ', 'ฉันชอบสุนัข', 'รับทราบ' ]
 ```
-ข้อความที่อยู่ใน State มี `id` ให้ทุกข้อความ
 
-## ดูตัวอย่าง
-`state.ts` มี graph แชตที่มีความจำให้แล้ว และคุยกันไปสองรอบ ที่ขาดคือ อ่านประวัติจาก State และลบข้อความแรกสุดออก
+`updateState()` ส่ง update ผ่านตัวรวมของ `MessagesValue` การลบจึงมีผลเฉพาะข้อความที่ ID ตรงกัน คำตอบถัดจาก `h1` ยังอยู่
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+## 2. ค่าและผลของคำสั่ง
 
-    pnpm lesson 2-04
+| คำสั่งหรือค่า | ใส่อะไร | สิ่งที่ได้ |
+|---|---|---|
+| `graph.getState(config)` | config ที่มี `thread_id` | snapshot ของ thread ข้อความอยู่ที่ `snapshot.values.messages` |
+| `?? []` | ใช้หลัง `snapshot.values.messages` | อาร์เรย์ว่างเมื่อ thread ยังไม่มีค่าข้อความ |
+| `graph.updateState(config, { messages: [...] })` | config และรายการที่ต้องการรวมเข้า State | checkpoint ที่เก็บ State หลังปรับแก้ |
+| `new RemoveMessage({ id: "h1" })` | ID ของข้อความที่มีอยู่ | คำสั่งลบข้อความสำหรับตัวรวมของ `MessagesValue` |
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+## 3. เปรียบเทียบการเปลี่ยน State
 
-## คุณทำได้แล้ว
-- อ่าน State ของ thread ด้วย `getState`
-- แก้ไข/ลบข้อความด้วย `updateState` + `RemoveMessage`
+ใช้ประวัติเดิม 4 ข้อความในแต่ละกรณี
 
-## ข้อควรจำ
-- `getState` คืน snapshot ไม่ใช่ค่าโดยตรง ค่าอยู่ที่ `.values`
-- thread ที่ยังไม่เคยมีข้อความ `.values.messages` เป็น `undefined` ไม่ใช่ `[]` ให้จัดการเอง
-- `updateState` ใช้ reducer เดียวกับ node: ส่งข้อความใหม่ = ต่อท้าย, ส่ง `RemoveMessage` = ลบ
+| ค่าภายใน `messages` ของ update | จำนวนหลังอัปเดต | ผลที่เห็น |
+|---|---:|---|
+| `[new RemoveMessage({ id: "h1" })]` | 3 | คำว่า `"ฉันชอบแมว"` หาย |
+| `[new RemoveMessage({ id: "h2" })]` | 3 | คำว่า `"ฉันชอบสุนัข"` หาย |
+| `[new HumanMessage({ id: "h1", content: "ฉันชอบนก" })]` | 4 | เนื้อหาที่ ID `h1` กลายเป็น `"ฉันชอบนก"` |
+| `[new HumanMessage("ฉันชอบปลา")]` | 5 | ข้อความใหม่ต่อท้าย |
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-04` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+บทนี้แก้ State ที่จะถูกอ่านต่อใน thread ระบบยังอาจมี checkpoint เก่าอยู่ในประวัติ [เอกสาร LangGraph เรื่อง persistence](https://docs.langchain.com/oss/javascript/langgraph/persistence)
+
+คัดลอกโค้ดหลัง import จาก [เฉลย](./solution/state.ts) จนถึงก่อนส่วนตรวจ ลงใน [`playground.ts`](./playground.ts) แล้วลองสลับ ID ที่จะลบและรัน `pnpm play 2-04`
 
 ## บทถัดไป
-บท 2-05: ตัดประวัติให้สั้นก่อนส่งให้ LLM
+
+[บท 2-05 ตัดประวัติก่อนส่งให้ LLM](../05-trim-messages/README.md)

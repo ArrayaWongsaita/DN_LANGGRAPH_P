@@ -1,69 +1,70 @@
+// รันด้วย pnpm lesson 2-17 หลังตั้งค่า .env และทำบท 1-01 กับ 1-02
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, type BaseMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { SqliteSaver } from "@langchain/langgraph-checkpoint-sqlite";
 import { createAgent } from "langchain";
-import { todo } from "@src/todo";
 import { z } from "zod";
 import { llm } from "../../level-1-basics/02-llm-config/llm";
 import { check } from "@src/check";
+import { todo } from "@src/todo";
 
-// รันด้วย: pnpm lesson 2-17
-// โปรเจกต์ปิด Level 2: ผู้ช่วยจดโน้ต = agent + tool สองตัว (จด / ดู) + ความจำถาวรใน SQLite
-// บทนี้รวมของที่เรียนมา: tool (08), createAgent (16), SqliteSaver (07)
-const store: string[] = []; // ที่เก็บโน้ต (ในโปรเจกต์จริงอาจเป็นฐานข้อมูล)
+const store: string[] = [];
 
 const addNote = tool(
-  ({ text }: { text: string }) => {
-    // 👉 ข้อ 1: เก็บ text ลงใน store แล้วคืน `บันทึกแล้ว: ${text}`
-    // แนวทาง: store.push(text); return `บันทึกแล้ว: ${text}`;
+  ({ text }) => {
+    // 👉 ข้อ 1 เพิ่ม text ลงใน store แล้วคืนข้อความ "บันทึกแล้ว: " ตามด้วย text
     return todo(1);
   },
-  {
-    name: "addNote",
-    description: "จดโน้ตใหม่หนึ่งข้อความ",
-    schema: z.object({ text: z.string().describe("ข้อความที่จะจด") }),
-  },
+  { name: "addNote", description: "จดโน้ตใหม่หนึ่งข้อความ", schema: z.object({ text: z.string() }) },
 );
 
 const listNotes = tool(
   () => {
-    // 👉 ข้อ 2: ถ้า store ว่างคืน "ยังไม่มีโน้ต" ไม่เช่นนั้นคืนโน้ตทั้งหมดต่อกันบรรทัดละข้อ เช่น "1. ก\n2. ข"
-    // แนวทาง: store.map((t, i) => `${i + 1}. ${t}`).join("\n")
+    // 👉 ข้อ 2 คืน "ยังไม่มีโน้ต" เมื่อ store ว่าง หรือคืนโน้ตทีละบรรทัดพร้อมเลขลำดับ
     return todo(2);
   },
-  { name: "listNotes", description: "ดูโน้ตทั้งหมดที่จดไว้", schema: z.object({}) },
+  { name: "listNotes", description: "ดูรายการโน้ตที่จดในรอบการเปิดโปรแกรมนี้", schema: z.object({}) },
 );
 
-// สร้างผู้ช่วยจาก saver ที่ส่งเข้ามา (เรียกสองครั้งเพื่อจำลองการรีสตาร์ต)
-function buildAssistant(saver: SqliteSaver) {
-  // 👉 ข้อ 3: createAgent ด้วย model: llm, tools: [addNote, listNotes], checkpointer: saver
-  //        และ systemPrompt: "คุณคือผู้ช่วยจดโน้ต ตอบสั้น ใช้ tool เมื่อผู้ใช้ขอจดหรือขอดูโน้ต"
+function buildAssistant(saver: SqliteSaver): ReturnType<typeof createAgent> {
+  // 👉 ข้อ 3 ให้ createAgent ใช้ llm, tools: [addNote, listNotes] และ checkpointer: saver
+  // ระบุ systemPrompt ให้จดและดูรายการด้วย tool และตอบเรื่องแชตก่อนหน้าจากบทสนทนา
   return todo(3);
 }
 
 const dir = mkdtempSync(join(tmpdir(), "lg-notes-"));
 const file = join(dir, "notes-memory.db");
-const config = { configurable: { thread_id: "me" } };
+const config = { configurable: { thread_id: "mali" } };
+let saver = SqliteSaver.fromConnString(file);
 
-const first = buildAssistant(SqliteSaver.fromConnString(file));
-for (const text of ["จดโน้ตว่า ซื้อนม", "จดโน้ตว่า โทรหาแม่"]) {
-  const r = await first.invoke({ messages: [new HumanMessage(text)] }, config);
-  console.log(r.messages[r.messages.length - 1].text);
+try {
+  const assistant = buildAssistant(saver);
+  for (const text of ["จดโน้ตว่า ซื้อนม", "จดโน้ตว่า โทรหาแม่"]) {
+    await assistant.invoke({ messages: [new HumanMessage(text)] }, config);
+  }
+
+  const listed: { messages: BaseMessage[] } = await assistant.invoke({ messages: [new HumanMessage("ขอดูรายการโน้ต")] }, config);
+  const notes = [...store];
+  const listing = listed.messages.filter((message) => message.type === "tool" && message.name === "listNotes").at(-1)?.text;
+  console.log(JSON.stringify({ notes, listing }));
+
+  saver.db.close();
+  store.length = 0; // จำลองการเปิดโปรแกรมใหม่
+  saver = SqliteSaver.fromConnString(file);
+  const restarted = buildAssistant(saver);
+  const reply: { messages: BaseMessage[] } = await restarted.invoke({ messages: [new HumanMessage("ในแชตก่อนหน้าฉันขอให้จดอะไร")] }, config);
+  const history = reply.messages.filter((message) => message.type === "human").map((message) => message.text);
+  console.log(JSON.stringify({ notes: store, history, reply: reply.messages.at(-1)?.text }));
+
+  // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+  check("agent เรียก addNote เพื่อเก็บโน้ตสองรายการ", notes.length === 2 && notes[0].includes("นม") && notes[1].includes("แม่"));
+  check("agent เรียก listNotes และได้รายการพร้อมเลขลำดับ", listing === notes.map((text, i) => `${i + 1}. ${text}`).join("\n"));
+  check("เปิดไฟล์เดิมกับ thread เดิมแล้วได้ข้อความก่อนหน้า", history[0] === "จดโน้ตว่า ซื้อนม" && history[1] === "จดโน้ตว่า โทรหาแม่", "ตั้ง checkpointer: saver");
+  check("รายการในหน่วยความจำว่างหลังจำลองการเปิดใหม่", await listNotes.invoke({}) === "ยังไม่มีโน้ต");
+} finally {
+  if (saver.db.open) saver.db.close();
+  rmSync(dir, { recursive: true, force: true });
 }
-
-// "รีสตาร์ต": ผู้ช่วยตัวใหม่จากไฟล์ความจำเดิม ยังรู้ว่าเราคุยอะไรไว้
-const restarted = buildAssistant(SqliteSaver.fromConnString(file));
-const r = await restarted.invoke({ messages: [new HumanMessage("ฉันให้จดอะไรไปบ้าง")] }, config);
-const reply = r.messages[r.messages.length - 1].text;
-console.log("หลังรีสตาร์ต:", reply);
-rmSync(dir, { recursive: true, force: true });
-
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("tool addNote เก็บโน้ตลง store ทั้งสองข้อความ", store.length === 2 && store[0].includes("นม") && store[1].includes("แม่"), "ต้องให้ agent เรียก addNote ได้ (ใส่ tools ใน createAgent)");
-check("หลังรีสตาร์ต ประวัติเดิมยังอยู่", r.messages.length > 6, "ต้องใช้ checkpointer: saver");
-check("หลังรีสตาร์ต ผู้ช่วยบอกโน้ตได้ (กล่าวถึงนมหรือแม่)", reply.includes("นม") || reply.includes("แม่"));

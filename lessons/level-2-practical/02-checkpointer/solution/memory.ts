@@ -1,33 +1,26 @@
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, type BaseMessage } from "@langchain/core/messages";
 import { END, MemorySaver, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { llm } from "../../../level-1-basics/02-llm-config/solution/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 2-02
-// checkpointer = ที่เก็บ State หลังจบแต่ละรอบ ทำให้ graph "จำ" บทสนทนาข้ามการเรียก invoke
 const State = new StateSchema({ messages: MessagesValue });
 
 const builder = new StateGraph(State)
-  .addNode("chat", async (state) => ({ messages: [await llm.invoke(state.messages)] }))
+  .addNode("chat", () => ({ messages: [new AIMessage("รับทราบ")] }))
   .addEdge(START, "chat")
   .addEdge("chat", END);
 
-// ข้อ 1: compile พร้อม checkpointer แบบ MemorySaver (เก็บความจำไว้ใน RAM)
-const graph = builder.compile({ checkpointer: new MemorySaver() });
+const checkpointer = new MemorySaver();
+const graph = builder.compile({ checkpointer });
+const config = { configurable: { thread_id: "mali" } };
 
-// thread_id ยังเป็นค่าคงที่ (บท 2-03 จะสอนการใช้หลาย thread)
-const config = { configurable: { thread_id: "default" } };
+const first = await graph.invoke({ messages: [new HumanMessage("ฉันชื่อมาลี")] }, config);
+const second = await graph.invoke({ messages: [new HumanMessage("ฉันชอบแมว")] }, config);
+const snapshot = await graph.getState(config);
+const savedMessages: BaseMessage[] = snapshot.values.messages ?? [];
 
-const replies: string[] = [];
-for (const text of ["ฉันชื่อมาลี", "ฉันชื่ออะไร"]) {
-  const result = await graph.invoke({ messages: [new HumanMessage(text)] }, config);
-  replies.push(result.messages[result.messages.length - 1].text);
-}
-const state = await graph.getState(config);
-console.log("คำตอบรอบสอง:", replies[1]);
+console.log("จำนวนข้อความแต่ละรอบ", [first.messages.length, second.messages.length]);
+console.log("ใน checkpoint", savedMessages.map((message) => message.text));
 
-// ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
-// ─────────────────────────────────────────────────────────────
-check("หลังสองรอบมีข้อความสะสม 4 ข้อความ (ผู้ใช้ AI ผู้ใช้ AI)", state.values.messages?.length === 4, "ต้อง compile พร้อม checkpointer");
-check("รอบสอง LLM จำชื่อ 'มาลี' ได้", replies[1].includes("มาลี"), "ถ้าไม่ผ่าน ดูว่าส่ง config เดิม (thread_id เดิม) ทั้งสองรอบ");
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+check("รอบสองอ่านประวัติเดิมต่อได้", first.messages.length === 2 && second.messages.length === 4);
+check("checkpoint ของ mali มีทั้งสองรอบ", savedMessages.map((m) => m.type).join(",") === "human,ai,human,ai");

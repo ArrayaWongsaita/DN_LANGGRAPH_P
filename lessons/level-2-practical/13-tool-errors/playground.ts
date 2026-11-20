@@ -3,11 +3,10 @@
 // เริ่มใหม่: pnpm play 2-13 --reset
 //
 // ลองทำดู:
-//   1) เขียน tool ที่ throw error ในบางกรณี แล้วดูว่า agent รับมืออย่างไร
-//   2) ใช้ ToolNode กับ handleToolErrors เพื่อส่ง error กลับให้ LLM
-//   3) นับ ToolMessage ที่เป็น error
+//   1) แก้ตัวหารจาก 0 เป็น 2 แล้วดู status
+//   2) เทียบ handleToolErrors ที่ true และ false
 
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, type ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { z } from "zod";

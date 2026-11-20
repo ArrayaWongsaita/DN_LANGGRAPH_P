@@ -3,11 +3,10 @@
 // เริ่มใหม่: pnpm play 2-19 --reset
 //
 // ลองทำดู:
-//   1) ให้มนุษย์อนุมัติหรือปฏิเสธ แล้วแยกทางด้วย conditional edge
-//   2) resume ด้วย true และ false แล้วเทียบ
-//   3) เพิ่มทางที่สามสำหรับ "ขอข้อมูลเพิ่ม"
+//   1) เทียบ resume ที่เป็น true, false และสตริง true
+//   2) ดูคำถามที่ค้างจาก getState ก่อนตอบ
 
-import { Command, END, MemorySaver, START, StateGraph, StateSchema, interrupt } from "@langchain/langgraph";
+import { Command, END, START, MemorySaver, StateGraph, StateSchema, interrupt } from "@langchain/langgraph";
 import { z } from "zod";
 
 // เขียนโค้ดของคุณตรงนี้

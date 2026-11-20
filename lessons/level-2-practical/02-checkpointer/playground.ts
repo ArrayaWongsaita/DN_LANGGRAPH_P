@@ -2,15 +2,12 @@
 // รันด้วย: pnpm play 2-02   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-02 --watch)
 // เริ่มใหม่: pnpm play 2-02 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) compile graph แชตด้วย MemorySaver แล้วคุยสองรอบใน thread เดียว
-//   2) ถามเรื่องที่คุยไปในรอบแรก เพื่อดูว่า graph จำได้
-//   3) เอา checkpointer ออกแล้วเทียบผล
+//   1) รันสองรอบด้วย MemorySaver แล้วดูจำนวนข้อความใน getState
+//   2) ใช้ thread_id ใหม่ในรอบสองแล้วเทียบจำนวนข้อความ
+//   3) สร้าง MemorySaver ตัวใหม่แล้วลองอ่าน thread เดิม
 
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, type BaseMessage } from "@langchain/core/messages";
 import { END, MemorySaver, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
 
 // เขียนโค้ดของคุณตรงนี้

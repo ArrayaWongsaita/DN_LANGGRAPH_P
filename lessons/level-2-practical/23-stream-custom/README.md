@@ -1,37 +1,71 @@
-# บทที่ 2-23: ส่งความคืบหน้าของเราเอง (`custom`)
+# บทที่ 2-23 ส่งความคืบหน้าระหว่างทำงานด้วย `custom`
 
-## แนวคิด
-บาง node ทำงานนาน (ค้นหา ประมวลผลหลายขั้น) และเราอยากบอกผู้ใช้ว่า "ตอนนี้ถึงไหนแล้ว" `updates` ส่งผลเมื่อ node **จบ** เท่านั้น ถ้าอยากส่งสัญญาณ **ระหว่างทำงาน** ใช้ `config.writer`:
+สมมติว่า node `crawl` อ่านเอกสารทีละหน้า ผู้ใช้รอผลรวมจาก node และอยากเห็นด้วยว่าอ่านถึงหน้าไหนแล้ว บทนี้ให้ node ส่งความคืบหน้าเองด้วย `config.writer` แล้วให้โปรแกรมอ่านด้วย `streamMode: "custom"`
+
+## 1. ส่งเหตุการณ์หลังอ่านแต่ละหน้า
+
+เปิด [`progress.ts`](./progress.ts) แล้วเติมข้อ 1 ให้เรียก `config.writer` พร้อม `{ page, total: pages }` ในลูป รันจากโฟลเดอร์หลักของโปรเจกต์ ตัวอย่างจำลองเวลาอ่านหน้าละ 20 มิลลิวินาทีและใช้ได้โดยไม่ต้องมี API key
+
+```sh
+pnpm lesson 2-23
+```
 
 ```ts
-.addNode("work", (state, config) => {
-  config.writer?.({ progress: 50 });   // ส่งอะไรก็ได้ที่เป็น JSON ระหว่างทำงาน
-  ...
-  config.writer?.({ progress: 100 });
-  return { ... };
-})
+import { setTimeout } from "node:timers/promises";
+import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
+import { z } from "zod";
+
+const State = new StateSchema({
+  pages: z.number().default(0),
+  done: z.string().default(""),
+});
+const graph = new StateGraph(State)
+  .addNode("crawl", async ({ pages }, config) => {
+    for (let page = 1; page <= pages; page++) {
+      await setTimeout(20);
+      config.writer?.({ page, total: pages });
+    }
+    return { done: `ครบ ${pages} หน้า` };
+  })
+  .addEdge(START, "crawl")
+  .addEdge("crawl", END)
+  .compile();
+
+const stream = await graph.stream({ pages: 3 }, { streamMode: "custom" });
+for await (const event of stream) {
+  console.log(JSON.stringify(event));
+}
 ```
-ฝั่งรับ ใช้ `streamMode: "custom"` จะได้เฉพาะสิ่งที่ `writer` ส่งมา เรียงตามลำดับ
 
-## ดูตัวอย่าง
-`progress.ts` มี node `crawl` ที่ประมวลผลหลายหน้า ขาดการส่งความคืบหน้าและการรับ บทนี้ไม่ใช้ LLM
+```text
+{"page":1,"total":3}
+{"page":2,"total":3}
+{"page":3,"total":3}
+✅ ได้ความคืบหน้าของทั้ง 3 หน้าตามลำดับ
+```
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+ทุกครั้งที่ node เรียก `writer` ลูปด้านนอกจะได้รับหนึ่งเหตุการณ์ ส่วน `return { done: ... }` อัปเดต State เมื่อ node จบ ดูโค้ดพร้อมส่วนตรวจได้ใน [`solution/progress.ts`](./solution/progress.ts)
 
-    pnpm lesson 2-23
+## 2. ฝั่งส่งและฝั่งรับใช้ค่าอะไร
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+| ค่า | ชนิดและผลที่ได้ |
+|---|---|
+| `config.writer?.(event)` | ส่งค่า `event` ตามรูปแบบที่ออกแบบไว้ เช่น ออบเจ็กต์ `{ page: 1, total: 3 }` ใช้ `?.` เพราะ `writer` อาจเป็น `undefined` เมื่อรันแบบอื่น |
+| `streamMode: "custom"` | แต่ละรายการคือค่าที่ส่งให้ `writer` โดยตรง |
+| `streamMode: "updates"` | แต่ละรายการคือค่าที่ node คืนเพื่ออัปเดต State เช่น `{ crawl: { done: "ครบ 3 หน้า" } }` |
 
-## คุณทำได้แล้ว
-- ส่งสัญญาณความคืบหน้าระหว่าง node ทำงาน
+ถ้าจะส่งต่อไปยังหน้าเว็บ ให้ใช้ payload ที่แปลงเป็น JSON ได้ และตั้งชื่อฟิลด์ให้โปรแกรมฝั่งรับใช้งานได้ตรงกัน การเรียก `writer` เพียงอย่างเดียวส่งเหตุการณ์ผ่านสตรีม ส่วนฟิลด์ที่จะอยู่ใน State ต้องมาจากค่าที่ node คืน [เอกสาร LangGraph เรื่อง custom stream](https://docs.langchain.com/oss/javascript/langgraph/streaming)
 
-## ข้อควรจำ
-- `writer` ส่งออกนอก State: ไม่ถูกเก็บใน State
-- `config.writer` อาจไม่มีเมื่อไม่ได้ stream แบบ custom ใช้ `?.` เสมอ
+## 3. เปลี่ยนจำนวนหน้าและโหมด
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 2-23` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+คัดลอกโค้ดหัวข้อ 1 ไปไว้ใน [`playground.ts`](./playground.ts) โดยเก็บ import ไว้ชุดเดียว แก้บรรทัด `graph.stream(...)` แล้วรัน `pnpm play 2-23`
+
+| อินพุตและโหมด | ผลที่พิมพ์ |
+|---|---|
+| `{ pages: 2 }` และ `"custom"` | `{"page":1,"total":2}` ตามด้วย `{"page":2,"total":2}` |
+| `{ pages: 0 }` และ `"custom"` | ไม่มีบรรทัด เพราะลูปใน node ทำงาน 0 รอบ |
+| `{ pages: 2 }` และ `"updates"` | `{"crawl":{"done":"ครบ 2 หน้า"}}` หนึ่งบรรทัดเมื่อ node จบ |
 
 ## บทถัดไป
-บท 2-24: สตรีมหลายโหมดพร้อมกัน
+
+[บท 2-24 รับความคืบหน้าและผลจาก node ในสตรีมเดียว](../24-stream-multi/README.md)

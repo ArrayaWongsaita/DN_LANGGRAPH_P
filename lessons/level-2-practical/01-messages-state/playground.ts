@@ -2,15 +2,12 @@
 // รันด้วย: pnpm play 2-01   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 2-01 --watch)
 // เริ่มใหม่: pnpm play 2-01 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) สร้าง graph ที่เก็บข้อความใน messages แล้วต่อคำตอบของ llm เข้าไปทุกรอบ
-//   2) invoke สองครั้งต่อกัน โดยส่ง state ของรอบแรกเข้าไปในรอบสอง
-//   3) พิมพ์จำนวนข้อความหลังแต่ละรอบ
+//   1) คืน AIMessage สองข้อความจาก node แล้วดูว่าต่อท้ายตามลำดับไหม
+//   2) รัน invoke สองครั้งแล้วดู messages ของแต่ละรอบ
+//   3) ลองอ่านข้อความสุดท้ายด้วย .at(-1)?.text
 
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { END, MessagesValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
 
 // เขียนโค้ดของคุณตรงนี้
