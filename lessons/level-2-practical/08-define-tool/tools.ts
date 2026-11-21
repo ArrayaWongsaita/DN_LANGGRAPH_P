@@ -5,6 +5,8 @@ import { check } from "@src/check";
 import { todo } from "@src/todo";
 
 // 👉 ข้อ 1 กำหนด schema ให้ a และ b เป็นตัวเลข
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const addSchema = z.object({ a: z.number(), b: z.number() });
 const addSchema: z.ZodObject<{ a: z.ZodNumber; b: z.ZodNumber }> = todo(1);
 const add = tool(({ a, b }) => String(a + b), {
   name: "add",
@@ -26,6 +28,19 @@ try {
   console.log("ToolInputParsingException");
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("บวก 2 กับ 3 ได้สตริง 5", sum === "5");
 check("schema ปฏิเสธ a เมื่อได้สตริง", rejected, "ใช้ z.number() สำหรับ a และ b");

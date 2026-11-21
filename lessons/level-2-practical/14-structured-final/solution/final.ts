@@ -34,7 +34,20 @@ const result = await graph.invoke({
 });
 console.log(JSON.stringify(result.answer));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("ได้ answer ที่ตรงกับ schema", AnswerSchema.safeParse(result.answer).success);
 check("อ่านอุณหภูมิ 22 จากผล tool", result.answer?.tempC === 22);
 check("ประวัติยังครบ 4 ข้อความ", result.messages.length === 4);

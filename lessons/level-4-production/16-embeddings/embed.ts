@@ -8,8 +8,18 @@ import { check } from "@src/check";
 // embedding แปลงข้อความเป็นเวกเตอร์ ข้อความความหมายใกล้กันได้เวกเตอร์ที่ชี้ไปทางเดียวกัน วัดด้วย cosine similarity แล้วเรียงเอกสารตามความใกล้
 
 function cosineSimilarity(a: number[], b: number[]): number {
-  // 👉 ข้อ 1: dot = ผลรวม a[i]*b[i]; |a| = รากที่สองของผลรวม a[i]^2 (เช่นเดียวกับ |b|)
+  // 👉 ข้อ 1 dot = ผลรวม a[i]*b[i]; |a| = รากที่สองของผลรวม a[i]^2 (เช่นเดียวกับ |b|)
   //          ถ้า |a| หรือ |b| เป็น 0 คืน 0 ไม่เช่นนั้นคืน dot / (|a| * |b|)
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   let dot = 0;
+  //   let na = 0;
+  //   let nb = 0;
+  //   for (let i = 0; i < a.length; i++) {
+  //     dot += a[i] * b[i];
+  //     na += a[i] * a[i];
+  //     nb += b[i] * b[i];
+  //   }
+  //   return na === 0 || nb === 0 ? 0 : dot / (Math.sqrt(na) * Math.sqrt(nb));
   return todo(1);
 }
 
@@ -20,9 +30,10 @@ interface Ranked {
 
 // เรียงเอกสารจากคล้ายคำถามมากไปน้อย แล้วเอา k อันดับแรก
 async function rank(query: string, docs: string[], embeddings: Embeddings, k: number): Promise<Ranked[]> {
-  // 👉 ข้อ 2: q = await embeddings.embedQuery(query); vectors = await embeddings.embedDocuments(docs)
-  //          สร้าง { text, score: cosineSimilarity(q, vector) } ของทุกเอกสาร เรียง score มากไปน้อย แล้ว slice(0, k)
-  return todo(2);
+  const q = await embeddings.embedQuery(query);
+  const vectors = await embeddings.embedDocuments(docs);
+  const scored = docs.map((text, i) => ({ text, score: cosineSimilarity(q, vectors[i]) }));
+  return scored.sort((a, b) => b.score - a.score).slice(0, k);
 }
 
 // ส่วนที่ 1: embedding ปลอมที่นับคำสำคัญ (ผลแน่นอน อธิบายได้) ตรวจว่าสูตรถูก
@@ -34,6 +45,17 @@ const limited = await rank("ลา", docs, new KeywordEmbeddings(), 2);
 // ส่วนที่ 2: embedding จริง จับ "ความหมาย" ได้ แม้ไม่มีคำซ้ำกัน (ถามว่า "ลืมพาสเวิร์ด" เอกสารเขียนว่า "รหัสผ่าน")
 const semantic = await rank("ลืมพาสเวิร์ดทำยังไง", docs, getEmbeddings(), 3);
 console.log("embedding จริง:", semantic.map((r) => `${r.score.toFixed(2)} ${r.text}`));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

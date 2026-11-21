@@ -1,47 +1,54 @@
-# บทที่ 19: stream ผลของ graph (ดูระหว่างทาง)
+# บทที่ 1-19 อ่าน State ระหว่าง graph ทำงานด้วย `stream()`
 
-## แนวคิด
-`graph.invoke(...)` ให้ผลสุดท้ายตอนจบทีเดียว แต่ graph ที่มีหลายขั้น (โดยเฉพาะขั้นที่เรียก LLM ใช้เวลานาน) เราอยากเห็น **ความคืบหน้าระหว่างทาง** จึงใช้ `graph.stream(...)` ซึ่งคืนผลเป็นชิ้น ๆ ให้ `for await` อ่าน (แบบเดียวกับ streaming ของ LLM ในบทที่ 08)
+`invoke()` จาก [บท 1-18](../18-compile-and-invoke/README.md) คืน State ตอนจบ เมื่ออยากรู้ว่าแต่ละ node ทำอะไร ให้ใช้ `stream()` แล้วเลือกว่าจะรับเฉพาะค่าที่เปลี่ยนหรือรับ State ทั้งก้อน
 
-เลือกได้ว่าอยากได้ชิ้นแบบไหนด้วย `streamMode`:
+## 1. ลองอ่านผลของ `clean` และ `measure`
 
-| streamMode | ได้อะไรในแต่ละชิ้น |
-|---|---|
-| `"updates"` | เฉพาะส่วนที่ node นั้นอัปเดต: `{ ชื่อ node: update }` (เหมาะแสดงว่า "ตอนนี้ node ไหนเสร็จแล้ว") |
-| `"values"` | state ทั้งก้อนหลังแต่ละก้าว (เหมาะแสดงสถานะล่าสุดทั้งหมด) |
+เปิด [`streamDemo.ts`](./streamDemo.ts) เติมข้อ 1 ให้เลือกโหมด `"updates"` แล้วรันโดยไม่ต้องมี API key ไฟล์ใช้ graph ตัดช่องว่างและวัดความยาวจาก [บท 1-11](../11-node/README.md)
 
-```
-graph: START → first → second → END
-
-updates: { first: {log:"first"} } , { second: {log:"second"} }
-values : {log:["start"]} , {log:["start","first"]} , {log:["start","first","second"]}
-          ↑ state เริ่มต้นที่เราส่งเข้ามา (ก่อน node ใดทำงาน) ก็นับเป็นชิ้นแรก
-          (ตัวอย่างนี้ส่ง { log: "start" } เข้าไปตอนเริ่ม)
+```sh
+pnpm lesson 1-19
 ```
 
-## ดูตัวอย่าง
-เปิด `streamDemo.ts`: มี graph 2 ขั้นให้มาแล้ว และต้องเขียนวนอ่าน stream 2 แบบ: เก็บชิ้นแบบ `updates` (ข้อ 1) และแบบ `values` (ข้อ 2)
+ในไฟล์ข้อ 1 มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
 
-## โจทย์
-เติมช่อง `// 👉 ข้อ N` (ตอนนี้เป็น `todo(N)`) ให้ครบ แล้วรัน:
+```ts
+const input = { text: "  abc  " };
+const stream = await graph.stream(input, { streamMode: "updates" });
 
-    pnpm lesson 1-19
+for await (const chunk of stream) {
+  console.log(JSON.stringify(chunk));
+}
+```
 
-ถ้ายังเติมไม่ครบจะเห็น `ยังไม่ได้ทำข้อ N` บอกว่าช่องไหนค้างอยู่ เติมครบแล้วจะเห็นผลที่พิมพ์ออกมา และบรรทัด `✅` ทุกข้อ ถ้ามี `❌` ให้ดูคำใบ้ในวงเล็บท้ายบรรทัด
+ไฟล์รวมข้อมูลแต่ละโหมดเป็นอาร์เรย์เพื่อเทียบกันในบรรทัดเดียว
 
-เทียบผลของสองโหมดที่พิมพ์ออกมา (ไม่ใช้ LLM จึงไม่ต้องมี key)
+```text
+updates [{"clean":{"text":"abc"}},{"measure":{"length":3}}]
+values [{"text":"  abc  ","length":0},{"text":"abc","length":0},{"text":"abc","length":3}]
+```
 
-## คุณทำได้แล้ว
-- ดูความคืบหน้าของ graph ระหว่างทางด้วย `stream`
-- เลือกโหมด `updates` หรือ `values` ให้เหมาะกับงาน
+`updates` มีชื่อ node เป็นคีย์แล้วตามด้วยค่าที่ node นั้นคืน `values` เริ่มด้วย State ก่อน node ตัวแรก จากนั้นส่ง State เต็มหลังแต่ละก้าว
 
-## ข้อควรจำ
-- `await graph.stream(input, { streamMode })` แล้ว `for await`
-- `values` มีชิ้นแรกเป็น state เริ่มต้นที่ส่งเข้าไป (ถ้าส่ง input ว่างเปล่า จะไม่มีชิ้นนี้)
-- Level 2 จะมีโหมดที่ stream ตัวอักษรของ LLM ในแต่ละ node ด้วย
+## 2. ค่า `streamMode` ที่ใช้ในบท
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 1-19` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+| ตัวเลือก | รูปแบบข้อมูลแต่ละชิ้น | เหมาะกับ |
+|---|---|---|
+| `"updates"` | `{ ชื่อNode: update }` | ดูว่า node ใดเพิ่งเปลี่ยนค่าอะไร |
+| `"values"` | State เต็ม เช่น `{ text: "abc", length: 3 }` | แสดงภาพรวมของข้อมูลในทุกก้าว |
+
+ใช้ `await graph.stream(input, options)` เพื่อเปิดสตรีม แล้วอ่านด้วย `for await...of` [เอกสาร LangGraph เรื่อง streaming](https://docs.langchain.com/oss/javascript/langgraph/streaming)
+
+## 3. ใช้อินพุตเดียวกันแล้วเทียบวิธีอ่าน
+
+| วิธีเรียก | จำนวนผลที่ได้กับ graph นี้ | ชิ้นสุดท้าย |
+|---|---:|---|
+| `await graph.invoke(input)` | 1 | `{ text: "abc", length: 3 }` |
+| `streamMode: "updates"` | 2 | `{ measure: { length: 3 } }` |
+| `streamMode: "values"` | 3 | `{ text: "abc", length: 3 }` |
+
+คัดลอกโค้ดหลัง import จาก [เฉลย](./solution/streamDemo.ts) จนถึงก่อนส่วนตรวจ ลงใน [`playground.ts`](./playground.ts) ลองเปลี่ยนอินพุตเป็น `"  ab  "` แล้วรัน `pnpm play 1-19` เพื่อดูว่า State เริ่มต้น หน้าตาของ update และความยาวสุดท้ายเปลี่ยนอย่างไร
 
 ## บทถัดไป
-บทที่ 20 เป็นโปรเจกต์ปิด Level 1: ประกอบทุกอย่างเป็นผู้ช่วยในเทอร์มินัล
+
+[บท 1-20 ประกอบผู้ช่วยที่เลือกวิธีตอบตามข้อความ](../20-mini-assistant/README.md)

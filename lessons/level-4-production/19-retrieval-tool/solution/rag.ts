@@ -12,8 +12,6 @@ import { check } from "@src/check";
 // RAG แบบง่ายที่สุด: ให้การค้นเอกสารเป็น tool ของ agent โมเดลตัดสินเองว่าจะค้นเมื่อไหร่ แล้วตอบจากผลที่ได้ (ไม่ต้องเดา)
 // จัดรูปผลค้นหาเป็นข้อความให้โมเดลอ่าน
 function formatHits(hits: Hit[]): string {
-  // ข้อ 1: กรองเฉพาะ hit ที่ score > 0 แล้วทำเป็นบรรทัดละชิ้น `[${source}] ${text}` ต่อกันด้วย "\n"
-  //          ถ้าไม่เหลือสักชิ้น คืน "ไม่พบข้อมูลที่เกี่ยวข้องในเอกสาร"
   const relevant = hits.filter((h) => h.score > 0);
   if (relevant.length === 0) return "ไม่พบข้อมูลที่เกี่ยวข้องในเอกสาร";
   return relevant.map((h) => `[${h.source}] ${h.text}`).join("\n");
@@ -22,7 +20,6 @@ function formatHits(hits: Hit[]): string {
 function makeSearchTool(index: InMemoryIndex) {
   return tool(
     async ({ query }: { query: string }) => {
-      // ข้อ 2: คืน formatHits(await index.search(query, 2))
       return formatHits(await index.search(query, 2));
     },
     {
@@ -34,8 +31,6 @@ function makeSearchTool(index: InMemoryIndex) {
 }
 
 function buildRagAgent(model: BaseChatModel, index: InMemoryIndex) {
-  // ข้อ 3: คืน createAgent({ model, tools: [makeSearchTool(index)],
-  //                              systemPrompt: "ตอบจากผลของ search_docs เท่านั้น ถ้าไม่พบให้บอกตรง ๆ ว่าไม่พบ ไม่ต้องเดา" })
   return createAgent({
     model,
     tools: [makeSearchTool(index)],
@@ -62,6 +57,17 @@ const r = await buildRagAgent(fake, index).invoke({ messages: [new HumanMessage(
 // โมเดลจริง: ถามเรื่องในเอกสาร และเรื่องที่ไม่มีในเอกสาร
 const real = await buildRagAgent(llm, index).invoke({ messages: [new HumanMessage("ลืมรหัสผ่านต้องทำอย่างไร")] });
 console.log("โมเดลจริงตอบ:", real.messages.at(-1)?.text);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

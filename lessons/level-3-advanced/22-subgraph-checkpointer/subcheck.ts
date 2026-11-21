@@ -24,15 +24,27 @@ const builder = new StateGraph(S)
   .addEdge("prepare", "confirm")
   .addEdge("confirm", END);
 
-// 👉 ข้อ 1: compile ที่ graph แม่พร้อม checkpointer: builder.compile({ checkpointer: new MemorySaver() })
-const app: ReturnType<typeof builder.compile> = todo(1);
+const app = builder.compile({ checkpointer: new MemorySaver() });
 
 const config = { configurable: { thread_id: "t" } };
 const paused = isInterrupted(await app.invoke({}, config));
 
-// 👉 ข้อ 2: ตอบคำถามที่ค้างใน subgraph: invoke ด้วย new Command({ resume: "ใช่" }) และ config เดิม ได้ state สุดท้าย
-const finished: { log: string } = todo(2);
+// 👉 ข้อ 1 ตอบคำถามที่ค้างใน subgraph: invoke ด้วย new Command({ resume: "ใช่" }) และ config เดิม ได้ state สุดท้าย
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const finished = await app.invoke(new Command({ resume: "ใช่" }), config);
+const finished: { log: string } = todo(1);
 console.log({ paused, log: finished.log });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

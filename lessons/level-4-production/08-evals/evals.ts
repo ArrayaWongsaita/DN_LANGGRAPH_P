@@ -14,8 +14,7 @@ type Scorer = (output: string, testCase: Case) => boolean | Promise<boolean>;
 
 // scorer แบบกฎ: ผ่านเมื่อคำตอบ "มี" expected อยู่ (ไม่สนตัวพิมพ์เล็ก-ใหญ่)
 const containsScorer: Scorer = (output, testCase) => {
-  // 👉 ข้อ 1: คืน output.toLowerCase().includes(testCase.expected.toLowerCase())
-  return todo(1);
+  return output.toLowerCase().includes(testCase.expected.toLowerCase());
 };
 
 interface EvalResult {
@@ -28,8 +27,11 @@ interface EvalResult {
 async function runEval(run: (input: string) => Promise<string>, cases: Case[], scorer: Scorer): Promise<EvalResult> {
   const failures: string[] = [];
   for (const testCase of cases) {
-    // 👉 ข้อ 2: const output = await run(testCase.input); ถ้า !(await scorer(output, testCase)) ให้ failures.push(testCase.input)
-    todo(2);
+    // 👉 ข้อ 1 const output = await run(testCase.input); ถ้า !(await scorer(output, testCase)) ให้ failures.push(testCase.input)
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const output = await run(testCase.input);
+    //   if (!(await scorer(output, testCase))) failures.push(testCase.input);
+    todo(1);
   }
   const total = cases.length;
   const passed = total - failures.length;
@@ -39,9 +41,10 @@ async function runEval(run: (input: string) => Promise<string>, cases: Case[], s
 // scorer แบบกรรมการ: ให้โมเดลตอบ PASS หรือ FAIL
 function makeJudgeScorer(judge: BaseChatModel): Scorer {
   return async (output, testCase) => {
-    // 👉 ข้อ 3: เรียก judge.invoke(`คำถาม: ${testCase.input}\nคำตอบที่คาดหวัง: ${testCase.expected}\nคำตอบจริง: ${output}\nตอบ PASS หรือ FAIL เท่านั้น`)
-    //          ผ่านเมื่อข้อความที่ได้ (ตัดช่องว่าง, ตัวพิมพ์ใหญ่) ขึ้นต้นด้วย "PASS"
-    return todo(3);
+    const verdict = await judge.invoke(
+      `คำถาม: ${testCase.input}\nคำตอบที่คาดหวัง: ${testCase.expected}\nคำตอบจริง: ${output}\nตอบ PASS หรือ FAIL เท่านั้น`,
+    );
+    return verdict.text.trim().toUpperCase().startsWith("PASS");
   };
 }
 
@@ -69,6 +72,17 @@ const realRun = async (input: string) => (await llm.invoke(`${input} ตอบ�
 const realRuled = await runEval(realRun, cases, containsScorer);
 const realJudged = await runEval(realRun, cases, makeJudgeScorer(llm));
 console.log({ ruled, realRuled, realJudged });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

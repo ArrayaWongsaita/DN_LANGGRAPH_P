@@ -10,21 +10,34 @@ interface Doc {
 
 // อันดับด้วยคำ: ตัด query เป็นคำด้วยช่องว่าง (ตัวพิมพ์เล็ก) นับว่ามีกี่คำที่ปรากฏใน text (ตัวพิมพ์เล็ก)
 function keywordRank(docs: Doc[], query: string): string[] {
-  // 👉 ข้อ 1: เก็บเฉพาะเอกสารที่ตรงอย่างน้อย 1 คำ เรียงจากจำนวนคำที่ตรงมากไปน้อย
-  //          ถ้าเท่ากันให้คงลำดับเดิมของ docs แล้วคืนรายการ id
-  return todo(1);
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  return docs
+    .map((doc, index) => ({ id: doc.id, index, hits: words.filter((w) => doc.text.toLowerCase().includes(w)).length }))
+    .filter((d) => d.hits > 0)
+    .sort((a, b) => b.hits - a.hits || a.index - b.index)
+    .map((d) => d.id);
 }
 
 // รวมหลายรายการอันดับ (แต่ละรายการคือ id เรียงจากดีที่สุด) ด้วย Reciprocal Rank Fusion
 function reciprocalRankFusion(rankings: string[][], k = 60): string[] {
-  // 👉 ข้อ 2: คะแนนของแต่ละ id = ผลรวมของ 1 / (k + อันดับ) โดยอันดับนับจาก 1 ในทุกรายการที่ id นั้นอยู่
+  // 👉 ข้อ 1 คะแนนของแต่ละ id = ผลรวมของ 1 / (k + อันดับ) โดยอันดับนับจาก 1 ในทุกรายการที่ id นั้นอยู่
   //          เรียงคะแนนมากไปน้อย ถ้าเท่ากันให้ id ที่ปรากฏก่อน (ตามลำดับรายการแล้วลำดับในรายการ) มาก่อน
-  return todo(2);
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const score = new Map<string, number>();
+  //   const firstSeen = new Map<string, number>();
+  //   let order = 0;
+  //   for (const ranking of rankings) {
+  //     ranking.forEach((id, i) => {
+  //       score.set(id, (score.get(id) ?? 0) + 1 / (k + i + 1));
+  //       if (!firstSeen.has(id)) firstSeen.set(id, order++);
+  //     });
+  //   }
+  //   return [...score.keys()].sort((a, b) => score.get(b)! - score.get(a)! || firstSeen.get(a)! - firstSeen.get(b)!);
+  return todo(1);
 }
 
 function hybridSearch(docs: Doc[], query: string, vectorRanking: string[], topN: number): string[] {
-  // 👉 ข้อ 3: รวม keywordRank(docs, query) กับ vectorRanking ด้วย reciprocalRankFusion แล้วเอา topN อันดับแรก
-  return todo(3);
+  return reciprocalRankFusion([keywordRank(docs, query), vectorRanking]).slice(0, topN);
 }
 
 const docs: Doc[] = [
@@ -36,6 +49,17 @@ const docs: Doc[] = [
 // สมมติเวกเตอร์ไม่รู้จักรหัสสินค้า AX-4421 เลย (ตอบแต่ b, c) แต่การค้นด้วยคำเจอ
 const hybrid = hybridSearch(docs, "AX-4421", ["b", "c"], 3);
 console.log("ค้นด้วยคำอย่างเดียว:", keywordRank(docs, "AX-4421"), "→ ผสม:", hybrid);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

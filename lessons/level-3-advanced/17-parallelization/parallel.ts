@@ -19,11 +19,15 @@ const builder = new StateGraph(State)
   .addNode("checkTone", async (s) => ({ tone: (await llm.invoke(`ตรวจน้ำเสียงของข้อความนี้ ตอบสั้นมาก: ${s.text}`)).text }))
   .addNode("checkLength", async (s) => ({ length: (await llm.invoke(`ตรวจความยาวของข้อความนี้ ตอบสั้นมาก: ${s.text}`)).text }))
   .addNode("makeReport", (s) => {
-    // 👉 ข้อ 2: คืน { report: `${s.safety} | ${s.tone} | ${s.length}` }
-    return todo(2);
+    return { report: `${s.safety} | ${s.tone} | ${s.length}` };
   });
 
-// 👉 ข้อ 1: เพิ่ม edge จาก START ไปทั้ง 3 node ตรวจ และจากทั้ง 3 node ไป "makeReport" (builder.addEdge หลายครั้ง)
+// 👉 ข้อ 1 เพิ่ม edge จาก START ไปทั้ง 3 node ตรวจ และจากทั้ง 3 node ไป "makeReport" (builder.addEdge หลายครั้ง)
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   for (const node of ["checkSafety", "checkTone", "checkLength"] as const) {
+//     builder.addEdge(START, node);
+//     builder.addEdge(node, "makeReport");
+//   }
 todo(1);
 
 const graph = builder.addEdge("makeReport", END).compile();
@@ -31,6 +35,17 @@ const started = Date.now();
 const result = await graph.invoke({ text: "สินค้าชิ้นนี้ดีมาก ส่งไวและแพ็กแน่น แนะนำเลยครับ" });
 console.log(`ใช้เวลา ${Date.now() - started} ms`);
 console.log(result.report);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

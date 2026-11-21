@@ -7,6 +7,8 @@ import { todo } from "@src/todo";
 
 const tools = [makeAddTool(), makeWeatherTool()];
 // 👉 ข้อ 1 สร้าง ToolNode จากรายการ tools
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const node = new ToolNode(tools);
 const node: ToolNode = todo(1);
 
 const request = new AIMessage({
@@ -22,6 +24,19 @@ console.log(JSON.stringify(messages.map((message) => ({
   content: message.content,
 }))));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("ได้ผล 1 ข้อความสำหรับ 1 คำขอ", messages.length === 1);
 check("คำขอ x ได้ผลบวก 2", messages[0]?.tool_call_id === "x" && messages[0].text === "2");

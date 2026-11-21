@@ -9,12 +9,24 @@ import { check } from "@src/check";
 // diamond: a → (b, c) → d  ทุก node เขียนบันทึกลงฟิลด์ log
 // withReducer = true → log รวมค่าด้วย reducer, false → log เป็นฟิลด์ธรรมดา (LastValue)
 function buildDiamond(withReducer: boolean) {
-  // 👉 ข้อ 1: State ที่มีฟิลด์ log:
-  //   withReducer → new ReducedValue(z.array(z.string()).default(() => []), { inputSchema: z.string(), reducer: (a, b) => [...a, b] })
-  //   ไม่ใช่ → z.array(z.string()).default(() => [])  แล้วสร้าง StateGraph(State) จากนั้นต่อ node a,b,c,d
-  //   โดย node ตัวไหนก็ตามคืน { log: <ชื่อ node> } (withReducer) หรือ { log: [<ชื่อ node>] } (ไม่ใช่)
-  //   edge: START→a, a→b, a→c, b→d, c→d, d→END  คอมไพล์แล้วคืนกราฟ
-  return todo(1);
+  const State = new StateSchema({
+    log: withReducer
+      ? new ReducedValue(z.array(z.string()).default(() => []), { inputSchema: z.string(), reducer: (a: string[], b: string) => [...a, b] })
+      : z.array(z.string()).default(() => []),
+  });
+  const write = (name: string) => () => ({ log: (withReducer ? name : [name]) as never });
+  return new StateGraph(State)
+    .addNode("a", write("a"))
+    .addNode("b", write("b"))
+    .addNode("c", write("c"))
+    .addNode("d", write("d"))
+    .addEdge(START, "a")
+    .addEdge("a", "b")
+    .addEdge("a", "c")
+    .addEdge("b", "d")
+    .addEdge("c", "d")
+    .addEdge("d", END)
+    .compile();
 }
 
 interface DebugEvent {
@@ -32,33 +44,40 @@ async function recordDebug(graph: ReturnType<typeof buildDiamond>): Promise<Debu
 
 // จัดกลุ่ม node ตามรอบ (superstep) จาก event ชนิด "task" เท่านั้น เรียงเลขรอบน้อย→มาก ชื่อ node ในรอบเรียงตามตัวอักษร
 function groupSupersteps(events: DebugEvent[]): { step: number; nodes: string[] }[] {
-  // 👉 ข้อ 2: กรอง e.type === "task" (ข้ามถ้าไม่มี payload.name) จัดกลุ่มตาม e.step แล้วคืน [{ step, nodes }] ตามที่อธิบาย (เรียงเลขรอบเป็นตัวเลข: 2 ก่อน 10)
-  return todo(2);
+  // 👉 ข้อ 1 กรอง e.type === "task" (ข้ามถ้าไม่มี payload.name) จัดกลุ่มตาม e.step แล้วคืน [{ step, nodes }] ตามที่อธิบาย (เรียงเลขรอบเป็นตัวเลข: 2 ก่อน 10)
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const byStep = new Map<number, string[]>();
+  //   for (const e of events) {
+  //     const name = e.type === "task" ? e.payload?.name : undefined;
+  //     if (!name) continue;
+  //     byStep.set(e.step, [...(byStep.get(e.step) ?? []), name]);
+  //   }
+  //   return [...byStep.entries()].sort((x, y) => x[0] - y[0]).map(([step, nodes]) => ({ step, nodes: nodes.sort() }));
+  return todo(1);
 }
 
 // จำนวน node ที่รันขนานกันมากที่สุดในรอบเดียว (ไม่มีรอบเลย = 0)
 function maxParallelism(steps: { nodes: string[] }[]): number {
-  // 👉 ข้อ 3: คืนขนาด nodes ที่ใหญ่สุด
-  return todo(3);
+  return steps.reduce((max, s) => Math.max(max, s.nodes.length), 0);
 }
 
 // ชื่อที่ซ้ำกันระหว่างชื่อ node กับชื่อฟิลด์ State (คืนตามลำดับใน nodeNames ไม่ซ้ำ)
 function findNameClashes(nodeNames: string[], stateKeys: string[]): string[] {
-  // 👉 ข้อ 4: nodeNames ที่อยู่ใน stateKeys ตามลำดับ ไม่ให้มีชื่อซ้ำในผลลัพธ์
-  return todo(4);
+  return [...new Set(nodeNames.filter((name) => stateKeys.includes(name)))];
 }
 
 // error นี้คือ "สอง node เขียนฟิลด์ LastValue เดียวกันในรอบเดียว" ใช่ไหม
 function isConcurrentUpdateError(error: unknown): boolean {
-  // 👉 ข้อ 5: true ถ้า (error as { lc_error_code?: string }).lc_error_code === "INVALID_CONCURRENT_GRAPH_UPDATE"
-  //          หรือข้อความมี "can only receive one value per step" นอกนั้น false (รวม null/ไม่ใช่ error)
-  return todo(5);
+  if (error === null || typeof error !== "object") return false;
+  const code = (error as { lc_error_code?: string }).lc_error_code;
+  const message = error instanceof Error ? error.message : "";
+  return code === "INVALID_CONCURRENT_GRAPH_UPDATE" || message.includes("can only receive one value per step");
 }
 
 // เหลือเฉพาะ channel ของผู้ใช้ (ฟิลด์ State) โดยตัด channel ภายในของ runtime ที่ขึ้นต้นด้วย "__", "branch:", "join:" หรือ "start:"
 function userChannels(channelNames: string[]): string[] {
-  // 👉 ข้อ 6: กรองชื่อที่ไม่ขึ้นต้นด้วยคำนำหน้าภายในทั้งสี่ (เช็กเฉพาะ "ขึ้นต้น" ชื่อ "restart:flag" ต้องอยู่)
-  return todo(6);
+  const internal = ["__", "branch:", "join:", "start:"];
+  return channelNames.filter((name) => !internal.some((prefix) => name.startsWith(prefix)));
 }
 
 // ส่วนที่ 1: ดู graph จริงทำงาน
@@ -86,6 +105,17 @@ try {
   clashMessage = (error as Error).message;
   console.log("addNode ชื่อ log →", clashMessage);
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

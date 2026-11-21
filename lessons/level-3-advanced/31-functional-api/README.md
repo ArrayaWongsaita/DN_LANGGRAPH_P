@@ -1,6 +1,7 @@
-# บทที่ 3-31: Functional API (`entrypoint` และ `task`)
+# บทที่ 3-31 Functional API (`entrypoint` และ `task`)
 
 ## แนวคิด
+
 นอกจาก Graph API ที่คุณใช้มาทั้งคอร์ส LangGraph มี **Functional API**: เขียนเวิร์กโฟลว์เป็นฟังก์ชัน async ธรรมดา ใช้ `if`, `for`, `Promise.all` ได้ตรง ๆ โดยไม่ต้องประกาศ State/node/edge ยังคงได้ความจำ (checkpointer), human-in-the-loop และ streaming เหมือนกัน
 
 ```ts
@@ -21,25 +22,55 @@ await workflow.invoke(3, { configurable: { thread_id: "1" } });
 
 **เมื่อไรเลือกอันไหน:** เอกสารของ LangGraph แนะนำ Graph API สำหรับ agent ใหม่ (เห็นภาพ ตรวจสอบง่าย) Functional API เหมาะกับงานที่เป็นลำดับขั้นตรง ๆ หรืออยากเพิ่มความทนทานให้โค้ดเดิมทีละน้อย
 
-## ดูตัวอย่าง
-`functional.ts` ขาดตัว task และตัวเวิร์กโฟลว์ บทนี้ไม่ใช้ LLM
+## 1. ลองเติมช่องเดียว
 
-## โจทย์
-เติม 2 ข้อ (ค้นหา `// 👉 ข้อ N` ในไฟล์) แล้วรัน:
+เปิด [`functional.ts`](./functional.ts) แล้วเติมข้อ 1: สร้าง workflow ด้วย `entrypoint` ที่เรียก task `double` แบบต่อเนื่องแล้วแบบขนานด้วย `Promise.all` รันจากโฟลเดอร์หลักของโปรเจกต์ บทนี้ไม่เรียกโมเดลจริง รันได้โดยไม่ต้องมี API key
 
-    pnpm lesson 3-31
+```sh
+pnpm lesson 3-31
+```
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+ในไฟล์ข้อ 1 มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
 
-## คุณทำได้แล้ว
-- เขียนเวิร์กโฟลว์แบบ Functional API
+ในไฟล์มี task `double` ที่ห่อด้วย `task` ให้แล้ว ขาดแค่ตัว workflow
+
+โค้ดตามแนวทาง:
+
+```ts
+const workflow = entrypoint({ name: "wf", checkpointer: new MemorySaver() }, async (n: number) => {
+  const a = await double(n);
+  const [x, y] = await Promise.all([double(a), double(a + 1)]);
+  return x + y;
+});
+```
+
+## 2. ผลที่ได้
+
+ผลที่รันจากเฉลย
+
+```text
+ผลลัพธ์: 26 task double ถูกรัน 3 ครั้ง
+✅ ผลลัพธ์ถูก: a=6, double(6)=12, double(7)=14 รวม 26
+✅ task double ถูกเรียก 3 ครั้ง
+```
+
+สิ่งที่ได้: เขียนเวิร์กโฟลว์แบบ Functional API
+
+## 3. ส่วนประกอบที่ใช้ในบทนี้
+
+| ส่วน | ตัวอย่าง | หน้าที่ |
+|---|---|---|
+| `task` | `task("double", async (n: number) => n * 2)` | งานย่อยที่บันทึกผลลง checkpoint |
+| `entrypoint` | `entrypoint({ name: "wf", checkpointer }, async (n) => ...)` | ฟังก์ชันเวิร์กโฟลว์หลัก เขียนด้วย `if`, `for`, `Promise.all` ได้ตรง ๆ |
+| `Promise.all` | `await Promise.all([double(a), double(a + 1)])` | รัน task ขนานกัน |
 
 ## ข้อควรจำ
+
 - input/output ของ task ต้องแปลงเป็น JSON ได้ (ถูกบันทึกลง checkpoint)
 - ผลข้างเคียงใส่ใน task ไม่ใช่ตรง ๆ ใน entrypoint
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 3-31` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+## ลองต่อใน playground
 
-## บทถัดไป
-บท 3-32: ดูภาพของ graph
+รัน `pnpm play 3-31` เพื่อเล่นกับโค้ดของบทนี้โดยไม่มีส่วนตรวจคำตอบ (ใช้ `--watch` ให้รันซ้ำเมื่อบันทึก และ `--reset` เพื่อเริ่มใหม่)
+
+ดู [เฉลย `functional.ts`](./solution/functional.ts) · ไปต่อ [บท 3-32 ดูภาพของ graph (Mermaid)](../32-visualize/README.md)

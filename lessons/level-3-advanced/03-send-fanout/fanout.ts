@@ -16,15 +16,16 @@ const State = new StateSchema({
 const graph = new StateGraph(State)
   .addNode("work", (input: unknown) => {
     const { item } = input as { item: string };
-    // 👉 ข้อ 1: คืน { out: item.toUpperCase() }
-    return todo(1);
+    return { out: item.toUpperCase() };
   })
   .addConditionalEdges(
     START,
     (state) => {
-      // 👉 ข้อ 2: คืนรายการ Send หนึ่งอันต่อหนึ่ง item: new Send("work", { item })
+      // 👉 ข้อ 1 คืนรายการ Send หนึ่งอันต่อหนึ่ง item: new Send("work", { item })
       // แนวทาง: state.items.map((item) => new Send("work", { item }))
-      return todo(2);
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+      //   return state.items.map((item) => new Send("work", { item }));
+      return todo(1);
     },
     ["work"],
   )
@@ -34,6 +35,17 @@ const graph = new StateGraph(State)
 const three = await graph.invoke({ items: ["a", "b", "c"] });
 const five = await graph.invoke({ items: ["x", "y", "z", "w", "v"] });
 console.log({ three: three.out, five: five.out });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

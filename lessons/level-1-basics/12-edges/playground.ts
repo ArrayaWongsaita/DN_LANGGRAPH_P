@@ -3,9 +3,8 @@
 // เริ่มใหม่: pnpm play 1-12 --reset
 //
 // ลองทำดู:
-//   1) สร้าง graph ที่มี 3 node ต่อด้วย addEdge จาก START ถึง END
-//   2) ให้แต่ละ node ต่อชื่อตัวเองท้าย trace แล้วพิมพ์ดูลำดับ
-//   3) ลองลืมต่อไป END แล้วดู error ตอน compile
+//   1) สลับ first กับ second โดยต่อ edge ให้ครบทั้งเส้นทาง
+//   2) พิมพ์ลำดับที่ node เขียนลง trace
 
 import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";

@@ -5,8 +5,6 @@ import { check } from "@src/check";
 // การ trace (บันทึกทุกก้าวของ agent ไปดูใน LangSmith) เปิดด้วย environment variable: บทนี้ฝึกอ่านและตรวจค่าตั้งนั้นอย่างปลอดภัย
 // (คอร์สนี้ไม่ส่งข้อมูล trace ออกไปไหน และไม่ต้องมีบัญชี LangSmith)
 
-// ข้อ 1: schema ของตัวแปรที่เกี่ยวข้อง ทุกตัวเป็นข้อความที่ไม่บังคับ:
-//        z.object({ LANGSMITH_TRACING: z.string().optional(), LANGSMITH_API_KEY: z.string().optional(), LANGSMITH_PROJECT: z.string().optional() })
 const tracingSchema = z.object({
   LANGSMITH_TRACING: z.string().optional(),
   LANGSMITH_API_KEY: z.string().optional(),
@@ -21,9 +19,6 @@ interface TracingStatus {
 
 function readTracing(source: Record<string, string | undefined>): TracingStatus {
   const env = tracingSchema.parse(source);
-  // ข้อ 2: enabled เป็นจริงก็ต่อเมื่อ LANGSMITH_TRACING เท่ากับ "true" และ LANGSMITH_API_KEY มีค่า (ไม่ว่าง)
-  //        project = LANGSMITH_PROJECT ถ้าไม่มีใช้ "default"
-  //        reason: เปิดอยู่ = "เปิด", ไม่ตั้ง TRACING = "ไม่ได้เปิด", เปิดแต่ไม่มี key = "ขาด LANGSMITH_API_KEY"
   const wanted = env.LANGSMITH_TRACING === "true";
   const hasKey = Boolean(env.LANGSMITH_API_KEY);
   return {
@@ -40,6 +35,17 @@ const on = readTracing({ LANGSMITH_TRACING: "true", LANGSMITH_API_KEY: "lsv2_pt_
 const off = readTracing({});
 const noKey = readTracing({ LANGSMITH_TRACING: "true" });
 console.log({ on, off, noKey, masked: maskKey("lsv2_pt_abcdef123456") });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -16,9 +16,6 @@ const builder = new StateGraph(State)
   .addNode(
     "supervisor",
     async (state) => {
-      // ข้อ 1: ใช้ llm.withStructuredOutput(z.object({ next: Next }), { method: "functionCalling" }) เรียก invoke ด้วย prompt นี้
-      //        `งาน: ${state.task}\nผลงานตอนนี้: ${state.work || "(ยังไม่มี)"}\nลูกทีม: researcher (ค้นข้อมูล) ต้องทำก่อน แล้ว writer (เขียนสรุป) ตามหลัง เมื่อมีทั้ง [ค้นข้อมูล] และ [เขียนสรุป] ในผลงานแล้วให้ FINISH ใครทำต่อ (researcher/writer/FINISH)?`
-      //        แล้วคืน new Command({ goto: ผล.next === "FINISH" ? END : ผล.next })
       const structured = llm.withStructuredOutput(z.object({ next: Next }), { method: "functionCalling" });
       const out = await structured.invoke(
         `งาน: ${state.task}\nผลงานตอนนี้: ${state.work || "(ยังไม่มี)"}\nลูกทีม: researcher (ค้นข้อมูล) ต้องทำก่อน แล้ว writer (เขียนสรุป) ตามหลัง เมื่อมีทั้ง [ค้นข้อมูล] และ [เขียนสรุป] ในผลงานแล้วให้ FINISH ใครทำต่อ (researcher/writer/FINISH)?`,
@@ -31,13 +28,23 @@ const builder = new StateGraph(State)
   .addNode("writer", (state) => ({ work: `${state.work}[เขียนสรุป]` }))
   .addEdge(START, "supervisor");
 
-// ข้อ 2: ลูกทีมทุกคนต้องกลับมาที่ supervisor: builder.addEdge("researcher", "supervisor") และ builder.addEdge("writer", "supervisor")
 builder.addEdge("researcher", "supervisor");
 builder.addEdge("writer", "supervisor");
 
 const graph = builder.compile();
 const result = await graph.invoke({ task: "สรุปข้อดีของการอ่านหนังสือ" }, { recursionLimit: 15 });
 console.log("ผลงาน:", result.work);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

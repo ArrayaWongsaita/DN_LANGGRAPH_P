@@ -20,12 +20,10 @@ const MAX_THREAD_ID = 255;
 
 // ถ้า thread_id ยาวเกิน MAX_THREAD_ID ให้เปลี่ยนเป็น "t_" + sha256 (hex) ของมัน ไม่เช่นนั้นคืนค่าเดิม
 function safeThreadId(id: string): string {
-  // ข้อ 1: ถ้า id.length <= MAX_THREAD_ID คืน id; ไม่เช่นนั้นคืน "t_" + createHash("sha256").update(id).digest("hex")
   return id.length <= MAX_THREAD_ID ? id : "t_" + createHash("sha256").update(id).digest("hex");
 }
 
 // สร้าง saver จากลิงก์เชื่อมต่อ (ยังไม่เชื่อมต่อจนกว่าจะใช้งาน)
-// ข้อ 2: คืน PostgresSaver.fromConnString(connectionString)
 function makeSaver(connectionString: string): PostgresSaver {
   return PostgresSaver.fromConnString(connectionString);
 }
@@ -38,7 +36,6 @@ function buildChatApp(saver: PostgresSaver) {
     .addNode("reply", (state) => ({ messages: [{ role: "assistant", content: `ฉันจำได้ ${state.messages.length} ข้อความ` }] }))
     .addEdge(START, "reply")
     .addEdge("reply", END);
-  // ข้อ 3: คืน builder.compile({ checkpointer: saver })
   return builder.compile({ checkpointer: saver });
 }
 
@@ -65,6 +62,17 @@ console.log({ texts, other });
 
 const longId = "x".repeat(MAX_THREAD_ID + 50);
 const hashed = safeThreadId(longId);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

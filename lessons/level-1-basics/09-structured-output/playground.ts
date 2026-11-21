@@ -5,11 +5,10 @@
 // ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
 //
 // ลองทำดู:
-//   1) ประกาศ zod schema ของคนหรือสิ่งของที่สนใจ แล้วใช้ llm.withStructuredOutput ดึงข้อมูลจากข้อความ
-//   2) เพิ่ม field ใหม่ เช่น city หรือใช้ z.enum กับ field ที่มีตัวเลือกจำกัด
-//   3) ส่งข้อความที่ข้อมูลไม่ครบ แล้วดูว่า LLM ตอบอย่างไร
+//   1) ลองตรวจ schema ด้วย age ที่เป็นตัวเลขหรือสตริง
+//   2) ขอให้โมเดลสกัดชื่อและอายุจากข้อความอีกชุด
 
 import { z } from "zod";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { llm } from "@lessons/level-1-basics/02-llm-config/llm";
 
 // เขียนโค้ดของคุณตรงนี้

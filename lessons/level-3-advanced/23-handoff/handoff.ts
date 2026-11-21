@@ -14,7 +14,9 @@ const S = new StateSchema({
 const sales = new StateGraph(S)
   .addNode("handle", (state) => {
     if (state.message.includes("พัง")) {
-      // 👉 ข้อ 1: คืน new Command({ update: { log: `${state.log}sales→support;` }, goto: "support", graph: Command.PARENT })
+      // 👉 ข้อ 1 คืน new Command({ update: { log: `${state.log}sales→support;` }, goto: "support", graph: Command.PARENT })
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+      //   return new Command({ update: { log: `${state.log}sales→support;` }, goto: "support", graph: Command.PARENT });
       return todo(1);
     }
     return { log: `${state.log}sales ตอบเอง;` };
@@ -22,13 +24,27 @@ const sales = new StateGraph(S)
   .addEdge(START, "handle")
   .compile();
 
-// 👉 ข้อ 2: ประกอบ graph แม่: เพิ่ม node "support" (ให้แล้วด้านล่าง) และเพิ่ม sales เป็น node พร้อมประกาศปลายทางที่ส่งต่อได้
-//        .addNode("sales", sales, { ends: ["support"] }) แล้วต่อ START -> sales และ support -> END แล้ว .compile()
-const team: { invoke: (input: { message: string }) => Promise<{ log: string }> } = todo(2);
+const team = new StateGraph(S)
+  .addNode("support", (state) => ({ log: `${state.log}support รับช่วง;` }))
+  .addNode("sales", sales, { ends: ["support"] })
+  .addEdge(START, "sales")
+  .addEdge("support", END)
+  .compile();
 
 const broken = await team.invoke({ message: "สินค้าที่ซื้อไปพังแล้ว" });
 const price = await team.invoke({ message: "ขอถามราคาหน่อย" });
 console.log({ broken: broken.log, price: price.log });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

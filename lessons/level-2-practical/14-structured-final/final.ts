@@ -14,6 +14,8 @@ const graph = new StateGraph(State)
     const formatter = llm.withStructuredOutput(AnswerSchema, { method: "functionCalling" });
     const input = [...state.messages, new HumanMessage("จัดคำตอบอากาศตาม schema โดยคงชื่อเมืองเดิม")];
     // 👉 ข้อ 1 เรียก formatter ด้วย input แล้วคืนผลใน field answer
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   return { answer: await formatter.invoke(input) };
     return todo(1);
   })
   .addEdge(START, "format")
@@ -36,7 +38,20 @@ const result = await graph.invoke({
 });
 console.log(JSON.stringify(result.answer));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("ได้ answer ที่ตรงกับ schema", AnswerSchema.safeParse(result.answer).success);
 check("อ่านอุณหภูมิ 22 จากผล tool", result.answer?.tempC === 22);
 check("ประวัติยังครบ 4 ข้อความ", result.messages.length === 4);

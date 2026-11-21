@@ -11,8 +11,12 @@ import { check } from "@src/check";
 // MCP (Model Context Protocol): มาตรฐานให้โปรแกรมอื่นเปิด tool ให้ agent ใช้ เรารัน MCP server จำลองในเครื่อง (ไฟล์ server.mts ข้างบท ไม่ต้องแก้) แล้วดึง tool ของมันมาให้ agent
 const SERVER_PATH = fileURLToPath(new URL("./server.mts", import.meta.url));
 
-// 👉 ข้อ 1: สร้าง client ที่เปิด server เป็นโปรเซสลูก:
+// 👉 ข้อ 1 สร้าง client ที่เปิด server เป็นโปรเซสลูก:
 //        new MultiServerMCPClient({ mcpServers: { calc: { transport: "stdio", command: "node", args: ["--import", "tsx", SERVER_PATH] } } })
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const client = new MultiServerMCPClient({
+//     mcpServers: { calc: { transport: "stdio", command: "node", args: ["--import", "tsx", SERVER_PATH] } },
+//   });
 const client: MultiServerMCPClient = todo(1);
 
 // นับว่ามีการปิด client กี่ครั้ง (ให้มาแล้ว)
@@ -26,17 +30,26 @@ client.close = async () => {
 let toolNames: string[] = [];
 let answer = "";
 try {
-  // 👉 ข้อ 2: ดึง tool ทั้งหมดจากเซิร์ฟเวอร์: await client.getTools() (ชื่อ tool จะมีคำนำหน้าเป็นชื่อเซิร์ฟเวอร์ เช่น calc_add)
-  const tools: StructuredToolInterface[] = todo(2);
+  const tools: StructuredToolInterface[] = await client.getTools();
   const agent = createAgent({ model: llm, tools });
   const result = await agent.invoke({ messages: [new HumanMessage("ใช้ tool calc_add บวก 2 กับ 3 แล้วบอกผลลัพธ์")] });
   toolNames = tools.map((t) => t.name);
   answer = result.messages[result.messages.length - 1].text;
 } finally {
-  // 👉 ข้อ 3: ปิด client ทุกครั้งที่ใช้เสร็จ (ไม่งั้นโปรเซสลูกค้าง): await client.close()
-  todo(3);
+  await client.close();
 }
 console.log({ toolNames, answer });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

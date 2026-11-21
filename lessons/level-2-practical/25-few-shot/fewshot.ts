@@ -11,6 +11,11 @@ const examples = [
 const review = "พนักงานใส่ใจ ประทับใจมาก";
 
 // 👉 ข้อ 1 แปลงตัวอย่างแต่ละรายการเป็นคู่ HumanMessage(input) แล้ว AIMessage(output)
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const exampleMessages: BaseMessage[] = examples.flatMap(({ input, output }) => [
+//     new HumanMessage(input),
+//     new AIMessage(output),
+//   ]);
 const exampleMessages: BaseMessage[] = todo(1);
 const messages = [new SystemMessage(system), ...exampleMessages, new HumanMessage(review)];
 
@@ -24,7 +29,20 @@ if (process.env.LESSON_LIVE === "1") {
   console.log("คำตอบจากโมเดล", reply.text.trim());
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "ตัวอย่างทุกคู่เรียง human แล้ว ai พร้อมเนื้อหาตรงกัน",
   exampleMessages.length === examples.length * 2 &&

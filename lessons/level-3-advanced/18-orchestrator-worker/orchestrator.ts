@@ -20,24 +20,26 @@ const MAX_TASKS = 3;
 
 const graph = new StateGraph(State)
   .addNode("plan", async (state) => {
-    // 👉 ข้อ 1: ใช้ llm.withStructuredOutput(z.object({ tasks: z.array(z.string()) }), { method: "functionCalling" }) เรียก invoke ด้วย
-    //        `แตกเป้าหมายนี้เป็นงานย่อยสั้น ๆ: ${state.goal}` แล้วคืน { tasks: ผล.tasks.slice(0, MAX_TASKS) }
-    return todo(1);
+    const structured = llm.withStructuredOutput(z.object({ tasks: z.array(z.string()) }), { method: "functionCalling" });
+    const out = await structured.invoke(`แตกเป้าหมายนี้เป็นงานย่อยสั้น ๆ: ${state.goal}`);
+    return { tasks: out.tasks.slice(0, MAX_TASKS) };
   })
   .addNode("worker", async (input: unknown) => {
     const { task } = input as { task: string };
     return { results: (await llm.invoke(`ทำงานย่อยนี้ ตอบสั้น ๆ: ${task}`)).text };
   })
   .addNode("synthesize", async (state) => {
-    // 👉 ข้อ 3: เรียก llm.invoke(`รวมผลต่อไปนี้เป็นรายงานสั้น ๆ: ${state.results.join("; ")}`) แล้วคืน { report: .text }
-    return todo(3);
+    const reply = await llm.invoke(`รวมผลต่อไปนี้เป็นรายงานสั้น ๆ: ${state.results.join("; ")}`);
+    return { report: reply.text };
   })
   .addEdge(START, "plan")
   .addConditionalEdges(
     "plan",
     (state) => {
-      // 👉 ข้อ 2: คืนรายการ Send ต่อหนึ่ง task: new Send("worker", { task })
-      return todo(2);
+      // 👉 ข้อ 1 คืนรายการ Send ต่อหนึ่ง task: new Send("worker", { task })
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+      //   return state.tasks.map((task) => new Send("worker", { task }));
+      return todo(1);
     },
     ["worker"],
   )
@@ -48,6 +50,17 @@ const graph = new StateGraph(State)
 const result = await graph.invoke({ goal: "จัดงานเลี้ยงวันเกิดเล็ก ๆ ที่บ้าน" });
 console.log("งานย่อย:", result.tasks);
 console.log("รายงาน:", result.report);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

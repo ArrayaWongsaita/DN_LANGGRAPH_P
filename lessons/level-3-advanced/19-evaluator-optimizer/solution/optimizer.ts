@@ -17,15 +17,11 @@ const State = new StateSchema({
 
 const graph = new StateGraph(State)
   .addNode("generate", async (state) => {
-    // ข้อ 1: prompt = `เขียนประโยคสั้น ๆ เกี่ยวกับ ${state.topic}` ถ้ามี state.feedback ให้ต่อท้ายด้วย `\nแก้ตามข้อติ: ${state.feedback}`
-    //        เรียก llm.invoke(prompt) แล้วคืน { draft: .text, round: state.round + 1 }
     const prompt = `เขียนประโยคสั้น ๆ เกี่ยวกับ ${state.topic}` + (state.feedback ? `\nแก้ตามข้อติ: ${state.feedback}` : "");
     const reply = await llm.invoke(prompt);
     return { draft: reply.text, round: state.round + 1 };
   })
   .addNode("evaluate", async (state) => {
-    // ข้อ 2: ใช้ llm.withStructuredOutput(z.object({ approved: z.boolean(), feedback: z.string() }), { method: "functionCalling" })
-    //        invoke ด้วย `ตรวจงานนี้ (ต้องมีตัวอย่างประกอบจึงจะผ่าน): ${state.draft}` แล้วคืน { approved: ผล.approved, feedback: ผล.feedback }
     const structured = llm.withStructuredOutput(z.object({ approved: z.boolean(), feedback: z.string() }), { method: "functionCalling" });
     const out = await structured.invoke(`ตรวจงานนี้ (ต้องมีตัวอย่างประกอบจึงจะผ่าน): ${state.draft}`);
     return { approved: out.approved, feedback: out.feedback };
@@ -35,7 +31,6 @@ const graph = new StateGraph(State)
   .addConditionalEdges(
     "evaluate",
     (state) => {
-      // ข้อ 3: คืน END ถ้า state.approved หรือ state.round >= MAX_ROUNDS ไม่เช่นนั้นคืน "generate"
       return state.approved || state.round >= MAX_ROUNDS ? END : "generate";
     },
     ["generate", END],
@@ -44,6 +39,17 @@ const graph = new StateGraph(State)
 
 const result = await graph.invoke({ topic: "การดื่มน้ำให้พอ" });
 console.log(`วนไป ${result.round} รอบ อนุมัติ=${result.approved}\nร่างสุดท้าย: ${result.draft}\nข้อติล่าสุด: ${result.feedback}`);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

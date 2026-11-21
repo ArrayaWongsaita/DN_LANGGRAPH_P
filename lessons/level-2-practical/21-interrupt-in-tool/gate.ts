@@ -14,6 +14,8 @@ const sendEmail = tool(
   ({ to }) => {
     console.log(`เข้า sendEmail(${to})`);
     // 👉 ข้อ 1 เรียก interrupt ด้วย action และ to เพื่อขออนุมัติก่อนส่ง
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const approved: unknown = interrupt({ action: "sendEmail", to });
     const approved: unknown = todo(1);
     if (approved !== true) return "ยกเลิกแล้ว";
     sent.push(to); // จำลองการส่งอีเมล
@@ -50,7 +52,20 @@ for (const [to, answer] of [["mali@example.com", true], ["somchai@example.com", 
   toolResults.push(result);
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("ทั้งสอง thread หยุดก่อนส่ง", paused.every(Boolean));
 check("อนุมัติแล้วส่งถึงมาลี", toolResults[0] === "ส่งอีเมลถึง mali@example.com แล้ว" && sent[0] === "mali@example.com");
 check("ปฏิเสธแล้วข้ามการส่งถึงสมชาย", toolResults[1] === "ยกเลิกแล้ว" && sent.length === 1);

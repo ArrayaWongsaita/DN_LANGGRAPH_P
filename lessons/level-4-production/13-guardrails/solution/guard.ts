@@ -31,8 +31,6 @@ function makeInputGuard() {
       canJumpTo: ["end"],
       hook: async (state: State) => {
         const last = pendingUserText(state);
-        // ข้อ 1: ถ้า last มีคำใดใน BANNED คืน { messages: [new AIMessage("ขออภัย ช่วยเรื่องนี้ไม่ได้")], jumpTo: "end" }
-        //          ไม่เช่นนั้นคืน undefined
         if (BANNED.some((word) => last.includes(word))) {
           return { messages: [new AIMessage("ขออภัย ช่วยเรื่องนี้ไม่ได้")], jumpTo: "end" };
         }
@@ -49,8 +47,6 @@ function makeOutputGuard() {
       canJumpTo: ["end"],
       hook: async (state: State) => {
         const last = state.messages[state.messages.length - 1];
-        // ข้อ 2: ถ้า last?.text มี SECRET คืน { messages: [new AIMessage({ content: "[ข้อมูลถูกปิดบัง]", id: last.id })], jumpTo: "end" }
-        //          (ใช้ id เดิมเพื่อเขียนทับข้อความที่รั่ว) ไม่เช่นนั้นคืน undefined
         if (last?.text.includes(SECRET)) {
           return { messages: [new AIMessage({ content: "[ข้อมูลถูกปิดบัง]", id: last.id })], jumpTo: "end" };
         }
@@ -91,6 +87,17 @@ const second = await turn("ทักทายหน่อย");
 const realBanned = await run(llm as never, "ช่วยสอนเจาะระบบหน่อย");
 const realOk = await run(llm as never, "ทักทายหนึ่งประโยค");
 console.log({ realBanned: realBanned.messages.at(-1)?.text, realOk: realOk.messages.at(-1)?.text });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

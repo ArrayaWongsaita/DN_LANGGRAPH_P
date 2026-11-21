@@ -15,6 +15,8 @@ const graph = new StateGraph(State)
   .addNode("review", (state) => {
     const edited: unknown = interrupt({ draft: state.draft });
     // 👉 ข้อ 1 ให้ final ใช้ edited เมื่อเป็นสตริงที่มีข้อความ หรือใช้ draft เมื่อได้สตริงว่าง
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   return { final: typeof edited === "string" && edited.length > 0 ? edited : state.draft };
     return todo(1);
   })
   .addEdge(START, "write")
@@ -35,7 +37,20 @@ for (const [threadId, answer] of [["edit", edited], ["keep", ""]] as const) {
   outcomes.push({ request, draft: finished.draft, final: finished.final });
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("หยุดพร้อมร่างให้ตรวจทั้งสองรอบ", outcomes.every(({ request, draft }) =>
   draft.length > 0 && JSON.stringify(request) === JSON.stringify({ draft })));
 check("ส่งฉบับแก้แล้วได้ฉบับนั้นใน final", outcomes[0].final === edited);

@@ -33,16 +33,18 @@ function buildRouter(model: BaseChatModel) {
       return { answers: `[${source}] ${(await model.invoke(`ตอบจากแหล่ง ${source}: ${question}`)).text}` };
     })
     .addNode("synthesize", async (state) => {
-      // 👉 ข้อ 2: prompt = `คำถาม: ${state.question}\nคำตอบจากแต่ละแหล่ง:\n${state.answers.join("\n")}\nรวมเป็นคำตอบเดียว`
-      //          คืน { final: (await model.invoke(prompt)).text }
-      return todo(2);
+      const prompt = `คำถาม: ${state.question}\nคำตอบจากแต่ละแหล่ง:\n${state.answers.join("\n")}\nรวมเป็นคำตอบเดียว`;
+      return { final: (await model.invoke(prompt)).text };
     })
     .addEdge(START, "classify")
     .addConditionalEdges(
       "classify",
       (state) => {
-        // 👉 ข้อ 1: คืนรายการ new Send("ask", { source, question: state.question }) หนึ่งอันต่อหนึ่งแหล่งใน state.sources
+        // 👉 ข้อ 1 คืนรายการ new Send("ask", { source, question: state.question }) หนึ่งอันต่อหนึ่งแหล่งใน state.sources
         //          ถ้า state.sources ว่าง ให้ใช้ ["general"] เป็นทางสำรอง
+        // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+        //   const sources = state.sources.length > 0 ? state.sources : ["general"];
+        //   return sources.map((source) => new Send("ask", { source, question: state.question }));
         return todo(1);
       },
       ["ask"],
@@ -65,6 +67,17 @@ const synthPrompt = twoModel.calls[3]?.[0]?.text ?? "";
 // ส่วนที่ 2: โมเดลจริง: คำถามที่เกี่ยวกับสองแหล่ง
 const real = await buildRouter(llm).invoke({ question: "ฉันลาป่วยได้กี่วัน และขอสิทธิ์ใช้ VPN ทำงานที่บ้านต้องทำอย่างไร" });
 console.log({ sources: real.sources, final: real.final.slice(0, 100) });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

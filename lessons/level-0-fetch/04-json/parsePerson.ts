@@ -1,66 +1,72 @@
-import { z } from "zod";
 import { todo } from "@src/todo";
-import { describeProvider } from "@src/llm";
+import { z } from "zod";
 import { check } from "@src/check";
-
-// รันด้วย: pnpm lesson 0-04  (ต้องตั้ง key ใน .env)
-// คำตอบของ LLM เป็น "ข้อความ" ถ้าอยากได้ข้อมูลเป็นโครงสร้างต้องแปลงและตรวจเอง
-const { model, chatUrl, apiKey } = describeProvider();
 
 const personSchema = z.object({ name: z.string(), age: z.number() });
 type Person = z.infer<typeof personSchema>;
 
-// LLM บางตัวชอบห่อ JSON ด้วยรั้วโค้ด ```json ... ``` ซึ่ง JSON.parse อ่านไม่ได้
-function stripFence(text: string): string {
-  // 👉 ข้อ 1: ตัดช่องว่างหัวท้าย แล้วถ้าข้อความถูกห่อด้วยรั้วโค้ด ให้ลอกรั้วออกเหลือแต่เนื้อใน
-  //   รั้วคือบรรทัดเปิด ``` (อาจตามด้วยคำว่า json) และบรรทัดปิด ```
-  // แนวทาง: const m = text.trim().match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
-  //         return m ? m[1] : text.trim();
+function parsePerson(raw: string): Person {
+  const text = raw.trim();
+  const json = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/)?.[1] ?? text;
+  let data: unknown;
+
+  try {
+    data = JSON.parse(json);
+  } catch {
+    throw new Error("อ่านคำตอบเป็น JSON ไม่ได้");
+  }
+
+  // 👉 ข้อ 1 ใช้ personSchema ตรวจ data แล้วคืนค่าที่ผ่าน schema
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return personSchema.parse(data);
   return todo(1);
 }
 
-// แปลงคำตอบข้อความของ LLM ให้เป็นข้อมูล Person ที่ตรวจแล้ว
-function parsePerson(text: string): Person {
-  const cleaned = stripFence(text);
-  // 👉 ข้อ 2: แปลง cleaned เป็น object ด้วย JSON.parse
-  //          ถ้า parse ไม่ได้ ให้ throw Error ข้อความไทยที่มีคำว่า "JSON" เช่น "LLM ไม่ได้ตอบเป็น JSON: ..."
-  // แนวทาง: try { data = JSON.parse(cleaned) } catch { throw new Error(`LLM ไม่ได้ตอบเป็น JSON: ${text}`) }
-  const data: unknown = todo(2);
-  // 👉 ข้อ 3: ตรวจรูปร่างข้อมูลด้วย zod: คืน personSchema.parse(data) (ถ้าผิดมันจะ throw เอง)
-  return todo(3);
+// จำลอง body จาก fetch โดยให้ข้อความของโมเดลอยู่ใน choices[0].message.content
+const samples = [
+  { label: "JSON ตรง ๆ", raw: '{"name":"มาลี","age":42}' },
+  { label: "JSON ในรั้วโค้ด", raw: '```json\n{"name":"มาลี","age":42}\n```' },
+  { label: "อายุเป็นข้อความ", raw: '{"name":"มาลี","age":"42"}' },
+  { label: "ข้อความธรรมดา", raw: "มาลีอายุ 42 ปี" },
+];
+const people: Person[] = [];
+const errors: unknown[] = [];
+
+for (const { label, raw } of samples) {
+  const response = Response.json({ choices: [{ message: { content: raw } }] });
+  const data = await response.json();
+
+  try {
+    const person = parsePerson(data.choices[0].message.content);
+    people.push(person);
+    console.log(`[${label}] ${JSON.stringify(person)}`);
+  } catch (error) {
+    errors.push(error);
+    if (error instanceof z.ZodError) {
+      const fields = error.issues.map((issue) => issue.path.join(".")).join(", ");
+      console.log(`[${label}] ข้อมูลไม่ตรงกับ schema ที่ฟิลด์ ${fields || "(ทั้งก้อน)"}`);
+    } else if (error instanceof Error && error.message === "อ่านคำตอบเป็น JSON ไม่ได้") {
+      console.log(`[${label}] ${error.message}`);
+    } else {
+      throw error;
+    }
+  }
 }
 
-// ขอให้ LLM ดึงชื่อและอายุจากข้อความ แล้วใช้ parsePerson แปลงคำตอบ (ให้มาแล้ว)
-const prompt = `ดึงชื่อและอายุจากข้อความนี้ ตอบเป็น JSON เท่านั้น รูปแบบ {"name": string, "age": number}\nข้อความ: คุณสมชาย อายุ 42 ปี อยู่เชียงใหม่`;
-const res = await fetch(chatUrl, {
-  method: "POST",
-  headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-  body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }] }),
-});
-const raw: string = (await res.json()).choices[0].message.content;
-console.log("คำตอบดิบ:", raw);
-const person = parsePerson(raw);
-console.log("ข้อมูลที่ตรวจแล้ว:", person);
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
-const fenced = "```json\n{\"name\":\"A\",\"age\":1}\n```";
-check("stripFence ลอกรั้วโค้ดออก", stripFence(fenced) === '{"name":"A","age":1}', "ใช้ regex ตามแนวทาง");
-check("stripFence ไม่ยุ่งกับข้อความที่ไม่มีรั้ว (แค่ตัดช่องว่าง)", stripFence('  {"a":1}  ') === '{"a":1}');
-check("parsePerson อ่าน JSON ที่ห่อรั้วได้", parsePerson(fenced).name === "A");
-let notJson = "";
-try {
-  parsePerson("ไม่ใช่ json เลย");
-} catch (e) {
-  notJson = (e as Error).message;
-}
-check("ข้อความที่ไม่ใช่ JSON: throw Error ที่มีคำว่า JSON", notJson.includes("JSON"), "ครอบ JSON.parse ด้วย try/catch");
-let wrongShape = false;
-try {
-  parsePerson('{"name":"A","age":"สิบ"}');
-} catch {
-  wrongShape = true;
-}
-check("รูปร่างผิด (age เป็นข้อความ): zod จับได้", wrongShape, "personSchema.parse(data)");
-check("ผลจาก LLM จริง: ชื่อสมชาย อายุ 42", person.name.includes("สมชาย") && person.age === 42);
+check("อ่าน JSON ได้ทั้งแบบตรง ๆ และแบบมีรั้ว", people.length === 2 && people.every(({ name, age }) => name === "มาลี" && age === 42));
+check("จับชนิดข้อมูลที่ผิดตรงฟิลด์ age", errors[0] instanceof z.ZodError && errors[0].issues.some((issue) => issue.path[0] === "age"));
+check("แยกข้อความที่อ่านเป็น JSON ไม่ได้", errors[1] instanceof Error && errors[1].message === "อ่านคำตอบเป็น JSON ไม่ได้");

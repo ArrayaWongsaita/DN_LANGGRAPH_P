@@ -9,7 +9,9 @@ import { check } from "@src/check";
 // รันด้วย: pnpm lesson 4-07
 // ทดสอบ agent โดยไม่เรียกโมเดลจริง: ใช้ fakeModel() ทางการของ langchain กำหนดว่าโมเดล "จะตอบอะไรตามลำดับ" (ขอเรียก tool แล้วตอบสุดท้าย หรือล้มเหลว)
 function buildCalculator(model: BaseChatModel) {
-  // 👉 ข้อ 1: คืน createAgent({ model, tools: [makeAddTool()] })
+  // 👉 ข้อ 1 คืน createAgent({ model, tools: [makeAddTool()] })
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return createAgent({ model, tools: [makeAddTool()] });
   return todo(1);
 }
 
@@ -19,8 +21,7 @@ async function ask(agent: ReturnType<typeof buildCalculator>, question: string):
     const result = await agent.invoke({ messages: [new HumanMessage(question)] });
     return result.messages[result.messages.length - 1].text;
   } catch {
-    // 👉 ข้อ 2: คืนข้อความ "ขออภัย ระบบขัดข้อง"
-    return todo(2);
+    return "ขออภัย ระบบขัดข้อง";
   }
 }
 
@@ -38,6 +39,17 @@ const apology = await ask(buildCalculator(failing), "x");
 // agent เดียวกันกับโมเดลจริง
 const real = await ask(buildCalculator(llm), "ใช้ tool add บวก 2 กับ 3 แล้วบอกผล");
 console.log({ answer, apology, real });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

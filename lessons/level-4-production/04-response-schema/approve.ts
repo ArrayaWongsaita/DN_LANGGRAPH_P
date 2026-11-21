@@ -10,8 +10,11 @@ const State = new StateSchema({ result: z.string().default("") });
 
 const app = new StateGraph(State)
   .addNode("decide", () => {
-    // 👉 ข้อ 1: const answer = interrupt({ question: "อนุมัติไหม?" }, { responseSchema: Decision });
+    // 👉 ข้อ 1 const answer = interrupt({ question: "อนุมัติไหม?" }, { responseSchema: Decision });
     //          แล้วคืน { result: JSON.stringify(answer) }
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const answer = interrupt({ question: "อนุมัติไหม?" }, { responseSchema: Decision });
+    //   return { result: JSON.stringify(answer) };
     return todo(1);
   })
   .addEdge(START, "decide")
@@ -29,13 +32,23 @@ try {
   rejected = (e as Error).message;
 }
 
-// 👉 ข้อ 2: thread t ยังรออยู่: ตอบใหม่ให้ถูกรูปแบบด้วย new Command({ resume: { approved: false, note: "ไม่ครบ" } }) และ cfg("t") ได้ state สุดท้าย
-const retried: { result: string } = todo(2);
+const retried = await app.invoke(new Command({ resume: { approved: false, note: "ไม่ครบ" } }), cfg("t"));
 
 // thread u: ตอบถูกรูปแบบตั้งแต่แรก แต่ไม่ใส่ note: schema เติมค่า default ให้ (ให้มาแล้ว)
 await app.invoke({}, cfg("u"));
 const filled = await app.invoke(new Command({ resume: { approved: true } }), cfg("u"));
 console.log({ rejected: rejected.slice(0, 60), retried: retried.result, filled: filled.result });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

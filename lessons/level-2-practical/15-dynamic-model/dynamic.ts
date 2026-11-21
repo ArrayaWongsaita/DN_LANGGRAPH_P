@@ -15,6 +15,10 @@ const allTools = [makeAddTool(), makeWeatherTool()];
 
 function choose(question: string): { model: "cheap" | "strong"; tools: typeof allTools } {
   // 👉 ข้อ 1 คืน model เป็น "strong" เมื่อยาวกว่า 30 ตัว และส่ง getWeather เฉพาะเมื่อมีคำว่า "อากาศ"
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const model = question.length > 30 ? "strong" : "cheap";
+  //   const tools = allTools.filter((tool) => tool.name !== "getWeather" || question.includes("อากาศ"));
+  //   return { model, tools };
   return todo(1);
 }
 
@@ -44,7 +48,20 @@ for (const question of ["สวัสดี", "ช่วยบอกอากา
   }));
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("คำถามยาว 30 ตัวใช้ cheap ส่วน 31 ตัวใช้ strong", choose("a".repeat(30)).model === "cheap" && choose("a".repeat(31)).model === "strong");
 check("คำถามสั้นทั่วไปส่ง add ให้ cheap", models.cheap.boundToolNames.join(",") === "add");
 check("คำถามยาวเรื่องอากาศส่งทั้งสอง tool ให้ strong", models.strong.boundToolNames.join(",") === "add,getWeather");

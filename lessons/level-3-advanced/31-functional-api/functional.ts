@@ -8,17 +8,33 @@ const runs = { double: 0 };
 
 const double = task("double", async (n: number) => {
   runs.double++;
-  // 👉 ข้อ 1: คืน n * 2
-  return todo(1);
+  return n * 2;
 });
 
-// 👉 ข้อ 2: สร้าง workflow: entrypoint({ name: "wf", checkpointer: new MemorySaver() }, async (n: number) => { ... })
+// 👉 ข้อ 1 สร้าง workflow: entrypoint({ name: "wf", checkpointer: new MemorySaver() }, async (n: number) => { ... })
 //        ข้างใน: const a = await double(n); แล้วรัน double(a) กับ double(a + 1) "ขนานกัน" ด้วย Promise.all
 //        คืนผลบวกของสองค่านั้น
-const workflow: { invoke: (n: number, config: object) => Promise<number> } = todo(2);
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const workflow = entrypoint({ name: "wf", checkpointer: new MemorySaver() }, async (n: number) => {
+//     const a = await double(n);
+//     const [x, y] = await Promise.all([double(a), double(a + 1)]);
+//     return x + y;
+//   });
+const workflow: { invoke: (n: number, config: object) => Promise<number> } = todo(1);
 
 const result = await workflow.invoke(3, { configurable: { thread_id: "t" } });
 console.log("ผลลัพธ์:", result, "task double ถูกรัน", runs.double, "ครั้ง");
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

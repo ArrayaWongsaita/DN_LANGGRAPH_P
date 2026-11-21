@@ -30,9 +30,24 @@ const stream = await graph.stream(
 for await (const [chunk, meta] of stream) {
   console.log(meta.langgraph_node, JSON.stringify(chunk.text));
   // 👉 ข้อ 1 ต่อ chunk.text เข้า answer เฉพาะชิ้นจาก visibleNode
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   if (meta.langgraph_node === visibleNode) answer += chunk.text;
   todo(1);
 }
 console.log("คำตอบที่แสดง", JSON.stringify(answer));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("ต่อเฉพาะชิ้นข้อความจาก polish", answer === "ไปทะเลกันเถอะ!", "กรองด้วย meta.langgraph_node แล้วต่อ chunk.text ทุกชิ้นที่ผ่าน");

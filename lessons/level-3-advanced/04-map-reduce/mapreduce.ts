@@ -17,19 +17,18 @@ const State = new StateSchema({
 const graph = new StateGraph(State)
   .addNode("countWords", (input: unknown) => {
     const { doc } = input as { doc: string };
-    // 👉 ข้อ 1 (map): คืน { counts: จำนวนคำของ doc } โดยคำคั่นด้วยช่องว่าง
-    // แนวทาง: { counts: doc.split(" ").length }
-    return todo(1);
+    return { counts: doc.split(" ").length };
   })
   .addNode("sum", (state) => {
-    // 👉 ข้อ 2 (reduce): คืน { total: ผลรวมของ state.counts }
-    return todo(2);
+    return { total: state.counts.reduce((a, b) => a + b, 0) };
   })
   .addConditionalEdges(
     START,
     (state) => {
-      // 👉 ข้อ 3: แตกงานหนึ่งอันต่อหนึ่งเอกสาร: new Send("countWords", { doc })
-      return todo(3);
+      // 👉 ข้อ 1 แตกงานหนึ่งอันต่อหนึ่งเอกสาร: new Send("countWords", { doc })
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+      //   return state.docs.map((doc) => new Send("countWords", { doc }));
+      return todo(1);
     },
     ["countWords"],
   )
@@ -39,6 +38,17 @@ const graph = new StateGraph(State)
 
 const result = await graph.invoke({ docs: ["one two three", "four five", "six"] });
 console.log(result);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

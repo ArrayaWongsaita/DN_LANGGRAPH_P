@@ -2,7 +2,7 @@
 
 A hands-on course for people who have **never built an LLM app**. Each lesson is tiny (one concept, 1-3 gaps to fill) so you finish it, feel the win, and move on. Lesson text is in Thai.
 
-**Status:** every level (0-5) uses the single-file format. Level 1 (lessons 01-20) is ready for review; every solution was run against the real model. **Level 0** (raw `fetch`, lessons 0-01..0-06, single-file format like Level 1) is ready for review; every solution was run against a real model. **Level 2** (2-01..2-27: memory, tools and agents, human-in-the-loop, streaming, reliability) starts each lesson with a small example and shows how changing an input affects the result. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is ready for review (single-file format like Levels 1 and 2); plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; every solution was run against a real model. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) and **Level 5** (5-01..5-26: real retrieval with pgvector and embeddings, event streaming, `langgraph dev` serving, checkpoint housekeeping/encryption, Functional API depth, SQL agent, MCP over HTTP, more middleware, context engineering, integration testing, Pregel runtime, capstone knowledge assistant, custom stream channels and framework-agnostic frontend stream state) are in the same single-file format; every solution was run (real model, real Postgres and real `langgraph dev` where a lesson uses them). Designs: `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md` and `...-level-5-design.md`. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. `legacy/` holds an earlier build kept only for reuse.
+**Status:** Every level uses single-file exercises. **Levels 0–2** (raw `fetch`, LangChain and LangGraph basics, practical agents) start with a small example and show what changes when you vary an input. **Level 3** (3-01..3-35: advanced graphs, long-term memory, workflow patterns, multi-agent, durability, middleware, functional API, capstone) is ready for review (single-file format like Levels 1 and 2); plan in `docs/superpowers/plans/2026-11-17-langgraph-course-level-3.md`; every solution was run against a real model. **Level 4** (4-01..4-26: modern durability, testing and evals, official multi-agent patterns, safety and context engineering, RAG, MCP, Postgres, capstone) and **Level 5** (5-01..5-26: real retrieval with pgvector and embeddings, event streaming, `langgraph dev` serving, checkpoint housekeeping/encryption, Functional API depth, SQL agent, MCP over HTTP, more middleware, context engineering, integration testing, Pregel runtime, capstone knowledge assistant, custom stream channels and framework-agnostic frontend stream state) are in the same single-file format; every solution was run (real model, real Postgres and real `langgraph dev` where a lesson uses them). Designs: `docs/superpowers/plans/2026-11-17-langgraph-course-level-4-design.md` and `...-level-5-design.md`. Doc cross-check: `docs/notes/docs-review-2026-11-17.md`; coverage vs official docs: `docs/notes/coverage-audit-2026-11-17.md`. `legacy/` holds an earlier build kept only for reuse.
 
 ## Levels at a glance
 
@@ -15,7 +15,7 @@ A hands-on course for people who have **never built an LLM app**. Each lesson is
 | 4 | 26 | production: durability, testing/evals, official multi-agent patterns, safety, RAG, MCP, Postgres, capstone | `4-01`..`4-26` |
 | 5 | 26 | retrieval and serving: pgvector, streaming events, `langgraph dev`, SQL agent, MCP over HTTP, Pregel runtime, capstone, React `useStream` (5-26, optional) | `5-01`..`5-26` |
 
-**Reading order:** want to see what an LLM call really is? Start at Level 0 (`0-01`). Want to go straight to LangChain/LangGraph? Start at Level 1 (`1-01`; lesson `1-02` covers `.env` setup). Levels build on each other: finish 1 → 2 → 3 → 4 → 5 in order.
+**Reading order:** want to see what an LLM call really is? Start at Level 0 (`0-01`). Want to go straight to LangChain/LangGraph? Start at Level 1 (`1-01`; lesson `1-02` builds the chat model from `.env`). Levels build on each other: finish 1 → 2 → 3 → 4 → 5 in order.
 
 ## Quick start
 
@@ -23,7 +23,7 @@ Requirements: Node.js 22.12+ (developed on Node 26).
 
 ```bash
 pnpm install
-cp .env.example .env      # then put your GROQ_API_KEY in .env
+cp -n .env.example .env   # for live exercises, set LLM_PROVIDER and its API key
 pnpm lesson 1-01         # Level 1, lesson 01 (single file: fill the gaps, then run it)
 pnpm lesson 0-01       # Level 0, lesson 01 (raw fetch; single file)
 pnpm lesson 2-01       # Level 2, lesson 01 (message state, no API key)
@@ -32,11 +32,11 @@ pnpm lesson 4-01       # Level 4, lesson 01 (node timeout; single file)
 pnpm lesson 5-01       # Level 5, lesson 01 (embedding contract; single file)
 ```
 
-Every lesson is a single file that you run with `pnpm lesson <level>-<NN>`. The command in each Level 2 README specifies whether the exercise needs an API key. Start with 2-01 to try message state locally. Level 5 lessons that use Postgres need Docker (see below), and 5-01..5-03 and 5-23 need an embedding key.
+Every lesson is a single file that you run with `pnpm lesson <level>-<NN>`. Each README in Levels 0–2 specifies whether its exercise needs an API key. Try `0-02` for HTTP response handling, `1-10` for State schemas, or `2-01` for message state without an API key. Level 5 lessons that use Postgres need Docker (see below), and 5-01..5-03 and 5-23 need an embedding key.
 
 ## How a lesson works
 
-You write the code; the lesson tells you whether it works. Open the one `.ts` file in the lesson, fill the `// 👉 ข้อ N` gaps (stubbed with `todo(N)`), and run it. It prints the result and `✅` / `❌` checks. The checks sit at the bottom of the file under a banner. For exercises that use the model configured in 1-02, it comes from `lessons/level-1-basics/02-llm-config/llm.ts` (you choose the provider there) and the validated `.env` values from lesson 01. Level 0 reads the provider through `describeProvider()` and calls it with raw `fetch`.
+You write the code; the lesson tells you whether it works. Open the one `.ts` file in the lesson, fill the `// 👉 ข้อ N` gaps (stubbed with `todo(N)`), and run it. It prints the result and `✅` / `❌` checks. The checks sit at the bottom of the file under a banner. Lesson 1-01 checks the environment and lesson 1-02 exports the chat model from the provider settings in `.env`. Level 0 reads the provider through `describeProvider()` and calls it with raw `fetch`.
 
 | File | What it is |
 |---|---|
@@ -55,7 +55,7 @@ See the [course design principles](docs/course-design-principles.md) when writin
 
 ## Switching LLM provider or model
 
-Levels 1-5 pick the provider in `lessons/level-1-basics/02-llm-config/llm.ts` (uncomment one block). The rest of this section describes `src/llm.ts` (`getLLM()`), which Level 0 and the helper scripts use. Some optional live examples also use this helper.
+For the live paths, select the provider and model in `.env`. Lesson 1-02 and optional live examples use `getLLM()` from `src/llm.ts`. Level 0 uses `describeProvider()` from the same file to obtain the URL and request settings.
 
 `src/env.ts` reads and validates `.env` once with zod (`import { env } from "@src/env"`; a wrong value gives one Thai message listing every problem). Callers of the shared helper get their model from `src/llm.ts` (`getLLM()` returns a LangChain `BaseChatModel`, built from that validated env). Change provider or model in `.env` only:
 

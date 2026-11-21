@@ -12,15 +12,18 @@ class SimpleIndex {
   constructor(private readonly embeddings: Embeddings) {}
 
   async add(chunks: Chunk[]): Promise<void> {
-    // 👉 ข้อ 1: vectors = await this.embeddings.embedDocuments(chunks.map((c) => c.text))
-    //          แล้ว push { chunk, vector } ของทุกชิ้นลง this.items (ต่อท้ายของเดิม ไม่ทับ)
-    todo(1);
+    const vectors = await this.embeddings.embedDocuments(chunks.map((c) => c.text));
+    chunks.forEach((chunk, i) => this.items.push({ chunk, vector: vectors[i] }));
   }
 
   async search(query: string, k: number): Promise<Hit[]> {
-    // 👉 ข้อ 2: q = await this.embeddings.embedQuery(query) แล้วสร้าง { ...chunk, score: cosine(q, vector) } ของทุกรายการ
+    // 👉 ข้อ 1 q = await this.embeddings.embedQuery(query) แล้วสร้าง { ...chunk, score: cosine(q, vector) } ของทุกรายการ
     //          เรียง score มากไปน้อย แล้ว slice(0, k)
-    return todo(2);
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const q = await this.embeddings.embedQuery(query);
+    //   const scored = this.items.map(({ chunk, vector }) => ({ ...chunk, score: cosine(q, vector) }));
+    //   return scored.sort((a, b) => b.score - a.score).slice(0, k);
+    return todo(1);
   }
 }
 
@@ -55,6 +58,17 @@ const real = new SimpleIndex(getEmbeddings());
 await real.add(SAMPLE_DOCS);
 const realHits = await real.search("ขอเงินที่จ่ายไปคืนได้ไหม", 1);
 console.log("embedding จริง:", realHits[0]);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

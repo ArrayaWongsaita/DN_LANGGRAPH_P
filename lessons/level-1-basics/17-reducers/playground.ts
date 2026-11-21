@@ -3,9 +3,9 @@
 // เริ่มใหม่: pnpm play 1-17 --reset
 //
 // ลองทำดู:
-//   1) สร้าง field ที่ใช้ ReducedValue เก็บรายการ แล้วให้สอง node เพิ่มค่าเข้าไป
-//   2) เพิ่ม field ที่รวมค่าอีกแบบ เช่น เก็บค่ามากที่สุดด้วย Math.max
-//   3) ลองเอา reducer ออกแล้วดูว่าค่าถูกทับ
+//   1) ส่งคะแนนตั้งต้นเป็น 0, 10 หรือ 20
+//   2) เปลี่ยนคะแนนที่ node a และ b คืน
+//   3) เปรียบเทียบการรวมคะแนนกับการต่อ log
 
 import { END, ReducedValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";

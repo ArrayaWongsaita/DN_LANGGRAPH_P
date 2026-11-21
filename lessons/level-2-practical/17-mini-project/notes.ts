@@ -16,6 +16,9 @@ const store: string[] = [];
 const addNote = tool(
   ({ text }) => {
     // 👉 ข้อ 1 เพิ่ม text ลงใน store แล้วคืนข้อความ "บันทึกแล้ว: " ตามด้วย text
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   store.push(text);
+    //   return `บันทึกแล้ว: ${text}`;
     return todo(1);
   },
   { name: "addNote", description: "จดโน้ตใหม่หนึ่งข้อความ", schema: z.object({ text: z.string() }) },
@@ -24,6 +27,8 @@ const addNote = tool(
 const listNotes = tool(
   () => {
     // 👉 ข้อ 2 คืน "ยังไม่มีโน้ต" เมื่อ store ว่าง หรือคืนโน้ตทีละบรรทัดพร้อมเลขลำดับ
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(2) ได้เลย):
+    //   return store.length === 0 ? "ยังไม่มีโน้ต" : store.map((text, i) => `${i + 1}. ${text}`).join("\n");
     return todo(2);
   },
   { name: "listNotes", description: "ดูรายการโน้ตที่จดในรอบการเปิดโปรแกรมนี้", schema: z.object({}) },
@@ -32,6 +37,13 @@ const listNotes = tool(
 function buildAssistant(saver: SqliteSaver): ReturnType<typeof createAgent> {
   // 👉 ข้อ 3 ให้ createAgent ใช้ llm, tools: [addNote, listNotes] และ checkpointer: saver
   // ระบุ systemPrompt ให้จดและดูรายการด้วย tool และตอบเรื่องแชตก่อนหน้าจากบทสนทนา
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(3) ได้เลย):
+  //   return createAgent({
+  //     model: llm,
+  //     tools: [addNote, listNotes],
+  //     checkpointer: saver,
+  //     systemPrompt: "คุณคือผู้ช่วยจดโน้ต ตอบสั้น ใช้ addNote เมื่อผู้ใช้ขอจด ใช้ listNotes เมื่อขอดูรายการโน้ต สำหรับคำถามเกี่ยวกับแชตก่อนหน้าให้ดูข้อความในบทสนทนา",
+  //   });
   return todo(3);
 }
 
@@ -59,7 +71,20 @@ try {
   const history = reply.messages.filter((message) => message.type === "human").map((message) => message.text);
   console.log(JSON.stringify({ notes: store, history, reply: reply.messages.at(-1)?.text }));
 
-  // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
   check("agent เรียก addNote เพื่อเก็บโน้ตสองรายการ", notes.length === 2 && notes[0].includes("นม") && notes[1].includes("แม่"));
   check("agent เรียก listNotes และได้รายการพร้อมเลขลำดับ", listing === notes.map((text, i) => `${i + 1}. ${text}`).join("\n"));
   check("เปิดไฟล์เดิมกับ thread เดิมแล้วได้ข้อความก่อนหน้า", history[0] === "จดโน้ตว่า ซื้อนม" && history[1] === "จดโน้ตว่า โทรหาแม่", "ตั้ง checkpointer: saver");

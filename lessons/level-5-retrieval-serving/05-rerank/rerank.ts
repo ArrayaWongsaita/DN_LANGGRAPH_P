@@ -13,9 +13,8 @@ interface Candidate {
 }
 
 function buildRerankPrompt(query: string, candidates: Candidate[]): string {
-  // 👉 ข้อ 1: คืนข้อความที่มีคำถามและเอกสารเรียงเป็นบรรทัด `${เลขที่เริ่มจาก 1}. ${text}` ทุกอัน
-  //          และบอกให้ให้คะแนนความเกี่ยวข้อง 0-10 ต่อเอกสาร ส่งกลับเป็น scores ตามลำดับเอกสาร
-  return todo(1);
+  const list = candidates.map((c, i) => `${i + 1}. ${c.text}`).join("\n");
+  return `คำถาม: ${query}\nเอกสาร:\n${list}\nให้คะแนนความเกี่ยวข้อง 0-10 ต่อเอกสาร ส่งกลับเป็น scores ตามลำดับเอกสาร`;
 }
 
 async function rerank(
@@ -29,13 +28,18 @@ async function rerank(
     .withStructuredOutput(z.object({ scores: z.array(z.number()) }), { method: "functionCalling" })
     .invoke(buildRerankPrompt(query, candidates));
 
-  // 👉 ข้อ 2: ถ้า result.scores.length ไม่เท่ากับจำนวน candidates (โมเดลตอบผิดรูป) ให้ถอยกลับ:
-  //          คืน candidates.slice(0, options.topN) ตามลำดับเดิม โดยไม่กรองและไม่เรียงใหม่
-  todo(2);
+  if (result.scores.length !== candidates.length) return candidates.slice(0, options.topN);
 
-  // 👉 ข้อ 3: จับคู่ candidate กับคะแนนตามตำแหน่ง เก็บเฉพาะที่คะแนน >= options.minScore
+  // 👉 ข้อ 1 จับคู่ candidate กับคะแนนตามตำแหน่ง เก็บเฉพาะที่คะแนน >= options.minScore
   //          เรียงคะแนนมากไปน้อย (เท่ากันคงลำดับเดิม) แล้วเอา options.topN อันแรก คืนเป็น Candidate
-  return todo(3);
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return candidates
+  //     .map((candidate, index) => ({ candidate, index, score: result.scores[index] }))
+  //     .filter((s) => s.score >= options.minScore)
+  //     .sort((a, b) => b.score - a.score || a.index - b.index)
+  //     .slice(0, options.topN)
+  //     .map((s) => s.candidate);
+  return todo(1);
 }
 
 const cands: Candidate[] = [
@@ -61,6 +65,17 @@ await rerank(spy, "คำถามพิเศษ", cands, { topN: 1, minScore: 
 // ส่วนที่ 2: โมเดลจริงให้คะแนนจริง
 const real = await rerank(llm, "ลืมรหัสผ่านต้องทำยังไง", cands, { topN: 2, minScore: 5 });
 console.log("โมเดลจริงเลือก:", real.map((c) => c.text));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

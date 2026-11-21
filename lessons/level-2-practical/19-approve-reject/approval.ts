@@ -21,6 +21,8 @@ const graph = new StateGraph(State)
   .addConditionalEdges(
     "request",
     // 👉 ข้อ 1 คืน "execute" เมื่อ approved เป็น true และคืน "cancelled" เมื่อเป็น false
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   (state) => state.approved ? "execute" : "cancelled",
     (state): "execute" | "cancelled" => todo(1),
     ["execute", "cancelled"],
   )
@@ -43,7 +45,20 @@ for (const [threadId, answer] of [["approve", true], ["reject", false]] as const
   results.push(finished.result);
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("อ่านคำถามของทั้งสอง thread ได้", requests.every((request) =>
   JSON.stringify(request) === JSON.stringify({ question: "อนุมัติไหม?", action: "รายงานประจำเดือน" })));
 check("ตอบ true ไปที่ execute", results[0] === "เผยแพร่แล้ว: รายงานประจำเดือน");

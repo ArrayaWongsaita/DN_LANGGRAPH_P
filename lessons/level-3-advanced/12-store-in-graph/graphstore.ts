@@ -17,13 +17,14 @@ const graph = new StateGraph(State, { context: z.object({ userId: z.string() }) 
     const ns = ["profiles", userId];
     if (state.text.startsWith("จำชื่อ:")) {
       const name = state.text.slice("จำชื่อ:".length).trim();
-      // 👉 ข้อ 1: เก็บชื่อ: await runtime.store!.put(ns, "name", { name })
+      // 👉 ข้อ 1 เก็บชื่อ: await runtime.store!.put(ns, "name", { name })
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+      //   await runtime.store!.put(ns, "name", { name });
       todo(1);
       return { reply: `ยินดีที่รู้จัก ${name}` };
     }
-    // 👉 ข้อ 2: อ่านชื่อ: const item = await runtime.store!.get(ns, "name") ถ้าไม่มีตอบ "ยังไม่รู้จักชื่อคุณ"
-    //        ถ้ามีตอบ `คุณชื่อ ${item.value.name}` (ใส่ผลใน reply)
-    return todo(2);
+    const item = await runtime.store!.get(ns, "name");
+    return { reply: item ? `คุณชื่อ ${item.value.name}` : "ยังไม่รู้จักชื่อคุณ" };
   })
   .addEdge(START, "respond")
   .addEdge("respond", END)
@@ -34,6 +35,17 @@ for (const [userId, text] of [["mali", "จำชื่อ: มาลี"], ["ma
   replies.push((await graph.invoke({ text }, { context: { userId } })).reply);
 }
 console.log(replies);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

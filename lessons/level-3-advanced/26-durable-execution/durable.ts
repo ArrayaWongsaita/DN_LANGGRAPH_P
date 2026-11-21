@@ -36,17 +36,29 @@ const job = new StateGraph(State)
 const config = { configurable: { thread_id: "job-1" } };
 let crashed = false;
 try {
-  // 👉 ข้อ 1: รันงานแบบ durability sync: await job.invoke({}, { ...config, durability: "sync" })
-  todo(1);
+  await job.invoke({}, { ...config, durability: "sync" });
 } catch (e) {
   // ล่มจากเครือข่ายจริงเท่านั้นถึงนับว่า "ล่ม" ส่วน error อื่น (เช่นยังไม่ได้เติมช่อง) ให้โยนต่อ
   if ((e as Error).message !== "เครือข่ายล่ม") throw e;
   crashed = true;
 }
 
-// 👉 ข้อ 2: ทำงานต่อจากจุดที่ล่ม: invoke ด้วย input เป็น null และ config เดิม ได้ state สุดท้าย
-const finished: { log: string } = todo(2);
+// 👉 ข้อ 1 ทำงานต่อจากจุดที่ล่ม: invoke ด้วย input เป็น null และ config เดิม ได้ state สุดท้าย
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const finished = await job.invoke(null, config);
+const finished: { log: string } = todo(1);
 console.log({ crashed, runs, log: finished.log });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

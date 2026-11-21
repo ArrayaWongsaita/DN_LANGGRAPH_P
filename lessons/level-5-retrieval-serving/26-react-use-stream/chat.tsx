@@ -27,31 +27,30 @@ interface StreamLike {
 
 // ส่งงานใหม่เข้า graph
 function sendOrder(stream: Pick<StreamLike, "submit">, item: string) {
-  // 👉 ข้อ 1: เรียก stream.submit({ item })
+  // 👉 ข้อ 1 เรียก stream.submit({ item })
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return stream.submit({ item });
   return todo(1);
 }
 
 // อ่านคำถามที่ graph หยุดรอ (ค่าที่ interrupt({ question }) ส่งมา) ไม่มีคำถามคืน undefined
 function questionOf(interrupt: StreamLike["interrupt"]): string | undefined {
-  // 👉 ข้อ 2: ถ้า interrupt?.value เป็นอ็อบเจ็กต์ที่มี question เป็นสตริง คืนค่านั้น นอกนั้นคืน undefined
-  return todo(2);
+  const value = interrupt?.value as { question?: unknown } | undefined;
+  return typeof value?.question === "string" ? value.question : undefined;
 }
 
 // ส่งคำตัดสินกลับให้ graph ที่หยุดรออยู่ (ไม่มี input ใหม่ มีแค่ command resume)
 function decide(stream: Pick<StreamLike, "submit">, approve: boolean) {
-  // 👉 ข้อ 3: เรียก stream.submit(undefined, { command: { resume: approve } })
-  return todo(3);
+  return stream.submit(undefined, { command: { resume: approve } });
 }
 
 // ข้อความสถานะสำหรับหัวฟอร์ม
 function statusLabel(stream: Pick<StreamLike, "values" | "isLoading" | "error" | "interrupt">): string {
-  // 👉 ข้อ 4: ตรวจตามลำดับ:
-  //   stream.error → `ผิดพลาด: ${ข้อความของ error ถ้าเป็น Error ไม่งั้น String(error)}`
-  //   questionOf(stream.interrupt) มีค่า → "รอคุณอนุมัติ"
-  //   stream.isLoading → "กำลังทำงาน..."
-  //   stream.values.result ไม่ว่าง → `เสร็จ: ${result}`
-  //   นอกนั้น "พร้อม"
-  return todo(4);
+  if (stream.error) return `ผิดพลาด: ${stream.error instanceof Error ? stream.error.message : String(stream.error)}`;
+  if (questionOf(stream.interrupt) !== undefined) return "รอคุณอนุมัติ";
+  if (stream.isLoading) return "กำลังทำงาน...";
+  if (stream.values.result) return `เสร็จ: ${stream.values.result}`;
+  return "พร้อม";
 }
 
 // (ให้ไว้แล้ว) คอมโพเนนต์ที่ต่อ useStream เข้ากับฟังก์ชันของคุณ
@@ -126,6 +125,17 @@ try {
   cleanup();
   stop();
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

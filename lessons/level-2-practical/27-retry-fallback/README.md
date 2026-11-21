@@ -10,6 +10,8 @@
 pnpm lesson 2-27
 ```
 
+ในไฟล์ข้อ 1 มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
+
 ```ts
 import { AIMessage } from "@langchain/core/messages";
 import { RunnableLambda } from "@langchain/core/runnables";
@@ -52,7 +54,11 @@ console.log(JSON.stringify({ calls, answer: reply.text }));
 | `onFailedAttempt` | ฟังก์ชันเสริมสำหรับดู error และอินพุตของรอบที่พลาด เช่น ใช้บันทึก log |
 | `fallbacks` | อาร์เรย์ Runnable สำรองที่รับอินพุตและคืนเอาต์พุตชนิดเดียวกับตัวหลัก ลองตามลำดับจนได้ผล ถ้าทุกตัวล้มเหลว `invoke` จะโยน error ของตัวหลักออกมา |
 
-การครอบ `withRetry` ก่อน `withFallbacks` ทำให้ลองตัวหลักจนครบก่อนสลับตัวสำรอง รุ่นที่โปรเจกต์ใช้เว้นช่วงก่อนลองใหม่ เวลาแต่ละรอบจึงแปรผันได้ ถ้าใช้โมเดลจริง ให้รวมจำนวนครั้งที่ตัวเชื่อมต่อของโมเดลลองเองด้วยเมื่อกำหนดงบและเวลารอ [อ้างอิง `withRetry`](https://reference.langchain.com/javascript/langchain-core/runnables/Runnable/withRetry) [อ้างอิง `RunnableWithFallbacks`](https://reference.langchain.com/javascript/langchain-core/runnables/RunnableWithFallbacks)
+การครอบ `withRetry` ก่อน `withFallbacks` ทำให้ลองตัวหลักจนครบก่อนสลับตัวสำรอง รุ่นที่โปรเจกต์ใช้เว้นช่วงก่อนลองใหม่ เวลาแต่ละรอบจึงแปรผันได้
+
+ถ้าใช้โมเดลจริง ให้รวมจำนวนครั้งที่ตัวเชื่อมต่อของโมเดลลองเองด้วยเมื่อกำหนดงบและเวลารอ
+
+อ้างอิง: [`withRetry`](https://reference.langchain.com/javascript/langchain-core/runnables/Runnable/withRetry) และ [`RunnableWithFallbacks`](https://reference.langchain.com/javascript/langchain-core/runnables/RunnableWithFallbacks)
 
 ## 3. เปลี่ยนสาเหตุจำลองและจำนวนครั้ง
 

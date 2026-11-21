@@ -24,14 +24,20 @@ class FlakyModel extends FakeToolLLM {
   }
 }
 
-// 👉 ข้อ 1: const retry = modelRetryMiddleware({ maxRetries: 3, initialDelayMs: 1, jitter: false, onFailure: "error" });
-const retry = todo(1);
-// 👉 ข้อ 2: const fallback = modelFallbackMiddleware(llm);  (ถ้าตัวหลักยังล่ม ให้ใช้ llm ตอบแทน)
-const fallback = todo(2);
+const retry = modelRetryMiddleware({ maxRetries: 3, initialDelayMs: 1, jitter: false, onFailure: "error" });
+const fallback = modelFallbackMiddleware(llm);
 
 const seen: number[] = [];
-// 👉 ข้อ 3: middleware ที่เขียนเอง: const logger = createMiddleware({ name: "logger", beforeModel: async (state) => { seen.push(state.messages.length); return undefined; } });
-const logger = todo(3);
+// 👉 ข้อ 1 middleware ที่เขียนเอง: const logger = createMiddleware({ name: "logger", beforeModel: async (state) => { seen.push(state.messages.length); return undefined; } });
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const logger = createMiddleware({
+//     name: "logger",
+//     beforeModel: async (state) => {
+//       seen.push(state.messages.length);
+//       return undefined;
+//     },
+//   });
+const logger = todo(1);
 
 // กรณีที่ 1: ตัวหลักล่ม 2 ครั้งแล้วผ่าน retry ช่วย / กรณีที่ 2: ตัวหลักล่มตลอด ต้องใช้ตัวสำรอง
 const flaky = new FlakyModel(["หลักตอบแล้ว"], 2);
@@ -44,6 +50,17 @@ const ask = async (primary: FlakyModel) => {
 const retried = await ask(flaky);
 const fellBack = await ask(dead);
 console.log({ retried, fellBack: fellBack.slice(0, 60), flakyAttempts: flaky.attempts, seen });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

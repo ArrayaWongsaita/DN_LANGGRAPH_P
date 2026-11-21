@@ -3,12 +3,10 @@
 // เริ่มใหม่: pnpm play 1-04 --reset
 //
 // ลองทำดู:
-//   1) สร้าง model ที่ตั้ง temperature ต่างกัน (เช่น 0, 0.7, 1.5) แล้วถามคำถามเดิมหลายรอบ
-//   2) ถามคำถามปลายเปิด เช่น ให้แต่งสโลแกน แล้วเทียบความหลากหลายของแต่ละค่า
-//   3) เทียบคำถามที่มีคำตอบเดียว กับคำถามปลายเปิด
+//   1) เทียบ temperature สองค่าด้วย prompt เดิม
+//   2) เปลี่ยนจากโจทย์ตั้งชื่อเป็นโจทย์ที่มีคำตอบเดียว
+//   3) เทียบจำนวนชื่อที่ไม่ซ้ำในแต่ละกลุ่ม
 
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { ChatGroq } from "@langchain/groq"; // ตัวอย่างใช้ Groq ถ้าเลือกเจ้าอื่นในบท 02 ให้เปลี่ยน import กับ new ... ตามบล็อกของเจ้านั้น
-import { env } from "@lessons/level-1-basics/01-env-schema/solution/env";
+import { getLLM } from "@src/llm";
 
 // เขียนโค้ดของคุณตรงนี้

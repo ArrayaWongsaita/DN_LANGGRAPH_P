@@ -8,6 +8,8 @@ import { todo } from "@src/todo";
 
 const tools: StructuredToolInterface[] = [makeAddTool(), makeWeatherTool()];
 // 👉 ข้อ 1 ผูก tools เข้ากับ llm ด้วย bindTools
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const bound = llm.bindTools!(tools);
 const bound: ReturnType<NonNullable<typeof llm.bindTools>> = todo(1);
 
 const question = "ช่วยใช้ tool add บวก 23 กับ 19";
@@ -23,6 +25,19 @@ const result = await selected.invoke({ ...call, type: "tool_call" });
 const content = ToolMessage.isInstance(result) ? result.text : result;
 console.log("ผลของ tool =", content);
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("โมเดลขอเรียก add", call.name === "add");
 check("รัน add แล้วได้ 42", content === "42");

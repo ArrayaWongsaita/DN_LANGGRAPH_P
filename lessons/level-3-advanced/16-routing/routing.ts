@@ -20,14 +20,17 @@ const expert = (role: string) => async (state: { question: string }) => ({
 
 // เลือก node ปลายทางจากหมวดที่ LLM จัดให้
 function routeOf(state: { category?: z.infer<typeof Category> }): "billing" | "tech" | "other" {
-  // 👉 ข้อ 2: คืน state.category (ถ้าไม่มีให้คืน "other")
-  return todo(2);
+  return state.category ?? "other";
 }
 
 const graph = new StateGraph(State)
   .addNode("classify", async (state) => {
-    // 👉 ข้อ 1: ใช้ llm.withStructuredOutput(z.object({ category: Category }), { method: "functionCalling" }) เรียก invoke ด้วย
+    // 👉 ข้อ 1 ใช้ llm.withStructuredOutput(z.object({ category: Category }), { method: "functionCalling" }) เรียก invoke ด้วย
     //        `จัดประเภทคำถาม (billing/tech/other): ${state.question}` แล้วคืน { category: ผล.category }
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const structured = llm.withStructuredOutput(z.object({ category: Category }), { method: "functionCalling" });
+    //   const out = await structured.invoke(`จัดประเภทคำถาม (billing/tech/other): ${state.question}`);
+    //   return { category: out.category };
     return todo(1);
   })
   .addNode("billing", expert("เจ้าหน้าที่การเงิน"))
@@ -47,6 +50,17 @@ for (const question of questions) {
   results.push(r);
   console.log(`[${r.category}] ${question}\n   -> ${r.answer.slice(0, 80)}`);
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

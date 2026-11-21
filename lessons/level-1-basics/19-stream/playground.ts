@@ -3,11 +3,11 @@
 // เริ่มใหม่: pnpm play 1-19 --reset
 //
 // ลองทำดู:
-//   1) สร้าง graph เล็ก ๆ แล้วใช้ graph.stream ด้วย streamMode "updates" พิมพ์ว่าแต่ละ node อัปเดตอะไร
-//   2) เปลี่ยนเป็น "values" แล้วเทียบกับ "updates"
-//   3) เพิ่ม node ที่สามแล้วดูว่า stream ให้อะไรเพิ่ม
+//   1) เปิด stream แบบ updates และ values ด้วย input เดียวกัน
+//   2) เปลี่ยนข้อความที่ส่งให้ node clean
+//   3) เทียบชิ้นสุดท้ายกับผลจาก invoke
 
-import { END, ReducedValue, START, StateGraph, StateSchema } from "@langchain/langgraph";
+import { END, START, StateGraph, StateSchema, type StreamMode } from "@langchain/langgraph";
 import { z } from "zod";
 
 // เขียนโค้ดของคุณตรงนี้

@@ -3,41 +3,47 @@ import { END, START, StateGraph, StateSchema } from "@langchain/langgraph";
 import { z } from "zod";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 1-10  (ไม่ใช้ LLM)
-// State = "กระดานกลาง" ที่ทุก node ใน graph อ่าน/เขียนร่วมกัน
-// แต่ละ field ประกาศชนิดข้อมูลด้วย zod  และ .default(...) คือค่าเริ่มต้นเมื่อผู้เรียกไม่ได้ส่งมา
 const ProfileState = new StateSchema({
   name: z.string(),
-  // 👉 ข้อ 1: เปลี่ยน todo(1) เป็น field "age" ชนิดตัวเลข ค่าเริ่มต้น 0
-  // แนวทาง: z.number().default(0)
-  age: todo(1),
-  // 👉 ข้อ 2: เปลี่ยน todo(2) เป็น field "city" ชนิดข้อความ ค่าเริ่มต้น "" (สตริงว่าง)
-  // แนวทาง: z.string().default("")
-  city: todo(2),
+  // 👉 ข้อ 1 แทนค่าหลัง age ทั้งหมดด้วย schema ตัวเลขที่มีค่าเริ่มต้น 0
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   age: z.number().default(0),
+  age: todo(1) as z.ZodDefault<z.ZodNumber>,
+  city: z.string().default(""),
 });
 
-// graph เล็ก ๆ ที่มี node เดียว ไว้ดูว่า state หน้าตาเป็นอย่างไร (ให้มาแล้ว ไม่ต้องแก้)
-const graph = new StateGraph(ProfileState)
+const app = new StateGraph(ProfileState)
   .addNode("show", (state) => ({ name: state.name }))
   .addEdge(START, "show")
   .addEdge("show", END)
   .compile();
 
-const onlyName = await graph.invoke({ name: "มาลี" });
-const everything = await graph.invoke({ name: "สมชาย", age: 30, city: "เชียงใหม่" });
-console.log("ส่งแค่ name:  ", onlyName);
-console.log("ส่งครบทุกช่อง:", everything);
+const onlyName = await app.invoke({ name: "มาลี" });
+const withDetails = await app.invoke({ name: "มาลี", age: 30, city: "เชียงใหม่" });
+console.log(onlyName);
+console.log(withDetails);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
 let rejected = false;
 try {
-  await graph.invoke({ name: "มาลี", age: "สามสิบ" } as never);
+  await app.invoke({ name: "มาลี", age: "สามสิบ" } as never);
 } catch {
   rejected = true;
 }
 
-check("field ที่ไม่ได้ส่งมาได้ค่าเริ่มต้น (age = 0, city = ว่าง)", onlyName.age === 0 && onlyName.city === "", "ใส่ .default(...) ให้ age และ city");
-check("field ที่ส่งมาถูกใช้แทนค่าเริ่มต้น", everything.age === 30 && everything.city === "เชียงใหม่");
-check("ส่งชนิดข้อมูลผิด (age เป็นข้อความ) แล้ว error", rejected, "age ต้องเป็น z.number()");
+check("เมื่อส่งแค่ชื่อ age เป็น 0 และ city เป็นสตริงว่าง", onlyName.age === 0 && onlyName.city === "", "ใส่ค่าเริ่มต้นให้ age");
+check("เมื่อส่งอายุและเมือง graph ใช้ค่าที่ส่งมา", withDetails.age === 30 && withDetails.city === "เชียงใหม่");
+check("graph ปฏิเสธ age ที่เป็นข้อความ", rejected, "กำหนด age เป็น z.number()");

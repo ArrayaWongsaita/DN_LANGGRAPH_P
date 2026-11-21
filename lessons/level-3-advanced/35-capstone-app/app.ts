@@ -20,10 +20,10 @@ await store.put(["prefs", "me"], "lang", { lang: "th" }); // ความชอ�
 
 const builder = new StateGraph(State, { context: z.object({ userId: z.string() }) })
   .addNode("prepare", async (_state, runtime) => {
-    // 👉 ข้อ 1: อ่านภาษาที่ชอบ: const item = await runtime.store!.get(["prefs", runtime.context!.userId], "lang");
-    //        lang = item?.value.lang ถ้าไม่มีใช้ "th"
-    //        ก่อน return ส่งความคืบหน้า: runtime.writer?.({ stage: "prepare" }) แล้วคืน { lang }
-    return todo(1);
+    const item = await runtime.store!.get(["prefs", runtime.context!.userId], "lang");
+    const lang = (item?.value.lang as string | undefined) ?? "th";
+    runtime.writer?.({ stage: "prepare" });
+    return { lang };
   })
   .addNode("draft", async (state, runtime) => {
     runtime.writer?.({ stage: "draft" });
@@ -31,8 +31,11 @@ const builder = new StateGraph(State, { context: z.object({ userId: z.string() }
     return { report: reply.text };
   })
   .addNode("approve", (state) => {
-    // 👉 ข้อ 2: ขออนุมัติ: const ok = interrupt({ report: state.report }); คืน { approved: ok === true }
-    return todo(2);
+    // 👉 ข้อ 1 ขออนุมัติ: const ok = interrupt({ report: state.report }); คืน { approved: ok === true }
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const ok = interrupt({ report: state.report });
+    //   return { approved: ok === true };
+    return todo(1);
   })
   .addNode("publish", (state) => ({
     result: state.approved ? `เผยแพร่แล้ว: ${state.report}` : "ไม่เผยแพร่",
@@ -43,17 +46,27 @@ const builder = new StateGraph(State, { context: z.object({ userId: z.string() }
   .addEdge("approve", "publish")
   .addEdge("publish", END);
 
-// 👉 ข้อ 3: compile พร้อม checkpointer และ store: builder.compile({ checkpointer: new MemorySaver(), store })
-const app: ReturnType<typeof builder.compile> = todo(3);
+// 👉 ข้อ 2 compile พร้อม checkpointer และ store: builder.compile({ checkpointer: new MemorySaver(), store })
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(2) ได้เลย):
+//   const app = builder.compile({ checkpointer: new MemorySaver(), store });
+const app: ReturnType<typeof builder.compile> = todo(2);
 
 // เริ่มงาน: ฟังความคืบหน้า (custom) และ state (values) ไปพร้อมกัน จนกว่า graph จะหยุดรออนุมัติ
 const config = { configurable: { thread_id: "run-1" }, context: { userId: "me" } };
 const stages: string[] = [];
 let report = "";
-// 👉 ข้อ 4: เปิด stream ด้วย streamMode ["custom", "values"]: app.stream({ question: "ประโยชน์ของการนอนหลับ" }, { ...config, streamMode: ["custom", "values"] })
+// 👉 ข้อ 3 เปิด stream ด้วย streamMode ["custom", "values"]: app.stream({ question: "ประโยชน์ของการนอนหลับ" }, { ...config, streamMode: ["custom", "values"] })
 //        แต่ละชิ้นเป็น [mode, data]: ถ้า mode เป็น "custom" push (data as { stage: string }).stage ลง stages
 //        ถ้าเป็น "values" เก็บ (data as { report?: string }).report ลง report (ถ้ามี)
-todo(4);
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(3) ได้เลย):
+//   for await (const [mode, data] of await app.stream(
+//     { question: "ประโยชน์ของการนอนหลับ" },
+//     { ...config, streamMode: ["custom", "values"] },
+//   )) {
+//     if (mode === "custom") stages.push((data as { stage: string }).stage);
+//     if (mode === "values") report = (data as { report?: string }).report || report;
+//   }
+todo(3);
 const waiting = (await app.getState({ configurable: { thread_id: "run-1" } })).next.includes("approve");
 console.log({ stages, waiting });
 console.log("รายงานที่รออนุมัติ:", report);
@@ -61,6 +74,17 @@ console.log("รายงานที่รออนุมัติ:", report);
 // ผู้ใช้กดอนุมัติ แล้วงานทำต่อจนเผยแพร่
 const finished = await app.invoke(new Command({ resume: true }), config);
 console.log(finished.result);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -27,6 +27,8 @@ const histories: string[][] = [];
 try {
   for (const { label, storage, text } of runs) {
     // 👉 ข้อ 1 เปิด SqliteSaver จาก storage ของรอบนี้
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const saver = SqliteSaver.fromConnString(storage);
     const saver: SqliteSaver = todo(1);
     try {
       const graph = builder.compile({ checkpointer: saver });
@@ -41,6 +43,19 @@ try {
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("เปิดไฟล์เดิมแล้วอ่านประวัติต่อได้", histories[1].length === 4 && histories[1][0] === "ฉันชื่อมาลี");
 check("ฐานข้อมูลใน RAM เริ่มด้วยประวัติว่าง", histories[2].length === 2);

@@ -13,7 +13,10 @@ import { check } from "@src/check";
 function makeSlowTool() {
   // งานที่ทำหลายขั้น
   const run = async function* ({ n }: { n: number }): AsyncGenerator<string, string> {
-    // 👉 ข้อ 1: วน i จาก 1 ถึง n แล้ว yield `ขั้น ${i}` ทุกรอบ จบด้วย return `เสร็จ ${n} ขั้น`
+    // 👉 ข้อ 1 วน i จาก 1 ถึง n แล้ว yield `ขั้น ${i}` ทุกรอบ จบด้วย return `เสร็จ ${n} ขั้น`
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   for (let i = 1; i <= n; i++) yield `ขั้น ${i}`;
+    //   return `เสร็จ ${n} ขั้น`;
     return todo(1);
   };
   return tool(run as never, { name: "slow", description: "งานที่ทำหลายขั้น", schema: z.object({ n: z.number() }) });
@@ -29,8 +32,7 @@ async function collectProgress(agent: ReturnType<typeof buildAgent>, question: s
   const stream = await agent.stream({ messages: [new HumanMessage(question)] }, { streamMode: ["tools"] } as never);
   for await (const chunk of stream as AsyncIterable<[string, { event: string; data?: unknown }]>) {
     const [, payload] = chunk;
-    // 👉 ข้อ 2: ถ้า payload.event เป็น "on_tool_event" ให้ progress.push(String(payload.data))
-    todo(2);
+    if (payload.event === "on_tool_event") progress.push(String(payload.data));
   }
   return progress;
 }
@@ -46,6 +48,17 @@ const toolMsg = seeing.calls[1].find((m) => m.type === "tool");
 // ส่วนที่ 2: โมเดลจริง
 const realProgress = await collectProgress(buildAgent(llm), "ใช้ tool slow ทำงาน 3 ขั้น");
 console.log({ progress, realProgress });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

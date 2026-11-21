@@ -29,6 +29,8 @@ const graph = new StateGraph(State)
 
 const maxToolRounds = 2;
 // 👉 ข้อ 1 คำนวณงบจาก 2 step ต่อรอบ บวก step เริ่มต้นและ step ตอบ
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const recursionLimit = 2 * maxToolRounds + 2;
 const recursionLimit: number = todo(1);
 console.log("recursionLimit =", recursionLimit);
 
@@ -46,7 +48,20 @@ for (const wantedRounds of [2, 100]) {
   console.log(`ขอ tool ${wantedRounds} รอบ → ${outcome}`);
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("งบครบสำหรับ 2 รอบ", recursionLimit === 6, "ใช้ 2 * maxToolRounds + 2");
 check("ทำงานครบได้ 2 รอบ", outcomes[0] === "เสร็จแล้ว");
 check("หยุดเมื่อจะทำ 100 รอบ", outcomes[1] === "GraphRecursionError");

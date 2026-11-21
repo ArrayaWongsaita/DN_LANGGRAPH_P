@@ -1,35 +1,39 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { llm } from "../../02-llm-config/solution/llm";
 import { check } from "@src/check";
 
-// รันด้วย: pnpm lesson 1-07
-// แม่แบบข้อความ: ช่องที่เขียนในปีกกา {ชื่อ} จะถูกเติมค่าตอนใช้งาน
-
-// ข้อ 1: สร้างแม่แบบด้วย ChatPromptTemplate.fromMessages มี 2 ข้อความ
 const prompt = ChatPromptTemplate.fromMessages([
-  ["system", "คุณคือนักแปล แปลข้อความของผู้ใช้เป็นภาษา{language} ตอบเฉพาะคำแปล"],
+  ["system", "แปลข้อความของผู้ใช้เป็นภาษา{language}"],
   ["human", "{text}"],
 ]);
 
-// ข้อ 2: ต่อแม่แบบเข้ากับ llm เป็นสายเดียว (chain) แล้วเรียกด้วยค่าของช่อง
-const chain = prompt.pipe(llm);
-const reply = await chain.invoke({ language: "อังกฤษ", text: "วันนี้อากาศดีจัง" });
+const input = { language: "อังกฤษ", text: "วันนี้อากาศดีจัง" };
+const messages = await prompt.formatMessages(input);
 
-console.log("อังกฤษ:", reply.text);
-// แม่แบบเดียวใช้ซ้ำได้กับภาษาอื่น (ให้มาแล้ว)
-console.log("ญี่ปุ่น:", (await chain.invoke({ language: "ญี่ปุ่น", text: "วันนี้อากาศดีจัง" })).text);
+for (const message of messages) {
+  console.log(message.type, message.text);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
-const formatted = await prompt.formatMessages({ language: "อังกฤษ", text: "สวัสดี" });
 check(
-  "แม่แบบสร้างข้อความ system แล้ว human โดยเติมช่อง {language} {text}",
-  formatted.length === 2 &&
-    formatted[0].type === "system" &&
-    String(formatted[0].content).includes("อังกฤษ") &&
-    formatted[1].type === "human" &&
-    String(formatted[1].content) === "สวัสดี",
-  'ช่องในปีกกาต้องชื่อ {language} กับ {text}',
+  "เติม language ในข้อความ system",
+  messages[0]?.type === "system" && messages[0].text === `แปลข้อความของผู้ใช้เป็นภาษา${input.language}`,
+  "ส่ง input ให้ prompt.formatMessages",
 );
-check("ได้คำแปลเป็นข้อความ", typeof reply.text === "string" && reply.text.length > 0, "ลืม pipe(llm) หรือเปล่า?");
+check(
+  "เติม text ในข้อความ human",
+  messages.length === 2 && messages[1].type === "human" && messages[1].text === input.text,
+  "ส่งทั้ง language และ text ให้แม่แบบ",
+);

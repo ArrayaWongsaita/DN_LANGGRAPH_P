@@ -13,14 +13,15 @@ const Full = new StateSchema({
 const In = new StateSchema({ question: z.string() });
 const Out = new StateSchema({ answer: z.string() });
 
-// 👉 ข้อ 1: ประกอบ StateGraph ด้วย { state: Full, input: In, output: Out }
+// 👉 ข้อ 1 ประกอบ StateGraph ด้วย { state: Full, input: In, output: Out }
 // แนวทาง: new StateGraph({ state: Full, input: In, output: Out })
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const builder = new StateGraph({ state: Full, input: In, output: Out });
 const builder = todo(1);
 
 const graph = builder
   .addNode("think", (state) => {
-    // 👉 ข้อ 2: คืน { scratch: `คิดเรื่อง: ${state.question}`, answer: `คำตอบของ: ${state.question}` }
-    return todo(2);
+    return { scratch: `คิดเรื่อง: ${state.question}`, answer: `คำตอบของ: ${state.question}` };
   })
   .addEdge(START, "think")
   .addEdge("think", END)
@@ -28,6 +29,17 @@ const graph = builder
 
 const result = await graph.invoke({ question: "ทำไมท้องฟ้าสีฟ้า" });
 console.log(result);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

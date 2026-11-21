@@ -2,14 +2,10 @@
 // รันด้วย: pnpm play 1-05   (รันซ้ำทุกครั้งที่บันทึก: pnpm play 1-05 --watch)
 // เริ่มใหม่: pnpm play 1-05 --reset
 //
-// ต้องใช้: key ของ LLM ที่ตั้งไว้ในบท 1-02
-//
 // ลองทำดู:
-//   1) ส่ง HumanMessage แล้วพิมพ์ reply.type, reply.text และ reply.usage_metadata
-//   2) เทียบ usage_metadata ของคำถามสั้นกับคำถามยาว
-//   3) ลองส่ง string ตรง ๆ แทน HumanMessage แล้วดูว่าผลเหมือนกันไหม
+//   1) สร้าง AIMessage ที่มี content เป็นสตริงหรืออาร์เรย์บล็อก
+//   2) ลองเพิ่ม usage_metadata แล้วดูค่าที่อ่านได้
 
-import { HumanMessage } from "@langchain/core/messages";
-import { llm } from "@lessons/level-1-basics/02-llm-config/solution/llm";
+import { AIMessage } from "@langchain/core/messages";
 
 // เขียนโค้ดของคุณตรงนี้

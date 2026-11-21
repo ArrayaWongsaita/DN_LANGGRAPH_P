@@ -13,31 +13,39 @@ import { check } from "@src/check";
 
 // แยก token จากหัว Authorization: "Bearer abc" → "abc"
 function parseBearer(header: string | null | undefined): string | null {
-  // 👉 ข้อ 1: ต้องเป็น "<scheme> <token>" สองส่วนพอดี (แยกด้วยช่องว่าง, trim ก่อน) scheme เทียบแบบไม่สนตัวพิมพ์ต้องเป็น "bearer"
+  // 👉 ข้อ 1 ต้องเป็น "<scheme> <token>" สองส่วนพอดี (แยกด้วยช่องว่าง, trim ก่อน) scheme เทียบแบบไม่สนตัวพิมพ์ต้องเป็น "bearer"
   //          และ token ไม่ว่าง ไม่งั้นคืน null (ไม่มีหัว, "Basic x", "Bearer", "Bearer a b" → null)
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   if (!header) return null;
+  //   const parts = header.trim().split(/\s+/);
+  //   if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer" || parts[1] === "") return null;
+  //   return parts[1];
   return todo(1);
 }
 
 // เทียบสตริงแบบ constant-time
 function safeEqual(a: string, b: string): boolean {
-  // 👉 ข้อ 2: ทำ sha256 ของทั้งสองสตริงก่อน (ให้ความยาวเท่ากัน timingSafeEqual ต้องการความยาวเท่า) แล้วเทียบด้วย timingSafeEqual
-  return todo(2);
+  return timingSafeEqual(createHash("sha256").update(a).digest(), createHash("sha256").update(b).digest());
 }
 
 type AuthResult = { ok: true; client: string } | { ok: false; reason: string };
 
 // tokens: ชื่อผู้เรียก → token
 function authenticate(header: string | null | undefined, tokens: Record<string, string>): AuthResult {
-  // 👉 ข้อ 3: token = parseBearer(header) ไม่มี → { ok: false, reason: "ไม่มี Bearer token" }
-  //          วนทุกคู่ใน tokens (ไม่หยุดทันทีที่เจอ เพื่อเวลาไม่บอกตำแหน่ง) ถ้า safeEqual ตรงตัวใดให้จำชื่อ แล้วคืน { ok: true, client: ชื่อ }
-  //          ไม่ตรงเลย → { ok: false, reason: "token ไม่ถูกต้อง" } (ข้อความต้องไม่มี token ที่ส่งมา)
-  return todo(3);
+  const token = parseBearer(header);
+  if (!token) return { ok: false, reason: "ไม่มี Bearer token" };
+  let matched: string | null = null;
+  for (const [name, expected] of Object.entries(tokens)) {
+    if (safeEqual(token, expected) && matched === null) matched = name;
+  }
+  return matched ? { ok: true, client: matched } : { ok: false, reason: "token ไม่ถูกต้อง" };
 }
 
 function unauthorizedResponse(reason: string): Response {
-  // 👉 ข้อ 4: คืน Response สถานะ 401 หัว "WWW-Authenticate": 'Bearer realm="mcp"' และ "content-type": "application/json"
-  //          body JSON { error: "unauthorized", reason }
-  return todo(4);
+  return new Response(JSON.stringify({ error: "unauthorized", reason }), {
+    status: 401,
+    headers: { "WWW-Authenticate": 'Bearer realm="mcp"', "content-type": "application/json" },
+  });
 }
 
 interface ServerSpec {
@@ -48,17 +56,22 @@ interface ServerSpec {
 
 // สร้าง config ของ MultiServerMCPClient (transport http) พร้อมหัว Authorization ถ้ามี token
 function buildMcpConfig(servers: ServerSpec[]) {
-  // 👉 ข้อ 5: คืน { mcpServers: { [name]: { transport: "http", url, headers? } } } โดย headers = { Authorization: `Bearer ${token}` } เฉพาะเมื่อมี token (ไม่มี token ห้ามมีคีย์ headers)
-  //          และถ้ามี token แต่ url ไม่ใช่ https:// และไม่ใช่ http://localhost / http://127.0.0.1 (ตามด้วย : หรือ / หรือจบ) ให้ throw
-  //          new Error(`ห้ามส่ง token ผ่าน http ธรรมดาไปที่ ${name}`) (ไม่ใส่ token ในข้อความ)
-  return todo(5);
+  const mcpServers: Record<string, { transport: "http"; url: string; headers?: Record<string, string> }> = {};
+  for (const { name, url, token } of servers) {
+    if (token && !/^https:\/\//.test(url) && !/^http:\/\/(localhost|127\.0\.0\.1)(?=[:/]|$)/.test(url)) {
+      throw new Error(`ห้ามส่ง token ผ่าน http ธรรมดาไปที่ ${name}`);
+    }
+    mcpServers[name] = token ? { transport: "http", url, headers: { Authorization: `Bearer ${token}` } } : { transport: "http", url };
+  }
+  return { mcpServers };
 }
 
 // แปลง error ของ adapter เป็นข้อความที่ผู้ใช้อ่านรู้เรื่อง ไม่เผย URL/รายละเอียดภายใน
 function describeMcpError(error: unknown): string {
-  // 👉 ข้อ 6: ข้อความ error มี "Authentication failed" → "เซิร์ฟเวอร์ MCP ปฏิเสธการยืนยันตัวตน (ตรวจ token)"
-  //          มี "ECONNREFUSED" หรือ "fetch failed" → "ต่อเซิร์ฟเวอร์ MCP ไม่ได้"  นอกนั้น → "เรียกเซิร์ฟเวอร์ MCP ไม่สำเร็จ"
-  return todo(6);
+  const message = error instanceof Error ? error.message : "";
+  if (message.includes("Authentication failed")) return "เซิร์ฟเวอร์ MCP ปฏิเสธการยืนยันตัวตน (ตรวจ token)";
+  if (message.includes("ECONNREFUSED") || message.includes("fetch failed")) return "ต่อเซิร์ฟเวอร์ MCP ไม่ได้";
+  return "เรียกเซิร์ฟเวอร์ MCP ไม่สำเร็จ";
 }
 
 // ส่วนที่ 1: เซิร์ฟเวอร์ MCP จริงผ่าน HTTP ในโปรเซสนี้ (ให้ไว้แล้ว) เปิด tool "add" หลังตรวจ Bearer ด้วย authenticate ของคุณ
@@ -135,6 +148,17 @@ try {
   leakedToken = (e as Error).message.includes("SECRET-TOKEN");
 }
 const authErr = new Error('Authentication failed for HTTP server "calc" at http://internal-host:2960/mcp. Original error: SdkHttpError');
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

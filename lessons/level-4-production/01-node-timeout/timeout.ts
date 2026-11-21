@@ -9,7 +9,9 @@ const State = new StateSchema({ log: z.string().default("") });
 
 // สร้าง graph ที่มี node "slow" หน่วงเวลา workMs แล้วค่อยเสร็จ โดยมีเพดาน timeoutMs
 function buildJob(workMs: number, timeoutMs: number) {
-  // 👉 ข้อ 1: options ของ node: { timeout: timeoutMs }
+  // 👉 ข้อ 1 options ของ node: { timeout: timeoutMs }
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const options = { timeout: timeoutMs };
   const options = todo(1);
   return new StateGraph(State)
     .addNode(
@@ -32,8 +34,8 @@ async function runJob(job: { invoke: (input: object) => Promise<{ log: string }>
     const result = await job.invoke({});
     return { ok: true, log: result.log };
   } catch (error) {
-    // 👉 ข้อ 2: ถ้า isNodeTimeoutError(error) คืน { ok: false, node: error.node } ไม่เช่นนั้นโยน error ต่อ (throw error)
-    return todo(2);
+    if (isNodeTimeoutError(error)) return { ok: false, node: error.node };
+    throw error;
   }
 }
 
@@ -57,6 +59,17 @@ try {
 } catch (e) {
   rethrown = (e as Error).message;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

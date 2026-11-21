@@ -35,34 +35,46 @@ function reduceUi(state: UiState, event: StreamEvent): UiState {
   const root = event.params.namespace.length === 0;
   const data = event.params.data;
 
-  // 👉 ข้อ 1: event ของ graph หลัก (root) เท่านั้นที่เกี่ยวกับสองกรณีนี้:
-  //   method "lifecycle": data.event "running" → { ...state, status: "running", error: undefined }
-  //                       "completed" → status "complete"   "failed" → status "error" พร้อม error: String(data.error)
-  //   method "values": { ...state, values: data }
-  //   event อื่นของ root ที่ไม่ตรงกรณีใด ให้ไปข้อ 2
 
-  // 👉 ข้อ 2: method "custom:node-status" (ข้อมูล data = { node, status, error? })
-  //   ถ้ายังไม่มี node นี้ → ต่อท้ายรายการ ถ้ามีแล้ว → แทนที่ตำแหน่งเดิม (ลำดับไม่เปลี่ยน) ค่า error ติดไปด้วยเมื่อมี
-  //   data ผิดรูป (ไม่มี node เป็นสตริง หรือ status ไม่ใช่ running/complete/error) ให้ละเลย
-  //   นอกเหนือจากนี้ทุกกรณี คืน state เดิม "ตัวเดียวกัน" (return state)
-  return todo(1);
+  if (root && event.method === "lifecycle") {
+    if (data?.event === "running") return { ...state, status: "running", error: undefined };
+    if (data?.event === "completed") return { ...state, status: "complete" };
+    if (data?.event === "failed") return { ...state, status: "error", error: String(data.error) };
+    return state;
+  }
+  if (root && event.method === "values") return { ...state, values: data };
+
+  if (event.method === "custom:node-status") {
+    const ok = data && typeof data.node === "string" && ["running", "complete", "error"].includes(data.status);
+    if (!ok) return state;
+    const view: NodeView = { node: data.node, status: data.status, ...(data.error !== undefined ? { error: data.error } : {}) };
+    const index = state.nodes.findIndex((n) => n.node === data.node);
+    const nodes = index === -1 ? [...state.nodes, view] : state.nodes.map((n, i) => (i === index ? view : n));
+    return { ...state, nodes };
+  }
+  return state;
 }
 
 // เปอร์เซ็นต์ความคืบหน้า: จำนวน node ที่ "complete" / expectedTotal ปัดเป็นจำนวนเต็ม ไม่เกิน 100
 function progressPercent(nodes: NodeView[], expectedTotal: number): number {
-  // 👉 ข้อ 3: expectedTotal < 1 ให้ถือเป็น 1 (กันหารด้วยศูนย์) คิดจากเฉพาะ node ที่ complete ปัดเศษแบบใกล้สุด (2/3 → 67)
-  return todo(3);
+  // 👉 ข้อ 1 expectedTotal < 1 ให้ถือเป็น 1 (กันหารด้วยศูนย์) คิดจากเฉพาะ node ที่ complete ปัดเศษแบบใกล้สุด (2/3 → 67)
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const total = Math.max(1, expectedTotal);
+  //   const done = nodes.filter((n) => n.status === "complete").length;
+  //   return Math.min(100, Math.round((done / total) * 100));
+  return todo(1);
 }
 
 const count = (text: string, token: string) => text.split(token).length - 1;
 
 // ปิดโครงสร้าง markdown ที่ค้างอยู่เพื่อให้เรนเดอร์ชั่วคราวได้
 function closeMarkdown(partial: string): string {
-  // 👉 ข้อ 4: นับรั้วโค้ด ``` ถ้าจำนวนเป็นคี่ (กำลังอยู่ในโค้ดบล็อก) → ต่อท้าย "\n```" (ถ้าข้อความยังไม่จบด้วย "\n") แล้วจบ ไม่แตะเรื่องอื่น
-  //          ถ้าไม่ได้อยู่ในโค้ดบล็อก: ลบรั้ว ``` ที่ปิดครบแล้วออกจากการนับก่อน จากนั้น
-  //            นับ "**" ถ้าคี่ → ต่อท้าย "**"  แล้วนับ backtick เดี่ยว ` (ในข้อความที่ตัด ``` ออก) ถ้าคี่ → ต่อท้าย "`"
-  //          (ทำตามลำดับ ** แล้ว ` ) ข้อความที่ครบถ้วนแล้วต้องคืนเหมือนเดิมทุกตัวอักษร  (ฟังก์ชัน count(text, token) ให้ไว้ด้านบนแล้ว)
-  return todo(4);
+  if (count(partial, "```") % 2 === 1) return partial.endsWith("\n") ? `${partial}\`\`\`` : `${partial}\n\`\`\``;
+  let out = partial;
+  const withoutFences = partial.replaceAll("```", "");
+  if (count(withoutFences, "**") % 2 === 1) out += "**";
+  if (count(withoutFences.replaceAll("**", ""), "`") % 2 === 1) out += "`";
+  return out;
 }
 
 // (ให้ไว้แล้ว) เรียก reduceUi ต่อเนื่องกับ event หลายตัว
@@ -72,9 +84,11 @@ function applyEvents(events: StreamEvent[], from: UiState = initialUi()): UiStat
 
 // ข้อความสถานะสั้น ๆ สำหรับหัวแถบ
 function headline(ui: UiState, expectedTotal: number): string {
-  // 👉 ข้อ 5: "error" → `ล้มเหลว: ${ui.error ?? "ไม่ทราบสาเหตุ"}`   "complete" → "เสร็จแล้ว"   "idle" → "พร้อม"
-  //          "running" → `กำลังทำงาน ${progressPercent(ui.nodes, expectedTotal)}%` ต่อด้วย ` (${ชื่อ node ที่ running อยู่ คั่นด้วย ", "})` ถ้ามี
-  return todo(5);
+  if (ui.status === "error") return `ล้มเหลว: ${ui.error ?? "ไม่ทราบสาเหตุ"}`;
+  if (ui.status === "complete") return "เสร็จแล้ว";
+  if (ui.status === "idle") return "พร้อม";
+  const running = ui.nodes.filter((n) => n.status === "running").map((n) => n.node);
+  return `กำลังทำงาน ${progressPercent(ui.nodes, expectedTotal)}%${running.length ? ` (${running.join(", ")})` : ""}`;
 }
 
 // ส่วนที่ 1: จำลองสตรีมที่ UI ได้รับ (รูปแบบเดียวกับ streamEvents v3 + channel จากบท 5-24) แล้วดูสถานะทีละขั้น
@@ -123,6 +137,17 @@ let live = initialUi();
 const run = await (graph as unknown as { streamEvents: (i: object, o: object) => Promise<AsyncIterable<StreamEvent>> }).streamEvents({}, { version: "v3" });
 for await (const e of run) live = reduceUi(live, e);
 console.log("สตรีมจริง:", headline(live, 2), JSON.stringify(live.values));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

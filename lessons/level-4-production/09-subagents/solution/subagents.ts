@@ -19,9 +19,6 @@ type Agent = ReturnType<typeof buildMathAgent>;
 
 // ห่อ agent ย่อยเป็น tool: รับ { request } ส่งให้ agent ย่อย แล้วคืนข้อความสุดท้ายของมัน
 function asTool(name: string, description: string, sub: Agent) {
-  // ข้อ 1: คืน tool(async ({ request }) => { const r = await sub.invoke({ messages: [new HumanMessage(request)] });
-  //                     return r.messages[r.messages.length - 1].text; },
-  //                   { name, description, schema: z.object({ request: z.string() }) })
   return tool(
     async ({ request }: { request: string }) => {
       const r = await sub.invoke({ messages: [new HumanMessage(request)] });
@@ -33,7 +30,6 @@ function asTool(name: string, description: string, sub: Agent) {
 
 function buildLead(leadModel: BaseChatModel, mathModel: BaseChatModel) {
   const mathTool = asTool("ask_math", "ถามผู้เชี่ยวชาญด้านการคำนวณ", buildMathAgent(mathModel));
-  // ข้อ 2: คืน createAgent({ model: leadModel, tools: [mathTool] })
   return createAgent({ model: leadModel, tools: [mathTool] });
 }
 
@@ -48,6 +44,17 @@ const subSaw = (subFake.calls[0] ?? []).map((m) => m.text);
 // ส่วนที่ 2: โมเดลจริงทั้งสองตัว
 const real = await buildLead(llm, llm).invoke({ messages: [new HumanMessage("ใช้ผู้เชี่ยวชาญด้านการคำนวณ (ask_math) หาผลบวกของ 1 กับ 2 แล้วบอกผล")] });
 console.log("โมเดลจริงตอบ:", real.messages.at(-1)?.text);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
