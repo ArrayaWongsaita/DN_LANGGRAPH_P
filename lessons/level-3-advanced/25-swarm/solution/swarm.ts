@@ -20,7 +20,6 @@ function makeAgent(self: "alice" | "bob", other: "alice" | "bob") {
       .withStructuredOutput(z.object({ reply: z.string(), handoffTo: Name.optional() }), { method: "functionCalling" })
       .invoke(`คุณคือ ${self} ในทีมที่มี alice (ดูแลเรื่องขาย) และ bob (ดูแลเรื่องสินค้าเสียและซัพพอร์ต) ถ้าเรื่องนี้ไม่ใช่หน้าที่ของคุณ ให้ตั้ง handoffTo เป็น ${other} ถ้าเป็นหน้าที่ของคุณไม่ต้องใส่ handoffTo ตอบลูกค้าสั้น ๆ: ${state.message}`);
     if (out.handoffTo && out.handoffTo !== self) {
-      // ข้อ 2: คืน new Command({ update: { reply: out.reply, active: out.handoffTo }, goto: out.handoffTo })
       return new Command({ update: { reply: out.reply, active: out.handoffTo }, goto: out.handoffTo });
     }
     return { reply: out.reply, active: self };
@@ -33,7 +32,6 @@ const builder = new StateGraph(State)
   .addConditionalEdges(
     START,
     (state) => {
-      // ข้อ 1: เริ่มที่ agent ปัจจุบัน: คืน state.active
       return state.active;
     },
     ["alice", "bob"],
@@ -41,7 +39,6 @@ const builder = new StateGraph(State)
   .addEdge("alice", END)
   .addEdge("bob", END);
 
-// ข้อ 3: compile พร้อม checkpointer: builder.compile({ checkpointer: new MemorySaver() }) (เพื่อให้ active จำข้ามข้อความ)
 const graph = builder.compile({ checkpointer: new MemorySaver() });
 
 const config = { configurable: { thread_id: "t" } };
@@ -51,6 +48,17 @@ for (const message of ["สนใจจะซื้อสินค้าให�
   talks.push({ reply: r.reply, active: r.active });
   console.log(`[${r.active}] ${r.reply.slice(0, 70)}`);
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

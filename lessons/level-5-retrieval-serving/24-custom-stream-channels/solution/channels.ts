@@ -18,10 +18,6 @@ interface ProtocolEvent {
 
 // แปลง event ชนิด "tasks" ของ graph หลัก (namespace ว่าง) เป็นสถานะของ node
 function nodeStatusFromEvent(event: ProtocolEvent): NodeStatus | null {
-  // ข้อ 1: method ต้องเป็น "tasks", params.namespace ต้องว่าง และ data.name ต้องเป็นสตริง ไม่งั้นคืน null
-  //          data.error ไม่ใช่ null/undefined → { node, status: "error", error: String(data.error?.message ?? data.error) }  (ตรวจข้อนี้ก่อน result)
-  //          data มีคีย์ "result" → { node, status: "complete" }
-  //          data มีคีย์ "input" → { node, status: "running" }   นอกนั้น null
   if (event.method !== "tasks" || event.params.namespace.length !== 0) return null;
   const data = event.params.data;
   if (!data || typeof data.name !== "string") return null;
@@ -41,11 +37,6 @@ function createNodeStatusTransformer() {
     return {
       init: () => ({ nodeStatus: channel }),
       process(event: ProtocolEvent): boolean {
-        // ข้อ 2: s = nodeStatusFromEvent(event) ถ้ามี → channel.push(s) และอัปเดต running
-        //          (เพิ่มเมื่อ "running" ลบเมื่อ "complete"/"error")
-        //          ถ้าเป็น event method "lifecycle" ของ namespace ว่างที่ data.event === "failed"
-        //          → push { node, status: "error", error: String(data.error) } ให้ทุก node ที่ยังอยู่ใน running แล้วล้าง running
-        //          ท้ายสุดคืน true เสมอ (ปล่อย event เดิมไหลต่อ)
         const s = nodeStatusFromEvent(event);
         if (s) {
           channel.push(s);
@@ -69,8 +60,6 @@ function buildObservedGraph(failAt?: string) {
     if (name === failAt) throw new Error("boom");
     return { text: name };
   };
-  // ข้อ 3: new StateGraph(State) ใส่ node "plan", "work", "report" (ใช้ step(ชื่อ)) ต่อ START→plan→work→report→END
-  //          compile({ transformers: [createNodeStatusTransformer()] })  (ชื่อ option คือ transformers)
   return new StateGraph(State)
     .addNode("plan", step("plan"))
     .addNode("work", step("work"))
@@ -91,8 +80,6 @@ interface Collected {
 async function collectNodeStatuses(graph: ReturnType<typeof buildObservedGraph>, input: object = {}): Promise<Collected> {
   const statuses: NodeStatus[] = [];
   let failed = false;
-  // ข้อ 4: const run = await graph.streamEvents(input, { version: "v3" }); วนอ่าน event เก็บเฉพาะ method === "custom:node-status"
-  //          ถ้าการวนอ่านโยน error (graph ล้ม) ให้จับไว้ ตั้ง failed = true แล้วคืนผลที่เก็บได้ (ห้ามโยนต่อ)
   try {
     const run = await (graph as unknown as { streamEvents: (i: object, o: object) => Promise<AsyncIterable<ProtocolEvent>> }).streamEvents(input, { version: "v3" });
     for await (const event of run) if (event.method === "custom:node-status") statuses.push(event.params.data as NodeStatus);
@@ -104,7 +91,6 @@ async function collectNodeStatuses(graph: ReturnType<typeof buildObservedGraph>,
 
 // สถานะล่าสุดของแต่ละ node เรียงตามลำดับที่เห็น node ครั้งแรก
 function latestByNode(statuses: NodeStatus[]): NodeStatus[] {
-  // ข้อ 5: คืนสถานะล่าสุดต่อ node (Map ที่ set ซ้ำคงตำแหน่งแรกไว้)
   const byNode = new Map<string, NodeStatus>();
   for (const s of statuses) byNode.set(s.node, s);
   return [...byNode.values()];
@@ -154,6 +140,17 @@ const passes = [ev("tasks", { name: "a", input: {} }), ev("values", { text: "x" 
 const methods = new Set<string>();
 for await (const e of await (buildObservedGraph() as unknown as { streamEvents: (i: object, o: object) => Promise<AsyncIterable<{ method: string }>> }).streamEvents({}, { version: "v3" })) methods.add(e.method);
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

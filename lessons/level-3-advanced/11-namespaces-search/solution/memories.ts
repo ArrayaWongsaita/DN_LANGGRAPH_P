@@ -13,15 +13,24 @@ const memories: [string, string][] = [
 
 for (const [userId, text] of memories) {
   const key = randomUUID();
-  // ข้อ 1: จำเรื่องนี้ไว้ใน namespace ของผู้ใช้: await store.put(["memories", userId], key, { text })
   await store.put(["memories", userId], key, { text });
 }
 
-// ข้อ 2: ดึงความจำทั้งหมดของ mali: items = await store.search(["memories", "mali"]) แล้ว map ให้เหลือ i.value.text
 const items = await store.search(["memories", "mali"]);
 const mali: string[] = items.map((i) => i.value.text as string);
 const somchai = (await store.search(["memories", "somchai"])).map((i) => i.value.text as string);
 console.log({ mali, somchai });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -16,16 +16,12 @@ type Progress =
 
 const isRoot = (ev: ProtocolEvent) => ev.params.namespace.length === 0;
 
-// ข้อ 1: node เริ่มทำงาน = ช่อง "tasks" ของกราฟหลัก (namespace ว่าง) ที่ data มีคีย์ "input"
-//          คืน { type: "node", node: data.name } ไม่ใช่ก็คืน null (ห้ามส่ง input ออกไป)
 function nodeProgress(ev: ProtocolEvent): Progress | null {
   if (ev.method !== "tasks" || !isRoot(ev)) return null;
   const data = ev.params.data as { name: string; input?: unknown };
   return "input" in data ? { type: "node", node: data.name } : null;
 }
 
-// ข้อ 2: ช่อง "tools": tool-started → จำชื่อใน names (key = tool_call_id) แล้วคืน { type: "tool-start", tool, input }
-//          tool-finished → คืน { type: "tool-end", tool: ชื่อที่จำไว้ ("?" ถ้าไม่เคยเห็น), output: data.output.content ถ้าเป็น string ไม่ก็ JSON.stringify }
 function toolProgress(ev: ProtocolEvent, names: Map<string, string>): Progress | null {
   if (ev.method !== "tools") return null;
   const data = ev.params.data as { event: string; tool_call_id: string; tool_name?: string; input?: string; output?: { content: unknown } };
@@ -40,8 +36,6 @@ function toolProgress(ev: ProtocolEvent, names: Map<string, string>): Progress |
   return null;
 }
 
-// ข้อ 3: ช่อง "messages" ที่ data.event === "content-block-delta" และ data.delta.type === "text-delta"
-//          และ data.delta.text ไม่ใช่สตริงว่าง → { type: "token", text } นอกนั้น null
 function tokenProgress(ev: ProtocolEvent): Progress | null {
   if (ev.method !== "messages") return null;
   const data = ev.params.data as { event?: string; delta?: { type?: string; text?: string } };
@@ -66,9 +60,6 @@ function createMapper(): (ev: ProtocolEvent) => Progress | null {
 
 async function* progressStream(run: AsyncIterable<ProtocolEvent>): AsyncGenerator<Progress> {
   const map = createMapper();
-  // ข้อ 4: วนอ่าน run ด้วย for await แปลงทีละเหตุการณ์ yield เฉพาะที่ไม่ใช่ null
-  //          ครอบด้วย try/catch: ถ้าวนอ่าน throw และ "ยังไม่เคย yield error" ให้ yield { type: "error", message: ข้อความของ error }
-  //          (กราฟล้มจะมี lifecycle failed มาก่อน throw ต้องไม่ส่ง error ซ้ำ)
   let sentError = false;
   try {
     for await (const ev of run) {
@@ -102,6 +93,17 @@ const broken = new StateGraph(S)
   .addEdge("boom", END)
   .compile();
 const failed = await collect(await broken.streamEvents({}, { version: "v3" }));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

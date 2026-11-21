@@ -29,6 +29,8 @@ const graph = new StateGraph(State)
 
     const oldCount = Math.max(0, state.messages.length - KEEP_LAST);
     // 👉 ข้อ 1 สร้าง RemoveMessage สำหรับ oldCount ข้อความแรก
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const removals = state.messages.slice(0, oldCount).map((m) => new RemoveMessage({ id: m.id! }));
     const removals: RemoveMessage[] = todo(1);
     return { summary: result.text, messages: removals };
   })
@@ -48,7 +50,20 @@ for (const text of ["ฉันชื่อมาลีและชอบแม�
 console.log(JSON.stringify(rounds, null, 2));
 console.log("ข้อความแรกที่ส่งให้โมเดลรอบ 4", chatModel.calls.at(-1)?.[0].text);
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("สรุปเมื่อต้องเก็บมากกว่า 4 ข้อความ", rounds[1].summary === "" && rounds[2].summary.length > 0);
 check("เก็บ 2 ข้อความล่าสุดหลังสรุป", rounds[2].messages === KEEP_LAST);
 check("รอบถัดไปได้รับสรุปใน SystemMessage", chatModel.calls.at(-1)?.[0].type === "system" && chatModel.calls.at(-1)?.[0].text === rounds[2].summary);

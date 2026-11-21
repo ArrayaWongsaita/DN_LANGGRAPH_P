@@ -16,12 +16,9 @@ const graph = new StateGraph(State, { context: z.object({ userId: z.string() }) 
     const ns = ["profiles", userId];
     if (state.text.startsWith("จำชื่อ:")) {
       const name = state.text.slice("จำชื่อ:".length).trim();
-      // ข้อ 1: เก็บชื่อ: await runtime.store!.put(ns, "name", { name })
       await runtime.store!.put(ns, "name", { name });
       return { reply: `ยินดีที่รู้จัก ${name}` };
     }
-    // ข้อ 2: อ่านชื่อ: const item = await runtime.store!.get(ns, "name") ถ้าไม่มีตอบ "ยังไม่รู้จักชื่อคุณ"
-    //        ถ้ามีตอบ `คุณชื่อ ${item.value.name}` (ใส่ผลใน reply)
     const item = await runtime.store!.get(ns, "name");
     return { reply: item ? `คุณชื่อ ${item.value.name}` : "ยังไม่รู้จักชื่อคุณ" };
   })
@@ -34,6 +31,17 @@ for (const [userId, text] of [["mali", "จำชื่อ: มาลี"], ["ma
   replies.push((await graph.invoke({ text }, { context: { userId } })).reply);
 }
 console.log(replies);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -19,7 +19,10 @@ const ParentState = new StateSchema({ doc: z.string().default(""), count: z.numb
 
 const parent = new StateGraph(ParentState)
   .addNode("callCounter", async (state) => {
-    // 👉 ข้อ 1: เรียก counter.invoke({ text: state.doc }) แล้วคืน { count: ผล.wc } (แปลงชื่อ field เอง)
+    // 👉 ข้อ 1 เรียก counter.invoke({ text: state.doc }) แล้วคืน { count: ผล.wc } (แปลงชื่อ field เอง)
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const out = await counter.invoke({ text: state.doc });
+    //   return { count: out.wc };
     return todo(1);
   })
   .addEdge(START, "callCounter")
@@ -29,6 +32,17 @@ const parent = new StateGraph(ParentState)
 const a = await parent.invoke({ doc: "one two three four" });
 const b = await parent.invoke({ doc: "hello" });
 console.log({ a: a.count, b: b.count });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

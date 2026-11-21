@@ -60,7 +60,20 @@ try {
   const history = reply.messages.filter((message) => message.type === "human").map((message) => message.text);
   console.log(JSON.stringify({ notes: store, history, reply: reply.messages.at(-1)?.text }));
 
-  // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
   check("agent เรียก addNote เพื่อเก็บโน้ตสองรายการ", notes.length === 2 && notes[0].includes("นม") && notes[1].includes("แม่"));
   check("agent เรียก listNotes และได้รายการพร้อมเลขลำดับ", listing === notes.map((text, i) => `${i + 1}. ${text}`).join("\n"));
   check("เปิดไฟล์เดิมกับ thread เดิมแล้วได้ข้อความก่อนหน้า", history[0] === "จดโน้ตว่า ซื้อนม" && history[1] === "จดโน้ตว่า โทรหาแม่", "ตั้ง checkpointer: saver");

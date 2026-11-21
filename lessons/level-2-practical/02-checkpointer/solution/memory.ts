@@ -21,6 +21,19 @@ const savedMessages: BaseMessage[] = snapshot.values.messages ?? [];
 console.log("จำนวนข้อความแต่ละรอบ", [first.messages.length, second.messages.length]);
 console.log("ใน checkpoint", savedMessages.map((message) => message.text));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("รอบสองอ่านประวัติเดิมต่อได้", first.messages.length === 2 && second.messages.length === 4);
 check("checkpoint ของ mali มีทั้งสองรอบ", savedMessages.map((m) => m.type).join(",") === "human,ai,human,ai");

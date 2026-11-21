@@ -44,21 +44,15 @@ async function upsertChunk(db: Db, row: { id: string; source: string; text: stri
 }
 
 function toVectorLiteral(vector: number[]): string {
-  // ข้อ 1: ถ้ามีค่าใดไม่ใช่ตัวเลขจำกัด (NaN/Infinity) ให้ throw new Error("เวกเตอร์มีค่าที่ไม่ใช่ตัวเลข")
-  //          ไม่เช่นนั้นคืน `[${vector.join(",")}]` เช่น [0.1,-2,3]
   if (vector.some((v) => !Number.isFinite(v))) throw new Error("เวกเตอร์มีค่าที่ไม่ใช่ตัวเลข");
   return `[${vector.join(",")}]`;
 }
 
 function searchSql(): string {
-  // ข้อ 2: คืน SQL หนึ่งคำสั่ง (ค่าทั้งหมดผ่านพารามิเตอร์ $1 = เวกเตอร์, $2 = จำนวนสูงสุด):
-  //   SELECT source, text, 1 - (embedding <=> $1::vector) AS score FROM course_chunks ORDER BY embedding <=> $1::vector LIMIT $2
   return "SELECT source, text, 1 - (embedding <=> $1::vector) AS score FROM course_chunks ORDER BY embedding <=> $1::vector LIMIT $2";
 }
 
 async function searchChunks(db: Db, queryVector: number[], k: number): Promise<Hit[]> {
-  // ข้อ 3: เรียก db.query(searchSql(), [toVectorLiteral(queryVector), k])
-  //          แล้วแปลงแต่ละแถวเป็น { source, text, score: Number(row.score) } (ฐานข้อมูลอาจส่ง score มาเป็นสตริง)
   const { rows } = await db.query(searchSql(), [toVectorLiteral(queryVector), k]);
   return rows.map((row) => ({ source: String(row.source), text: String(row.text), score: Number(row.score) }));
 }
@@ -104,6 +98,17 @@ try {
 } finally {
   await pool.end();
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

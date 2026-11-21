@@ -16,15 +16,16 @@ const graph = new StateGraph(State)
   .addConditionalEdges(
     "inc",
     (state) => {
-      // 👉 ข้อ 1: คืน END ถ้า state.n >= state.target ไม่เช่นนั้นคืน "inc" (วนต่อ)
-      return todo(1);
+      return state.n >= state.target ? END : "inc";
     },
     ["inc", END],
   )
   .compile();
 
-// 👉 ข้อ 2: เพดาน step ที่พอดีสำหรับวนครบ target รอบ: target + 2 (เผื่อ step เล็กน้อย)
-const limitForRounds = (target: number): number => todo(2);
+// 👉 ข้อ 1 เพดาน step ที่พอดีสำหรับวนครบ target รอบ: target + 2 (เผื่อ step เล็กน้อย)
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const limitForRounds = (target: number): number => target + 2;
+const limitForRounds = (target: number): number => todo(1);
 
 // สองกรณี: เพดานพอดี และเพดานต่ำเกินไป (5 ทั้งที่ต้องวน 50 รอบ)
 const outcomes: string[] = [];
@@ -33,11 +34,22 @@ for (const [target, limit] of [[3, limitForRounds(3)], [50, 5]]) {
     const r = await graph.invoke({ target }, { recursionLimit: limit });
     outcomes.push(`ok:${r.n}`);
   } catch (e) {
-    // 👉 ข้อ 3: ถ้า e เป็น GraphRecursionError ให้ push "limit" ลง outcomes ไม่เช่นนั้น throw e ต่อ
-    throw e;
+    if (e instanceof GraphRecursionError) outcomes.push("limit");
+    else throw e;
   }
 }
 console.log(outcomes);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

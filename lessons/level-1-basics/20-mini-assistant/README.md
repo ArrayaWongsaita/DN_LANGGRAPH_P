@@ -10,6 +10,8 @@
 pnpm lesson 1-20
 ```
 
+ในไฟล์ทุกข้อมี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(N)` ของข้อนั้นได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
+
 ```ts
 function pickRoute({ category }: { category: string }): "smallTalk" | "respond" {
   return category === "greeting" ? "smallTalk" : "respond";

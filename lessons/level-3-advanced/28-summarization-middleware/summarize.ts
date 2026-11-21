@@ -8,12 +8,13 @@ import { check } from "@src/check";
 // รันด้วย: pnpm lesson 3-28
 // แทนที่จะเขียน node สรุปเอง (บท 2-06) ใช้ summarizationMiddleware สำเร็จรูป: สรุปประวัติให้อัตโนมัติเมื่อยาวเกินเกณฑ์
 
-// 👉 ข้อ 1: สร้าง middleware: summarizationMiddleware({ model: llm, trigger: { messages: 4 }, keep: { messages: 2 } })
+// 👉 ข้อ 1 สร้าง middleware: summarizationMiddleware({ model: llm, trigger: { messages: 4 }, keep: { messages: 2 } })
 //        (สรุปเมื่อมีตั้งแต่ 4 ข้อความ เก็บข้อความล่าสุดไว้ 2 ข้อความ)
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const summarizer = summarizationMiddleware({ model: llm, trigger: { messages: 4 }, keep: { messages: 2 } });
 const summarizer = todo(1);
 
-// 👉 ข้อ 2: createAgent({ model: llm, tools: [], checkpointer: new MemorySaver(), middleware: [summarizer] })
-const agent: { invoke: (input: { messages: HumanMessage[] }, config: object) => Promise<{ messages: { type: string; text: string }[] }> } = todo(2);
+const agent = createAgent({ model: llm, tools: [], checkpointer: new MemorySaver(), middleware: [summarizer] });
 
 const config = { configurable: { thread_id: "t" } };
 const sizes: number[] = [];
@@ -25,6 +26,17 @@ for (const text of ["ฉันชื่อมาลี", "ฉันชอบแ�
 }
 console.log("จำนวนข้อความใน State หลังแต่ละรอบ:", sizes);
 console.log("คำตอบสุดท้าย:", last);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

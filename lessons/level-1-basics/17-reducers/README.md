@@ -10,6 +10,8 @@
 pnpm lesson 1-17
 ```
 
+ในไฟล์ข้อ 1 มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
+
 ```ts
 const State = new StateSchema({
   score: new ReducedValue(z.number().default(0), {
@@ -31,6 +33,16 @@ const State = new StateSchema({
 ```
 
 คะแนนถูกบวกสะสม ส่วน `log` เก็บข้อความทีละรายการในอาร์เรย์ ถ้าเอาลำดับงานไปใช้ตัดสินผล ให้เชื่อม edge ให้เห็นลำดับอย่างชัดเจน เพราะสอง node นี้ถูกตั้งให้ทำงานขนานกัน [เอกสาร LangGraph เรื่อง State และ reducer](https://docs.langchain.com/oss/javascript/langgraph/use-graph-api)
+
+### ถ้าไม่มี reducer จะเกิดอะไรขึ้น
+
+ช่องธรรมดาอย่าง `score: z.number().default(0)` รับค่าได้แค่หนึ่งค่าต่อหนึ่งก้าว ถ้า `a` กับ `b` เขียน `score` พร้อมกัน Graph จะโยน error แทนที่จะเดาว่าควรเก็บค่าไหน
+
+```text
+InvalidUpdateError: Invalid update for channel "score" with values [1,2]: LastValue can only receive one value per step.
+```
+
+reducer จึงเป็นกติกาที่บอก Graph ว่าค่าหลายค่าในก้าวเดียวกันต้องรวมกันอย่างไร
 
 ## 2. แต่ละพารามิเตอร์รับอะไร
 

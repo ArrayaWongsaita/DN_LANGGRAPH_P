@@ -27,13 +27,25 @@ const config = { configurable: { thread_id: "t" } };
 await graph.invoke({}, config);
 
 const snapshots: StateSnapshot[] = [];
-// 👉 ข้อ 1: ดึง snapshot ทั้งหมดของ thread: for await (const s of graph.getStateHistory(config)) ให้ push s ลง snapshots
+// 👉 ข้อ 1 ดึง snapshot ทั้งหมดของ thread: for await (const s of graph.getStateHistory(config)) ให้ push s ลง snapshots
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   for await (const s of graph.getStateHistory(config)) snapshots.push(s);
 todo(1);
 
-// 👉 ข้อ 2: หา snapshot แรกที่ node ถัดไปคือ "b" (จุดหลัง a เสร็จ ก่อน b ทำงาน): snapshots.find((s) => s.next.includes("b"))
-const beforeB: StateSnapshot | undefined = todo(2);
+const beforeB: StateSnapshot | undefined = snapshots.find((s) => s.next.includes("b"));
 console.log("จำนวน snapshot:", snapshots.length);
 console.log("ก่อนทำ b:", beforeB?.values.log, "next =", beforeB?.next);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

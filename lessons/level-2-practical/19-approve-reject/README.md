@@ -10,6 +10,8 @@
 pnpm lesson 2-19
 ```
 
+ในไฟล์ข้อ 1 มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
+
 ใน [`approval.ts`](./approval.ts) node `request` พักด้วย `interrupt` แล้วคืน `{ approved: answer === true }` เมื่อคนตอบ จากนั้น `addConditionalEdges` เลือกทางตาม `approved` โดยแต่ละทางคืนข้อความจำลองใน `result`
 
 ```ts

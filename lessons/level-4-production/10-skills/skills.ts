@@ -22,16 +22,17 @@ const SKILLS: Record<string, Skill> = {
 
 // ข้อความรายการ skill สำหรับ system prompt (มีชื่อและคำอธิบายสั้น ห้ามมีเนื้อหาเต็ม)
 function skillIndex(skills: Record<string, Skill>): string {
-  // 👉 ข้อ 1: แต่ละ skill เป็นบรรทัด `- ${ชื่อ}: ${description}` ต่อกันด้วย "\n"
-  //          แล้วขึ้นต้นด้วย "skills ที่ใช้ได้ (ใช้ load_skill เพื่ออ่านรายละเอียด):\n"
-  return todo(1);
+  const lines = Object.entries(skills).map(([name, skill]) => `- ${name}: ${skill.description}`);
+  return "skills ที่ใช้ได้ (ใช้ load_skill เพื่ออ่านรายละเอียด):\n" + lines.join("\n");
 }
 
 function makeLoadSkillTool(skills: Record<string, Skill>) {
   return tool(
     async ({ name }: { name: string }) => {
-      // 👉 ข้อ 2: ถ้ามี skills[name] คืน .content ไม่เช่นนั้นคืน `ไม่พบ skill: ${name}`
-      return todo(2);
+      // 👉 ข้อ 1 ถ้ามี skills[name] คืน .content ไม่เช่นนั้นคืน `ไม่พบ skill: ${name}`
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+      //   return skills[name] ? skills[name].content : `ไม่พบ skill: ${name}`;
+      return todo(1);
     },
     { name: "load_skill", description: "โหลดเนื้อหาเต็มของ skill", schema: z.object({ name: z.string() }) },
   );
@@ -58,6 +59,17 @@ const secondCall = (fake.calls[1] ?? []).map((m) => m.text).join("\n");
 // ส่วนที่ 2: โมเดลจริง: ถามเรื่องคืนเงิน ต้องโหลด skill refund เองแล้วตอบจากเนื้อหา
 const real = await buildSkillAgent(llm).invoke({ messages: [new HumanMessage("ลูกค้าขอคืนเงินได้ภายในกี่วัน ดูจาก skill ที่มี")] });
 console.log("โมเดลจริงตอบ:", real.messages.at(-1)?.text);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

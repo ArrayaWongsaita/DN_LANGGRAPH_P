@@ -32,14 +32,23 @@ const pendingCount = isInterrupted(first) ? first[INTERRUPT].length : 0;
 const answers: Record<string, string> = {};
 if (isInterrupted(first)) {
   for (const pending of first[INTERRUPT]) {
-    // ข้อ 1: answers[pending.id!] = answerer(String(pending.value))
     answers[pending.id!] = answerer(String(pending.value));
   }
 }
 
-// ข้อ 2: ตอบทุกคำถามทีเดียว: await form.invoke(new Command({ resume: answers }), cfg) ได้ state สุดท้าย
 const done = await form.invoke(new Command({ resume: answers }), cfg);
 console.log({ pendingCount, answers, done });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -1,56 +1,82 @@
-# บทที่ 2-04 อ่านและแก้ไข State ของ thread
+# บทที่ 2-04 อ่านและแก้ไข State ของ thread ด้วย `updateState`
 
-ใน [บท 2-03](../03-thread-id/README.md) เราใช้รหัสเลือกห้องแชต คราวนี้จะอ่านประวัติของห้องนั้นจากนอก graph แล้วใช้ ID ลบข้อความหนึ่งรายการจาก State ล่าสุด
+## 1. ทำไมต้องแก้ State จากข้างนอก
 
-## 1. ลองลบข้อความตาม ID
+ใน [บท 2-03](../03-thread-id/README.md) เราใช้ `thread_id` เลือกห้องแชต แต่บางครั้งต้องจัดการห้องนั้นจากนอก graph เช่น ผู้ใช้พิมพ์ผิดแล้วอยากลบข้อความนั้นทิ้ง หรือระบบต้องดูว่าตอนนี้ในห้องมีอะไรบ้าง
 
-เปิด [`state.ts`](./state.ts) แล้วเติมข้อ 1 ให้ลบข้อความ `h1` จาก thread `"mali"` จากนั้นรันโดยไม่ต้องมี API key
+มี 2 คำสั่งที่ใช้
+
+| ต้องการ | คำสั่ง |
+|---|---|
+| **อ่าน** State ของ thread | `graph.getState(config)` |
+| **แก้** State ของ thread | `graph.updateState(config, update)` |
+
+`update` ผ่านตัวรวม (reducer) ตัวเดียวกับที่ node ใช้ จึงทำได้สามอย่าง คือ ส่งข้อความใหม่ = ต่อท้าย, ส่งข้อความที่ id เดิม = แทนที่, ส่ง `RemoveMessage` = ลบ
+
+## 2. ลองลบข้อความตาม id
+
+ไฟล์ [`state.ts`](./state.ts) สร้างห้องแชต `"mali"` ไว้ให้แล้ว คุยกัน 2 รอบ ข้อความผู้ใช้มี id คือ `h1` = "ฉันชอบแมว" และ `h2` = "ฉันชอบสุนัข" แต่ละรอบมีคำตอบ "รับทราบ" รวม 4 ข้อความ และมีการอ่านประวัติก่อนแก้ไว้ให้แล้ว
+
+มี 1 ข้อให้เติม (ค้นหา `// 👉 ข้อ 1`) ให้ลบข้อความ `h1` ด้วย `updateState` แล้วรันจากโฟลเดอร์หลักของโปรเจกต์ (ไม่ต้องมี API key)
 
 ```sh
 pnpm lesson 2-04
 ```
 
-ไฟล์สร้างประวัติไว้แล้ว ข้อความ `h1` คือ `"ฉันชอบแมว"` และ `h2` คือ `"ฉันชอบสุนัข"` แต่ละรอบมีคำตอบตัวอย่าง `"รับทราบ"`
+ในไฟล์มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ให้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย รูปแบบคือ
 
 ```ts
-const config = { configurable: { thread_id: "mali" } };
-
-const before: BaseMessage[] = (await graph.getState(config)).values.messages ?? [];
-const removal = new RemoveMessage({ id: "h1" });
-await graph.updateState(config, { messages: [removal] });
-const after: BaseMessage[] = (await graph.getState(config)).values.messages ?? [];
+await graph.updateState(config, {
+  messages: [new RemoveMessage({ id: "h1" })],  // คำสั่งลบข้อความตาม id
+});
 ```
+
+เมื่อทำถูก จะเห็น
 
 ```text
 ก่อนลบ [ 'ฉันชอบแมว', 'รับทราบ', 'ฉันชอบสุนัข', 'รับทราบ' ]
 หลังลบ [ 'รับทราบ', 'ฉันชอบสุนัข', 'รับทราบ' ]
+✅ ลบเฉพาะข้อความ h1
 ```
 
-`updateState()` ส่ง update ผ่านตัวรวมของ `MessagesValue` การลบจึงมีผลเฉพาะข้อความที่ ID ตรงกัน คำตอบถัดจาก `h1` ยังอยู่
+สังเกตว่าลบเฉพาะ `h1` เท่านั้น คำตอบ "รับทราบ" ที่ตามหลังยังอยู่ เพราะ `RemoveMessage` ลบตาม id ไม่ลบข้อความถัดไปให้
 
-## 2. ค่าและผลของคำสั่ง
+## 3. คำสั่งแต่ละตัวให้อะไร
 
 | คำสั่งหรือค่า | ใส่อะไร | สิ่งที่ได้ |
 |---|---|---|
-| `graph.getState(config)` | config ที่มี `thread_id` | snapshot ของ thread ข้อความอยู่ที่ `snapshot.values.messages` |
-| `?? []` | ใช้หลัง `snapshot.values.messages` | อาร์เรย์ว่างเมื่อ thread ยังไม่มีค่าข้อความ |
-| `graph.updateState(config, { messages: [...] })` | config และรายการที่ต้องการรวมเข้า State | checkpoint ที่เก็บ State หลังปรับแก้ |
-| `new RemoveMessage({ id: "h1" })` | ID ของข้อความที่มีอยู่ | คำสั่งลบข้อความสำหรับตัวรวมของ `MessagesValue` |
+| `graph.getState(config)` | config ที่มี `thread_id` | snapshot ของ thread ข้อความอยู่ที่ `snapshot.values.messages` และ `snapshot.next` คือ node ที่จะทำต่อ (`[]` = จบแล้ว) |
+| `?? []` | ใช้หลัง `snapshot.values.messages` | อาร์เรย์ว่างเมื่อ thread ยังไม่เคยมีข้อความ (ค่าตรงนั้นเป็น `undefined` ไม่ใช่ `[]`) |
+| `graph.updateState(config, { messages: [...] })` | config และรายการที่จะรวมเข้า State | checkpoint ใหม่ที่เก็บ State หลังแก้ |
+| `new RemoveMessage({ id })` | id ของข้อความที่มีอยู่ | คำสั่งลบสำหรับตัวรวมของ `MessagesValue` |
 
-## 3. เปรียบเทียบการเปลี่ยน State
+ข้อความทุกข้อความใน State มี `id` ให้อยู่แล้ว ถ้าไม่ได้กำหนดเอง ให้ดูจาก `message.id`
 
-ใช้ประวัติเดิม 4 ข้อความในแต่ละกรณี
+## 4. เปลี่ยนค่าแล้วได้อะไร
 
-| ค่าภายใน `messages` ของ update | จำนวนหลังอัปเดต | ผลที่เห็น |
+ใช้ประวัติเดิม 4 ข้อความในแต่ละกรณี ใส่ค่าในช่อง `messages` ของ `updateState`
+
+| ค่าใน `messages` | จำนวนหลังอัปเดต | ผลที่เห็น |
 |---|---:|---|
-| `[new RemoveMessage({ id: "h1" })]` | 3 | คำว่า `"ฉันชอบแมว"` หาย |
-| `[new RemoveMessage({ id: "h2" })]` | 3 | คำว่า `"ฉันชอบสุนัข"` หาย |
-| `[new HumanMessage({ id: "h1", content: "ฉันชอบนก" })]` | 4 | เนื้อหาที่ ID `h1` กลายเป็น `"ฉันชอบนก"` |
+| `[new RemoveMessage({ id: "h1" })]` | 3 | "ฉันชอบแมว" หาย |
+| `[new RemoveMessage({ id: "h2" })]` | 3 | "ฉันชอบสุนัข" หาย |
+| `[new HumanMessage({ id: "h1", content: "ฉันชอบนก" })]` | 4 | ข้อความที่ id `h1` กลายเป็น "ฉันชอบนก" (แก้ข้อความ) |
 | `[new HumanMessage("ฉันชอบปลา")]` | 5 | ข้อความใหม่ต่อท้าย |
 
-บทนี้แก้ State ที่จะถูกอ่านต่อใน thread ระบบยังอาจมี checkpoint เก่าอยู่ในประวัติ [เอกสาร LangGraph เรื่อง persistence](https://docs.langchain.com/oss/javascript/langgraph/persistence)
+ลองในไฟล์ [`playground.ts`](./playground.ts) ด้วย `pnpm play 2-04` ได้เลย เช่น สลับ id ที่จะลบ หรืออ่าน `values.messages` ของ thread ที่ยังไม่มีประวัติ
 
-คัดลอกโค้ดหลัง import จาก [เฉลย](./solution/state.ts) จนถึงก่อนส่วนตรวจ ลงใน [`playground.ts`](./playground.ts) แล้วลองสลับ ID ที่จะลบและรัน `pnpm play 2-04`
+## 5. เจาะลึก (อ่านเมื่อจำเป็น)
+
+- `updateState` สร้าง checkpoint ใหม่ ไม่ได้เขียนทับของเก่า ระบบยังอาจมี checkpoint ก่อนหน้าอยู่ในประวัติของ thread ([เอกสาร LangGraph เรื่อง persistence](https://docs.langchain.com/oss/javascript/langgraph/persistence))
+- `getState` ของ thread ที่ยังไม่เคยใช้ คืน `values` ว่าง (`{}`) จึงต้องใส่ `?? []` เมื่อจะวนหรือนับข้อความ
+
+## คุณทำได้แล้ว
+- อ่าน State ของ thread ด้วย `getState`
+- ลบ แก้ หรือเพิ่มข้อความใน State ด้วย `updateState`
+
+## ข้อควรจำ
+- `getState` คืน snapshot ไม่ใช่ค่าโดยตรง ค่าอยู่ที่ `.values`
+- `updateState` ผ่าน reducer เดียวกับ node: ข้อความใหม่ = ต่อท้าย, id เดิม = แทนที่, `RemoveMessage` = ลบ
 
 ## บทถัดไป
 

@@ -26,7 +26,20 @@ for await (const chunk of await graph.stream(input, { streamMode: "values" })) {
 console.log("updates", JSON.stringify(updates));
 console.log("values", JSON.stringify(values));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("updates มีเฉพาะค่าที่แต่ละ node คืน", JSON.stringify(updates) === '[{"clean":{"text":"abc"}},{"measure":{"length":3}}]');
 check(
   "values มี State เริ่มต้นและ State หลังแต่ละ node",

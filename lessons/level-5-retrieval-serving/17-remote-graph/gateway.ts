@@ -26,32 +26,33 @@ const State = new StateSchema({
 type S = typeof State.State;
 
 function toRemoteInput(state: Pick<S, "question">): Record<string, unknown> {
-  // 👉 ข้อ 1: คืน { question: state.question } เท่านั้น (ห้ามส่งฟิลด์อื่นของกราฟแม่)
+  // 👉 ข้อ 1 คืน { question: state.question } เท่านั้น (ห้ามส่งฟิลด์อื่นของกราฟแม่)
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return { question: state.question };
   return todo(1);
 }
 
 // thread ฝั่งปลายทางที่อิงจาก thread ของกราฟแม่ (undefined = ไม่มี thread ต่อเนื่อง)
 function remoteThreadId(parentThreadId: unknown): string | undefined {
-  // 👉 ข้อ 2: เซิร์ฟเวอร์รับ thread_id ที่เป็น UUID เท่านั้น (ส่ง "remote-abc" ได้ HTTP 400 Invalid uuid เจอตอนรันจริง)
-  //   จึงต้องสร้าง UUID ที่ "คงที่" จาก thread ของแม่: parentThreadId ไม่ใช่สตริงไม่ว่าง → undefined
-  //   ไม่งั้น h = createHash("sha256").update(`remote:${parentThreadId}`).digest("hex") แล้วคืน
-  //   `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-${v}${h.slice(17, 20)}-${h.slice(20, 32)}`
-  //   โดย v = ((parseInt(h[16], 16) & 0x3) | 0x8).toString(16) (ตัวแรกของกลุ่มที่ 4 ต้องเป็น 8, 9, a หรือ b)
-  return todo(2);
+  if (typeof parentThreadId !== "string" || parentThreadId === "") return undefined;
+  const h = createHash("sha256").update(`remote:${parentThreadId}`).digest("hex");
+  const v = ((Number.parseInt(h[16], 16) & 0x3) | 0x8).toString(16);
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-${v}${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
 function fromRemoteOutput(out: Record<string, unknown>): Partial<S> {
-  // 👉 ข้อ 3: ถ้า out.answer ไม่ใช่สตริงที่ไม่ว่าง ให้ throw new Error("ปลายทางไม่ส่ง answer ที่ใช้ได้")
-  //          ไม่งั้นคืน { answer: out.answer, source: "remote", error: "" }
-  return todo(3);
+  if (typeof out.answer !== "string" || out.answer === "") throw new Error("ปลายทางไม่ส่ง answer ที่ใช้ได้");
+  return { answer: out.answer, source: "remote", error: "" };
 }
 
 async function askRemote(remote: RemoteLike, state: S, config?: LangGraphRunnableConfig): Promise<Partial<S>> {
-  // 👉 ข้อ 4: threadId = remoteThreadId(config?.configurable?.thread_id)
-  //   try: out = await remote.invoke(toRemoteInput(state), threadId ? { configurable: { thread_id: threadId } } : undefined)
-  //        แล้วคืน fromRemoteOutput(out)
-  //   catch: คืน { answer: "ขออภัย ระบบปลายทางไม่พร้อมให้บริการ", source: "fallback", error: ข้อความของ error }
-  return todo(4);
+  const threadId = remoteThreadId(config?.configurable?.thread_id);
+  try {
+    const out = await remote.invoke(toRemoteInput(state), threadId ? { configurable: { thread_id: threadId } } : undefined);
+    return fromRemoteOutput(out);
+  } catch (error) {
+    return { answer: "ขออภัย ระบบปลายทางไม่พร้อมให้บริการ", source: "fallback", error: error instanceof Error ? error.message : String(error) };
+  }
 }
 
 // (ให้ไว้แล้ว) กราฟแม่: ask (เรียกปลายทางผ่าน adapter) → END
@@ -133,6 +134,17 @@ const clientStub = {
 };
 const stubRemote = new RemoteGraph({ graphId: "demo", client: clientStub as never });
 const r6 = await buildGateway(stubRemote as unknown as RemoteLike, new MemorySaver()).invoke({ question: "ถาม", secret: "ลับ-777" }, { configurable: { thread_id: "p9" } });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

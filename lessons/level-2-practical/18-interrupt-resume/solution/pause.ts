@@ -26,7 +26,20 @@ const reply = "yes";
 const finished = await graph.invoke(new Command({ resume: reply }), config);
 console.log(JSON.stringify({ pending: isInterrupted(finished), decision: finished.decision }));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("กราฟหยุดและส่งคำถามพร้อมชื่องาน", pending &&
   JSON.stringify(started.__interrupt__[0]?.value) === JSON.stringify({ question: "อนุมัติไหม?", action: "เผยแพร่รายงาน" }));
 check("กราฟทำต่อและบันทึกคำตอบ", !isInterrupted(finished) && finished.decision === reply, "ใช้ Command({ resume: reply }) พร้อม config เดิม");

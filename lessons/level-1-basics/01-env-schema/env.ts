@@ -18,6 +18,8 @@ const envSchema = z.object({
 });
 
 // 👉 ข้อ 1 เรียก envSchema.safeParse ด้วย process.env
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const result = envSchema.safeParse(process.env);
 const result: ReturnType<typeof envSchema.safeParse> = todo(1);
 if (!result.success) {
   const problems = result.error.issues.map((issue) => `${issue.path.join(".")} ${issue.message}`);
@@ -31,7 +33,20 @@ if (!hasApiKey) {
   throw new Error("ยังไม่ได้ตั้ง API key ใน .env เปิด .env.example เพื่อดูชื่อตัวแปรของโมเดลที่เลือก");
 }
 
-// ส่วนตรวจคำตอบ ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 if (import.meta.filename === process.argv[1]) {
   console.log("LLM_MODEL", env.LLM_MODEL || "(ใช้โมเดลเริ่มต้น)");
   check("พบ API key อย่างน้อยหนึ่งตัว", hasApiKey);

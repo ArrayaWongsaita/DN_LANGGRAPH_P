@@ -14,6 +14,8 @@ const graph = new StateGraph(State)
     for (let page = 1; page <= pages; page++) {
       await setTimeout(20);
       // 👉 ข้อ 1 ส่ง { page, total: pages } ด้วย config.writer
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+      //   config.writer?.({ page, total: pages });
       todo(1);
     }
     return { done: `ครบ ${pages} หน้า` };
@@ -29,7 +31,20 @@ for await (const event of stream) {
   console.log(JSON.stringify(event));
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "ได้ความคืบหน้าของทั้ง 3 หน้าตามลำดับ",
   events.length === 3 && events.every((event, index) => event?.page === index + 1 && event?.total === 3),

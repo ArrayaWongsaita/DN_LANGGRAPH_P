@@ -37,14 +37,27 @@ async function snapshotBeforeB(config: typeof replayCfg) {
 }
 
 const beforeReplay = await snapshotBeforeB(replayCfg);
-// 👉 ข้อ 1 (replay): เล่นซ้ำจากจุดนั้น: await graph.invoke(null, beforeReplay.config) ได้ state สุดท้าย
-const replayed: { log: string[] } = todo(1);
+const replayed = await graph.invoke(null, beforeReplay.config);
 
 const beforeFork = await snapshotBeforeB(forkCfg);
-// 👉 ข้อ 2 (fork): แก้ State ที่จุดนั้นให้มี log เพิ่ม "X" ได้ config ของเส้นใหม่: const forked = await graph.updateState(beforeFork.config, { log: "X" })
+// 👉 ข้อ 1 (fork) แก้ State ที่จุดนั้นให้มี log เพิ่ม "X" ได้ config ของเส้นใหม่: const forked = await graph.updateState(beforeFork.config, { log: "X" })
 //        แล้วรันต่อ: await graph.invoke(null, forked) ได้ state สุดท้าย
-const forkedResult: { log: string[] } = todo(2);
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const forked = await graph.updateState(beforeFork.config, { log: "X" });
+//   const forkedResult = await graph.invoke(null, forked);
+const forkedResult: { log: string[] } = todo(1);
 console.log({ replayed: replayed.log, forked: forkedResult.log });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

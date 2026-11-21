@@ -24,8 +24,6 @@ const double = task("double", async (n: number) => {
 
 // ยอดสะสมต่อ thread
 function buildTotals(checkpointer: BaseCheckpointSaver) {
-  // ข้อ 1: คืน entrypoint({ name: "totals", checkpointer }, async (inc: number) => { ... })
-  //          total = (getPreviousState<number>() ?? 0) + inc แล้ว return entrypoint.final({ value: total, save: total })
   return entrypoint({ name: "totals", checkpointer }, async (inc: number) => {
     const total = (getPreviousState<number>() ?? 0) + inc;
     return entrypoint.final({ value: total, save: total });
@@ -34,10 +32,6 @@ function buildTotals(checkpointer: BaseCheckpointSaver) {
 
 // จอง → รออนุมัติ → ส่งของ
 function buildOrderFlow(checkpointer: BaseCheckpointSaver) {
-  // ข้อ 2: entrypoint({ name: "order", checkpointer }, async (input: { item: string }) => { ... })
-  //          reserved = await reserve(input.item)
-  //          approved = interrupt({ question: `อนุมัติส่ง ${reserved} ไหม`, reserved })
-  //          ถ้า approved เป็นเท็จ return "ยกเลิก" ไม่งั้น return await ship(reserved)
   return entrypoint({ name: "order", checkpointer }, async (input: { item: string }) => {
     const reserved = await reserve(input.item);
     const approved = interrupt({ question: `อนุมัติส่ง ${reserved} ไหม`, reserved });
@@ -48,8 +42,6 @@ function buildOrderFlow(checkpointer: BaseCheckpointSaver) {
 
 // ส่งความคืบหน้าทาง custom stream
 function buildProgress() {
-  // ข้อ 3: entrypoint({ name: "progress" }, async (n: number) => { ... })
-  //          write = getWriter() ?? (() => {}) (ไม่ได้สตรีมก็ไม่ต้องเขียน); write({ progress: "เริ่ม" }); r = await double(n); write({ progress: "เสร็จ" }); return r
   return entrypoint({ name: "progress" }, async (n: number) => {
     const write = getWriter() ?? (() => {});
     write({ progress: "เริ่ม" });
@@ -61,8 +53,6 @@ function buildProgress() {
 
 // task ที่ล้ม 2 ครั้งแรกแล้วสำเร็จ
 function makeFlakyTask() {
-  // ข้อ 4: คืน task({ name: "flaky", retry: { maxAttempts: 3, initialInterval: 1 } }, async () => { ... })
-  //          ข้างใน calls.flaky++ แล้วถ้า calls.flaky < 3 ให้ throw new Error("ล้มชั่วคราว") ไม่งั้นคืน "สำเร็จ"
   return task({ name: "flaky", retry: { maxAttempts: 3, initialInterval: 1 } }, async () => {
     calls.flaky++;
     if (calls.flaky < 3) throw new Error("ล้มชั่วคราว");
@@ -111,6 +101,17 @@ resetCalls();
 const retried = await buildRetryFlow().invoke(0);
 const flakyCalls = calls.flaky;
 console.log({ t1, t2, t3, shipped, cancelled, custom, retried });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

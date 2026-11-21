@@ -28,19 +28,18 @@ function buildAgenticRag(model: BaseChatModel, index: InMemoryIndex) {
       return { query, docs: hits.map((h) => `[${h.source}] ${h.text}`).join("\n") };
     })
     .addNode("grade", async (state) => {
-      // 👉 ข้อ 1: verdict = await model.withStructuredOutput(z.object({ relevant: z.boolean() }), { method: "functionCalling" })
-      //                      .invoke(`คำถาม: ${state.question}\nเอกสาร: ${state.docs}\nเอกสารนี้ตอบคำถามได้ไหม`)
-      //          คืน { relevant: verdict.relevant }
-      return todo(1);
+      const verdict = await model
+        .withStructuredOutput(z.object({ relevant: z.boolean() }), { method: "functionCalling" })
+        .invoke(`คำถาม: ${state.question}\nเอกสาร: ${state.docs}\nเอกสารนี้ตอบคำถามได้ไหม`);
+      return { relevant: verdict.relevant };
     })
     .addNode("rewrite", async (state) => {
       const reply = await model.invoke(`เขียนคำค้นใหม่ให้ตรงศัพท์ในเอกสารมากขึ้น: ${state.question}`);
       return { query: reply.text, rewrites: state.rewrites + 1 };
     })
     .addNode("generate", async (state) => {
-      // 👉 ข้อ 3: prompt = `ตอบคำถามจากเอกสารนี้เท่านั้น\nเอกสาร: ${state.docs}\nคำถาม: ${state.question}`
-      //          คืน { answer: (await model.invoke(prompt)).text }
-      return todo(3);
+      const prompt = `ตอบคำถามจากเอกสารนี้เท่านั้น\nเอกสาร: ${state.docs}\nคำถาม: ${state.question}`;
+      return { answer: (await model.invoke(prompt)).text };
     })
     .addNode("giveUp", () => ({ answer: "ไม่พบข้อมูลในเอกสาร" }))
     .addEdge(START, "retrieve")
@@ -48,8 +47,11 @@ function buildAgenticRag(model: BaseChatModel, index: InMemoryIndex) {
     .addConditionalEdges(
       "grade",
       (state) => {
-        // 👉 ข้อ 2: ถ้า state.relevant คืน "generate"; ไม่เกี่ยวและ state.rewrites < MAX_REWRITES คืน "rewrite"; นอกนั้นคืน "giveUp"
-        return todo(2);
+        // 👉 ข้อ 1 ถ้า state.relevant คืน "generate"; ไม่เกี่ยวและ state.rewrites < MAX_REWRITES คืน "rewrite"; นอกนั้นคืน "giveUp"
+        // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+        //   if (state.relevant) return "generate";
+        //   return state.rewrites < MAX_REWRITES ? "rewrite" : "giveUp";
+        return todo(1);
       },
       ["generate", "rewrite", "giveUp"],
     )
@@ -74,6 +76,17 @@ const gaveUp = await buildAgenticRag(giveUpModel, index).invoke({ question: "ท
 // ส่วนที่ 2: โมเดลจริง
 const real = await buildAgenticRag(llm, index).invoke({ question: "ลืมรหัสผ่านทำไง" });
 console.log({ answer: real.answer.slice(0, 100), rewrites: real.rewrites });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

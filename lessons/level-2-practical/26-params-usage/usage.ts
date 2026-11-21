@@ -6,6 +6,8 @@ import { getLLM } from "@src/llm";
 
 function totalTokens(message: AIMessage): number {
   // 👉 ข้อ 1 คืน total_tokens จาก usage_metadata ถ้าไม่มีข้อมูลให้คืน 0
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return message.usage_metadata?.total_tokens ?? 0;
   return todo(1);
 }
 
@@ -38,5 +40,18 @@ if (process.env.LESSON_LIVE === "1") {
   console.log(JSON.stringify({ liveKnownTotal }));
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("อ่านยอดที่รายงานและใช้ 0 เมื่อไม่มีข้อมูล", perCall.join(",") === "17,0,15", "อ่าน usage_metadata?.total_tokens แล้วใช้ ?? 0");

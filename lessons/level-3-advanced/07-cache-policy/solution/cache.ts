@@ -18,13 +18,11 @@ const builder = new StateGraph(State)
       counter.runs++;
       return { out: `${state.q}!` };
     },
-    // ข้อ 1: ตั้ง options ของ node: { cachePolicy: { ttl: 60 } }  (จำผลไว้ 60 วินาที)
     { cachePolicy: { ttl: 60 } },
   )
   .addEdge(START, "expensive")
   .addEdge("expensive", END);
 
-// ข้อ 2: compile พร้อมตัวเก็บแคช: builder.compile({ cache: new InMemoryCache() })
 const graph = builder.compile({ cache: new InMemoryCache() });
 
 const first = await graph.invoke({ q: "hi" });
@@ -32,6 +30,17 @@ const second = await graph.invoke({ q: "hi" });
 const afterSame = counter.runs;
 const third = await graph.invoke({ q: "other" });
 console.log({ first: first.out, second: second.out, runsAfterSame: afterSame, runsAfterOther: counter.runs });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

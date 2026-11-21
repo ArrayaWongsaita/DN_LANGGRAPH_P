@@ -13,8 +13,6 @@ type AnyTool = StructuredToolInterface;
 
 // agent ที่ให้ตัวคัดเลือกกรอง tool ก่อนส่งให้โมเดลหลัก
 function buildSelectiveAgent(model: BaseChatModel, selectorLlm: BaseChatModel, tools: AnyTool[]) {
-  // ข้อ 1: createAgent({ model, tools, middleware: [llmToolSelectorMiddleware({ model: selectorLlm, maxTools: 2, alwaysInclude: ["search"] })] })
-  //          (โมเดลคัดเลือกส่งเข้าเป็น model; ต้องแปลงชนิดด้วย `as never` เพราะชนิดของ option เข้มกว่า)
   return createAgent({
     model,
     tools,
@@ -24,14 +22,11 @@ function buildSelectiveAgent(model: BaseChatModel, selectorLlm: BaseChatModel, t
 
 // agent วางแผนงานยาวด้วย to-do list
 function buildPlanner(model: BaseChatModel) {
-  // ข้อ 2: createAgent({ model, tools: [], middleware: [todoListMiddleware()] })
   return createAgent({ model, tools: [], middleware: [todoListMiddleware()] });
 }
 
 // agent สำหรับทดสอบ: จำลอง tool ที่ระบุด้วยโมเดล ส่วน tool อื่นรันจริง
 function buildTestAgent(model: BaseChatModel, emulatorLlm: BaseChatModel, tools: AnyTool[], emulate: string[]) {
-  // ข้อ 3: createAgent({ model, tools, middleware: [toolEmulatorMiddleware({ tools: emulate, model: emulatorLlm })] })
-  //          (ใส่ `as never` ที่ model ของ emulator เช่นเดียวกับข้อ 1)
   return createAgent({ model, tools, middleware: [toolEmulatorMiddleware({ tools: emulate, model: emulatorLlm as never })] });
 }
 
@@ -43,7 +38,6 @@ interface TodoItem {
 // ข้อความแผนสำหรับ UI: บรรทัดละหนึ่งงาน `${เลขที่เริ่มจาก 1}. [${ป้าย}] ${content}`
 // ป้าย: pending → "รอ", in_progress → "กำลังทำ", completed → "เสร็จ"  รายการว่างคืน "(ยังไม่มีแผน)"
 function renderTodos(todos: TodoItem[] | undefined): string {
-  // ข้อ 4: สร้างข้อความตามที่อธิบาย (undefined หรือว่าง → "(ยังไม่มีแผน)")
   if (!todos || todos.length === 0) return "(ยังไม่มีแผน)";
   const label = { pending: "รอ", in_progress: "กำลังทำ", completed: "เสร็จ" } as const;
   return todos.map((t, i) => `${i + 1}. [${label[t.status]}] ${t.content}`).join("\n");
@@ -51,7 +45,6 @@ function renderTodos(todos: TodoItem[] | undefined): string {
 
 // ชื่อ tool ที่ควรจำลองตอนทดสอบ = tool ที่ "มีผลข้างเคียง" คือไม่อยู่ใน readOnly (รักษาลำดับเดิมของ tools)
 function toolsToEmulate(tools: { name: string }[], readOnly: string[]): string[] {
-  // ข้อ 5: คืนชื่อของ tool ที่ name ไม่อยู่ใน readOnly (ปลอดภัยไว้ก่อน: tool ที่ไม่รู้จักถือว่ามีผลข้างเคียง)
   return tools.filter((t) => !readOnly.includes(t.name)).map((t) => t.name);
 }
 
@@ -93,6 +86,17 @@ const emuRuns = { ...runs };
 // ส่วนที่ 2: โมเดลจริงวางแผนด้วย to-do list
 const real = (await buildPlanner(llm).invoke(ask("ช่วยวางแผนทำเค้กช็อกโกแลตเป็น 3 ขั้นตอน โดยบันทึกแผนด้วย to-do list"))) as { todos?: TodoItem[] };
 console.log(renderTodos(real.todos));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

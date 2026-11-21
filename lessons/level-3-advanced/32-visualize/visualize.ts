@@ -15,13 +15,26 @@ const graph = new StateGraph(State)
   .addEdge("done", END)
   .compile();
 
-// 👉 ข้อ 1: เอาแผนภาพ Mermaid: const g = await graph.getGraphAsync(); แล้ว g.drawMermaid()
+// 👉 ข้อ 1 เอาแผนภาพ Mermaid: const g = await graph.getGraphAsync(); แล้ว g.drawMermaid()
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const g = await graph.getGraphAsync();
+//   const mermaid: string = g.drawMermaid();
 const mermaid: string = todo(1);
 
-// 👉 ข้อ 2: รายชื่อ node ที่เราประกาศเอง: Object.keys((await graph.getGraphAsync()).nodes) แล้วกรองชื่อที่ขึ้นต้นด้วย "__" (จุดเริ่ม/จุดจบ) ออก
-const names: string[] = todo(2);
+const names: string[] = Object.keys((await graph.getGraphAsync()).nodes).filter((n) => !n.startsWith("__"));
 console.log(mermaid);
 console.log("node:", names);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

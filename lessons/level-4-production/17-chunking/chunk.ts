@@ -8,15 +8,17 @@ import { check } from "@src/check";
 const CHUNK_SIZE = 60;
 const CHUNK_OVERLAP = 10;
 
-// 👉 ข้อ 1: สร้างตัวหั่น: new RecursiveCharacterTextSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP })
+// 👉 ข้อ 1 สร้างตัวหั่น: new RecursiveCharacterTextSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP })
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const splitter = new RecursiveCharacterTextSplitter({ chunkSize: CHUNK_SIZE, chunkOverlap: CHUNK_OVERLAP });
 const splitter = todo(1);
 
 // แปลงเอกสารทั้งชุดเป็น chunk โดยทุกชิ้นพก source เดิมของเอกสารไปด้วย
 async function toChunks(docs: Chunk[]): Promise<Chunk[]> {
   const out: Chunk[] = [];
   for (const doc of docs) {
-    // 👉 ข้อ 2: pieces = await splitter.splitText(doc.text) แล้ว push { text: ชิ้น, source: doc.source } ของทุกชิ้นลง out
-    todo(2);
+    const pieces = await splitter.splitText(doc.text);
+    for (const piece of pieces) out.push({ text: piece, source: doc.source });
   }
   return out;
 }
@@ -30,6 +32,17 @@ const mixed = await toChunks([
   { source: "two.md", text: "short" },
 ]);
 console.log(longOut.map((c) => c.text));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -8,8 +8,6 @@ import { check } from "@src/check";
 
 // แบ่ง items เป็นกลุ่มละ size ตัว (กลุ่มสุดท้ายอาจน้อยกว่า)
 function chunked<T>(items: T[], size: number): T[][] {
-  // ข้อ 1: ถ้า size < 1 ให้ throw new Error("batchSize ต้องมากกว่า 0")
-  //          ไม่เช่นนั้นคืนอาร์เรย์ของกลุ่ม เช่น chunked([1,2,3,4,5], 2) = [[1,2],[3,4],[5]] (รายการว่างได้ [])
   if (size < 1) throw new Error("batchSize ต้องมากกว่า 0");
   const groups: T[][] = [];
   for (let i = 0; i < items.length; i += size) groups.push(items.slice(i, i + size));
@@ -18,16 +16,12 @@ function chunked<T>(items: T[], size: number): T[][] {
 
 // embed ทีละกลุ่ม "ตามลำดับ" (ไม่ส่งพร้อมกัน) แล้วรวมผลเรียงตามข้อความ
 async function embedInBatches(embeddings: Embeddings, texts: string[], batchSize: number): Promise<number[][]> {
-  // ข้อ 2: วนแต่ละกลุ่มจาก chunked(texts, batchSize) เรียก await embeddings.embedDocuments(กลุ่ม)
-  //          แล้วต่อผลลัพธ์เข้าด้วยกัน (ไม่มีข้อความ = ไม่เรียก embedding เลย)
   const out: number[][] = [];
   for (const group of chunked(texts, batchSize)) out.push(...(await embeddings.embedDocuments(group)));
   return out;
 }
 
 function assertDimensions(vectors: number[][], dims: number): void {
-  // ข้อ 3: ถ้ามีเวกเตอร์ตัวใดยาวไม่เท่า dims ให้ throw new Error(`เวกเตอร์ตัวที่ ${i} มี ${จริง} มิติ แต่ต้องเป็น ${dims}`)
-  //          (i นับจาก 0 ตัวแรกที่ผิด)
   vectors.forEach((v, i) => {
     if (v.length !== dims) throw new Error(`เวกเตอร์ตัวที่ ${i} มี ${v.length} มิติ แต่ต้องเป็น ${dims}`);
   });
@@ -42,6 +36,17 @@ const query = await embeddings.embedQuery("ลืมพาสเวิร์ด�
 assertDimensions([query], embeddingDimensions());
 const scores = docs.map((_, i) => cosine(query, vectors[i]));
 docs.forEach((doc, i) => console.log(scores[i].toFixed(3), doc));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

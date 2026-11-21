@@ -13,11 +13,8 @@ const graph = new StateGraph(State)
   .addNode(
     "triage",
     (state) => {
-      // ข้อ 1: คืน new Command({ update: { log: "triage" }, goto: ... })
-      //        goto เป็น "premium" ถ้า state.amount >= 1000 ไม่เช่นนั้น "basic"
       return new Command({ update: { log: "triage" }, goto: state.amount >= 1000 ? "premium" : "basic" });
     },
-    // ข้อ 2: ประกาศปลายทางที่เป็นไปได้ (ไว้ให้ graph วาดเส้นถูก) ด้วย { ends: ["premium", "basic"] }
     { ends: ["premium", "basic"] },
   )
   .addNode("premium", (state) => ({ log: `${state.log}>premium` }))
@@ -31,6 +28,17 @@ const big = await graph.invoke({ amount: 5000 });
 const small = await graph.invoke({ amount: 100 });
 const edge = await graph.invoke({ amount: 1000 });
 console.log({ big: big.log, small: small.log, edge: edge.log });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

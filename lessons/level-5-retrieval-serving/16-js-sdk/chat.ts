@@ -26,39 +26,47 @@ interface Started {
 }
 
 async function startOrder(client: ClientLike, assistantId: string, item: string): Promise<Started> {
-  // 👉 ข้อ 1: สร้าง thread ด้วย client.threads.create() แล้ว client.runs.wait(thread_id, assistantId, { input: { item } })
+  // 👉 ข้อ 1 สร้าง thread ด้วย client.threads.create() แล้ว client.runs.wait(thread_id, assistantId, { input: { item } })
   //          คืน { threadId, pending: result.__interrupt__?.[0]?.value, result }
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const { thread_id } = await client.threads.create();
+  //   const result = await client.runs.wait(thread_id, assistantId, { input: { item } });
+  //   return { threadId: thread_id, pending: result.__interrupt__?.[0]?.value, result };
   return todo(1);
 }
 
 // กู้คำถามที่ค้างอยู่ (เช่นผู้ใช้เปิดหน้าใหม่) จาก state ของ thread
 async function pendingApproval(client: ClientLike, threadId: string): Promise<unknown | undefined> {
-  // 👉 ข้อ 2: state = await client.threads.getState(threadId) คืน value ของ interrupt ตัวแรกที่พบใน state.tasks (วน tasks แล้ว interrupts) ไม่มีคืน undefined
-  return todo(2);
+  const state = await client.threads.getState(threadId);
+  for (const t of state.tasks) if (t.interrupts.length > 0) return t.interrupts[0].value;
+  return undefined;
 }
 
 async function decide(client: ClientLike, assistantId: string, threadId: string, approve: boolean): Promise<any> {
-  // 👉 ข้อ 3: client.runs.wait(threadId, assistantId, { command: { resume: approve } }) แล้วคืนผล
-  return todo(3);
+  return client.runs.wait(threadId, assistantId, { command: { resume: approve } });
 }
 
 type Update = { type: "node"; node: string; update: unknown } | { type: "interrupt"; value: unknown };
 
 async function* streamUpdates(client: ClientLike, assistantId: string, threadId: string, input: Record<string, unknown>): AsyncGenerator<Update> {
-  // 👉 ข้อ 4: วน client.runs.stream(threadId, assistantId, { input, streamMode: ["updates"] })
-  //   สนใจเฉพาะ event === "updates": วน Object.entries(data): คีย์ "__interrupt__" → yield { type: "interrupt", value: ค่าของ interrupt ตัวแรก (data.__interrupt__[0].value) }
-  //   คีย์อื่น → yield { type: "node", node: คีย์, update: ค่า }  เหตุการณ์ชนิดอื่น (metadata, end) ข้าม
-  todo(4);
+  for await (const ev of client.runs.stream(threadId, assistantId, { input, streamMode: ["updates"] })) {
+    if (ev.event !== "updates") continue;
+    for (const [key, value] of Object.entries(ev.data as Record<string, any>)) {
+      if (key === "__interrupt__") yield { type: "interrupt", value: value[0].value };
+      else yield { type: "node", node: key, update: value };
+    }
+  }
 }
 
 // แปลงข้อผิดพลาดของ SDK/เครือข่ายเป็นข้อความที่ผู้ใช้อ่านรู้เรื่อง (ไม่เผยรายละเอียดภายในเซิร์ฟเวอร์)
 function describeError(error: unknown): string {
-  // 👉 ข้อ 5: อ่าน status จาก (error as { status?: number }).status
-  //   404 → "ไม่พบ graph หรือ thread บนเซิร์ฟเวอร์"; 401 หรือ 403 → "ไม่มีสิทธิ์เรียกเซิร์ฟเวอร์ (ตรวจ API key)";
-  //   status >= 500 → "เซิร์ฟเวอร์มีปัญหา ลองใหม่ภายหลัง";
-  //   ไม่มี status แต่ข้อความมี "fetch failed" หรือ "ECONNREFUSED" → "ต่อเซิร์ฟเวอร์ไม่ได้ ตรวจว่าเปิดอยู่และที่อยู่ถูกต้อง";
-  //   นอกนั้นคืน "เกิดข้อผิดพลาดที่ไม่คาดคิด"
-  return todo(5);
+  const status = (error as { status?: number } | null)?.status;
+  if (status === 404) return "ไม่พบ graph หรือ thread บนเซิร์ฟเวอร์";
+  if (status === 401 || status === 403) return "ไม่มีสิทธิ์เรียกเซิร์ฟเวอร์ (ตรวจ API key)";
+  if (typeof status === "number" && status >= 500) return "เซิร์ฟเวอร์มีปัญหา ลองใหม่ภายหลัง";
+  const message = error instanceof Error ? error.message : "";
+  if (status === undefined && (message.includes("fetch failed") || message.includes("ECONNREFUSED"))) return "ต่อเซิร์ฟเวอร์ไม่ได้ ตรวจว่าเปิดอยู่และที่อยู่ถูกต้อง";
+  return "เกิดข้อผิดพลาดที่ไม่คาดคิด";
 }
 
 // ส่วนที่ 1: เซิร์ฟเวอร์จริง + Client จริง (graph "order": เตรียม → หยุดรออนุมัติ → ผลลัพธ์)
@@ -164,6 +172,17 @@ const s5 = fakeServer();
 const ups: Update[] = [];
 for await (const u of streamUpdates(s5.fake, "order", "t9", { item: "หมวก" })) ups.push(u);
 const http = (status: number) => Object.assign(new Error(`HTTP ${status}: ข้อมูลภายในเซิร์ฟเวอร์ secret-path`), { status });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

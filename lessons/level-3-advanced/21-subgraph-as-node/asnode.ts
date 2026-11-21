@@ -18,12 +18,30 @@ const normalize = new StateGraph(TextState)
 const measure = (s: { text: string }) => ({ length: s.text.length });
 
 const builder = new StateGraph(TextState).addNode("measure", measure);
-// 👉 ข้อ 1: เพิ่ม subgraph เป็น node ชื่อ "normalize" (builder.addNode("normalize", normalize))
+// 👉 ข้อ 1 เพิ่ม subgraph เป็น node ชื่อ "normalize" (builder.addNode("normalize", normalize))
 //        แล้วต่อ START → normalize → measure → END
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const pipeline = builder
+//     .addNode("normalize", normalize)
+//     .addEdge(START, "normalize")
+//     .addEdge("normalize", "measure")
+//     .addEdge("measure", END)
+//     .compile();
 const pipeline: ReturnType<typeof builder.compile> = todo(1);
 
 const result = await pipeline.invoke({ text: "  Hello World  " });
 console.log(result);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

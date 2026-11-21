@@ -1,6 +1,7 @@
-# บทที่ 5-22: Pregel runtime เบื้องหลัง graph
+# บทที่ 5-22 Pregel runtime เบื้องหลัง graph
 
 ## แนวคิด
+
 `StateGraph` ที่คุณเขียนถูกคอมไพล์เป็นตัวรันชื่อ **Pregel** (แนวคิดจากระบบประมวลผล graph ขนาดใหญ่) ความเข้าใจ 3 ข้อนี้อธิบาย "ข้อควรระวัง" ที่เจอมาตลอดคอร์ส:
 
 **1. Superstep (ก้าวรัน):** runtime รันเป็นรอบ ๆ ในแต่ละรอบ:
@@ -20,27 +21,64 @@ runtime ยังสร้าง channel ภายใน เช่น `branch:to
 - checkpoint เกิดต่อรอบ ไม่ใช่ต่อ node (ข้อมูลที่ไม่เสร็จครบรอบจะไม่ถูกบันทึก บท 4-01)
 - ลำดับผลลัพธ์ในรอบเดียวกันไม่ควรถูกคาดหวัง (ถ้าต้องเรียง ให้เรียงเองใน reducer/โหนดถัดไป)
 
-## ดูตัวอย่าง
-`pregel.ts` มีฟังก์ชันวิเคราะห์ event ของ runtime จริง ขาด 6 ส่วน ไฟล์เดียวกันรัน graph จริงกับ node ปลอมและอ่าน event จริง
+## 1. ลองเติมช่องเดียว
 
-## โจทย์
-เติม 6 ข้อ แล้วรัน:
+เปิด [`pregel.ts`](./pregel.ts) แล้วเติมข้อ 1: เติมส่วนหลักของบท (Pregel runtime เบื้องหลัง graph) รันจากโฟลเดอร์หลักของโปรเจกต์ บทนี้ไม่เรียกโมเดลจริง รันได้โดยไม่ต้องมี API key
 
-    pnpm lesson 5-22
+```sh
+pnpm lesson 5-22
+```
 
-สคริปต์จะพิมพ์ผล แล้วท้ายไฟล์มีส่วนตรวจที่แสดง ✅/❌ (ไม่ต้องแก้และไม่ต้องอ่านก็ได้)
+ในไฟล์ข้อ 1 มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
 
-สคริปต์เดียวกันนี้ยังรันกับของจริงด้วย — ดูของจริง (พิมพ์รอบรัน, channel ภายใน และ error ที่เจอ)
+`pregel.ts` มีฟังก์ชันวิเคราะห์ event ของ runtime จริง ส่วนอื่นของบทนี้เขียนไว้ให้แล้ว ขาดแค่ข้อ 1
 
-## คุณทำได้แล้ว
-- อ่านการรันของ graph เป็น superstep และอธิบายที่มาของ error ด้านความขนานและชื่อ node
+โค้ดตามแนวทาง:
+
+```ts
+const byStep = new Map<number, string[]>();
+for (const e of events) {
+  const name = e.type === "task" ? e.payload?.name : undefined;
+  if (!name) continue;
+  byStep.set(e.step, [...(byStep.get(e.step) ?? []), name]);
+}
+return [...byStep.entries()].sort((x, y) => x[0] - y[0]).map(([step, nodes]) => ({ step, nodes: nodes.sort() }));
+```
+
+## 2. ผลที่ได้
+
+ผลที่รันจากเฉลย
+
+```text
+รอบรัน: #1 [a]  #2 [b, c]  #3 [d]
+ขนานสูงสุด: 2 node
+channel ทั้งหมด: log, __start__, __pregel_tasks, branch:to:a, branch:to:b, branch:to:c, branch:to:d
+channel ของผู้ใช้: log
+ไม่มี reducer → error ความขนาน: Invalid update for channel "log" with values [["b"],["c"]]: LastValue can only receive one value per step.
+ชื่อ node ที่ชนกับฟิลด์: [ 'log' ]
+addNode ชื่อ log → log is already being used as a state attribute (a.k.a. a channel), cannot also be used as a node name.
+✅ diamond มี 3 รอบ และ b กับ c อยู่รอบเดียวกัน (เลขรอบเรียงและไม่ซ้ำ)
+✅ มี reducer: ผลของ node ขนานถูกรวมครบ
+✅ ไม่มี reducer: สอง node เขียนฟิลด์เดียวกันในรอบเดียว → error ความขนาน
+✅ groupSupersteps: เรียงรอบ, เรียงชื่อ, ข้าม event ที่ไม่ใช่ task และ task ที่ไม่มีชื่อ
+✅ groupSupersteps: เรียงเลขรอบเป็นตัวเลข (10 มาหลัง 2)
+✅ maxParallelism
+✅ findNameClashes: เจอชื่อซ้ำ ไม่ซ้ำกันเอง ตามลำดับ node
+✅ isConcurrentUpdateError: รู้จักด้วยรหัสหรือข้อความ และไม่หลงทางกับ error อื่น
+✅ userChannels: ตัด channel ภายในของ runtime (เช็กเฉพาะคำขึ้นต้น)
+✅ channel จริงของ graph: ฟิลด์ของเรามีอยู่ และมี channel ภายในปนอยู่
+✅ addNode ชื่อเดียวกับฟิลด์ State → LangGraph ปฏิเสธ
+```
+
+สิ่งที่ได้: อ่านการรันของ graph เป็น superstep และอธิบายที่มาของ error ด้านความขนานและชื่อ node
 
 ## ข้อควรจำ
+
 - รายละเอียดภายใน (ชื่อ channel ภายใน) เปลี่ยนได้ตามเวอร์ชัน ใช้เพื่อทำความเข้าใจ/ดีบัก ไม่ใช่เขียนโค้ดพึ่งพา
 - ถ้า reducer ไม่สลับที่ได้ (commutative) ผลจะไม่ขึ้นกับลำดับที่ node ขนานเสร็จ
 
-## ลองเล่นต่อ
-อยากทดลองเองโดยไม่มีส่วนตรวจคำตอบ: `pnpm play 5-22` จะรันไฟล์ `playground.ts` ในโฟลเดอร์บทนี้ (สร้างให้แล้ว มีแต่ import ที่ใช้ เขียนโค้ดต่อเองได้เลย) ในหัวไฟล์มีไอเดียให้ลองทำ ใช้ `--watch` ให้รันซ้ำทุกครั้งที่บันทึก และ `--reset` เพื่อเริ่มใหม่
+## ลองต่อใน playground
 
-## บทถัดไป
-บท 5-23: โครงงานปิดท้าย ผู้ช่วยความรู้ขององค์กร
+รัน `pnpm play 5-22` เพื่อเล่นกับโค้ดของบทนี้โดยไม่มีส่วนตรวจคำตอบ (ใช้ `--watch` ให้รันซ้ำเมื่อบันทึก และ `--reset` เพื่อเริ่มใหม่)
+
+ดู [เฉลย `pregel.ts`](./solution/pregel.ts) · ไปต่อ [บท 5-23 (โครงงานปิดท้าย): ผู้ช่วยความรู้ขององค์กร](../23-capstone-knowledge-assistant/README.md)

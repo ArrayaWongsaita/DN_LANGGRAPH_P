@@ -13,6 +13,8 @@ const State = new StateSchema({
 function shouldContinue(state: typeof State.State): "refine" | typeof END {
   // 👉 ข้อ 1 คืน END เมื่อ last ตัดช่องว่างแล้วเป็น OK หรือเมื่อ rounds ถึง maxRounds
   // ถ้ายังทำต่อได้ให้คืน "refine"
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return state.last.trim() === "OK" || state.rounds >= maxRounds ? END : "refine";
   return todo(1);
 }
 
@@ -32,8 +34,19 @@ const capped = await app.invoke({
 console.log(`${approved.rounds} รอบ -> ${JSON.stringify(approved.last)}`);
 console.log(`${capped.rounds} รอบ -> ${JSON.stringify(capped.last)}`);
 
+
+
+
+
+
+
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
 check("วนอีกรอบเมื่อผลแรกยังไม่ใช่ OK", approved.rounds > 1, "ให้ router คืน refine เมื่อยังมีรอบเหลือ");
 check("หยุดทันทีที่ได้ OK แม้มีช่องว่าง", approved.rounds === 2 && approved.last.trim() === "OK", "ตรวจ last.trim()");

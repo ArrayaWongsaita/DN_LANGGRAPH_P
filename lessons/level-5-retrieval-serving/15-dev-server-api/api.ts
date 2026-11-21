@@ -19,18 +19,23 @@ const endpoint = (base: string, path: string) => `${base.replace(/\/+$/, "")}${p
 const JSON_HEADERS = { "content-type": "application/json" };
 
 async function ensureOk(res: Response): Promise<Response> {
-  // 👉 ข้อ 1: ถ้า res.ok คืน res เลย ไม่งั้น throw new Error(`เซิร์ฟเวอร์ตอบ ${res.status}: ${await res.text()}`)
-  return todo(1);
+  if (res.ok) return res;
+  throw new Error(`เซิร์ฟเวอร์ตอบ ${res.status}: ${await res.text()}`);
 }
 
 async function createThread(base: string, fetchFn: FetchFn = fetch): Promise<string> {
-  // 👉 ข้อ 2: POST endpoint(base, "/threads") ด้วยหัว JSON_HEADERS และ body "{}" ผ่าน ensureOk แล้วคืน (await res.json()).thread_id
-  return todo(2);
+  const res = await ensureOk(await fetchFn(endpoint(base, "/threads"), { method: "POST", headers: JSON_HEADERS, body: "{}" }));
+  return (await res.json()).thread_id;
 }
 
 async function runWait(base: string, threadId: string, assistantId: string, input: unknown, fetchFn: FetchFn = fetch): Promise<unknown> {
-  // 👉 ข้อ 3: POST endpoint(base, `/threads/${threadId}/runs/wait`) body JSON { assistant_id: assistantId, input } ผ่าน ensureOk แล้วคืน res.json()
-  return todo(3);
+  // 👉 ข้อ 1 POST endpoint(base, `/threads/${threadId}/runs/wait`) body JSON { assistant_id: assistantId, input } ผ่าน ensureOk แล้วคืน res.json()
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const res = await ensureOk(
+  //     await fetchFn(endpoint(base, `/threads/${threadId}/runs/wait`), { method: "POST", headers: JSON_HEADERS, body: JSON.stringify({ assistant_id: assistantId, input }) }),
+  //   );
+  //   return res.json();
+  return todo(1);
 }
 
 // (ให้ไว้แล้ว)
@@ -41,11 +46,39 @@ async function getState(base: string, threadId: string, fetchFn: FetchFn = fetch
 
 // อ่านข้อความ SSE จากก้อนข้อความที่ตัดตรงไหนก็ได้ แล้วคืนเหตุการณ์ทีละอัน
 async function* parseSse(chunks: AsyncIterable<string>): AsyncGenerator<SseEvent> {
-  // 👉 ข้อ 4: สะสม buffer จากทุก chunk (แปลง \r\n เป็น \n ก่อน) ตัดเป็นเหตุการณ์ที่บรรทัดว่าง ("\n\n")
-  //   แต่ละเหตุการณ์: บรรทัด "event: x" → event (ไม่มีให้เป็น "message"), "data: y" → data (หลายบรรทัดต่อด้วย "\n"),
-  //   "id: z" → id, บรรทัดขึ้นต้นด้วย ":" คือคอมเมนต์ให้ข้าม; ช่องว่างหนึ่งตัวหลัง ":" ตัดทิ้ง
-  //   ข้ามเหตุการณ์ที่ไม่มีทั้ง event และ data  เมื่อจบ stream ถ้ายังเหลือ buffer ที่ไม่ว่างให้ถือเป็นเหตุการณ์สุดท้ายด้วย
-  todo(4);
+  const parseBlock = (block: string): SseEvent | null => {
+    let event = "";
+    let id: string | undefined;
+    const data: string[] = [];
+    for (const line of block.split("\n")) {
+      if (line === "" || line.startsWith(":")) continue;
+      const colon = line.indexOf(":");
+      const field = colon === -1 ? line : line.slice(0, colon);
+      const value = colon === -1 ? "" : line.slice(colon + 1).replace(/^ /, "");
+      if (field === "event") event = value;
+      else if (field === "data") data.push(value);
+      else if (field === "id") id = value;
+    }
+    if (event === "" && data.length === 0) return null;
+    const out: SseEvent = { event: event || "message", data: data.join("\n") };
+    if (id !== undefined) out.id = id;
+    return out;
+  };
+  let buffer = "";
+  for await (const chunk of chunks) {
+    buffer = (buffer + chunk).replace(/\r\n/g, "\n");
+    let cut = buffer.indexOf("\n\n");
+    while (cut !== -1) {
+      const parsed = parseBlock(buffer.slice(0, cut));
+      buffer = buffer.slice(cut + 2);
+      if (parsed) yield parsed;
+      cut = buffer.indexOf("\n\n");
+    }
+  }
+  if (buffer.trim() !== "") {
+    const parsed = parseBlock(buffer);
+    if (parsed) yield parsed;
+  }
 }
 
 async function* streamRun(
@@ -56,11 +89,32 @@ async function* streamRun(
   streamMode: string[],
   fetchFn: FetchFn = fetch,
 ): AsyncGenerator<{ event: string; data: unknown }> {
-  // 👉 ข้อ 5: POST endpoint(base, `/threads/${threadId}/runs/stream`) body { assistant_id, input, stream_mode: streamMode } ผ่าน ensureOk
-  //   อ่าน res.body ด้วย getReader() และ TextDecoder แบบ { stream: true } (ไบต์ของตัวอักษรไทยอาจถูกตัดครึ่งระหว่างก้อน)
-  //   ส่งข้อความเข้า parseSse แล้ว yield { event, data: JSON.parse(data) } ของทุกเหตุการณ์
-  //   เหตุการณ์ "end" → หยุด (ไม่ yield); เหตุการณ์ "error" → throw new Error(data.message ?? data.error ?? "สตรีมล้มเหลว")
-  todo(5);
+  const res = await ensureOk(
+    await fetchFn(endpoint(base, `/threads/${threadId}/runs/stream`), {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ assistant_id: assistantId, input, stream_mode: streamMode }),
+    }),
+  );
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  async function* texts(): AsyncGenerator<string> {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        const rest = decoder.decode();
+        if (rest) yield rest;
+        return;
+      }
+      yield decoder.decode(value, { stream: true });
+    }
+  }
+  for await (const ev of parseSse(texts())) {
+    const data = ev.data === "" ? null : JSON.parse(ev.data);
+    if (ev.event === "end") return;
+    if (ev.event === "error") throw new Error(data?.message ?? data?.error ?? "สตรีมล้มเหลว");
+    yield { event: ev.event, data };
+  }
 }
 
 // ส่วนที่ 1: ของจริง เปิด langgraph dev แล้วเรียกด้วยฟังก์ชันของคุณ (graph "demo" นับรอบ turns ค้างใน thread)
@@ -161,6 +215,17 @@ const srThai = await all(streamRun("http://x", "t", "demo", {}, ["values"], fake
 const srErr = await failMsg(all(streamRun("http://x", "t", "demo", {}, ["values"], fakeFetch(() => streamResponse('event: values\ndata: {"a":1}\n\nevent: error\ndata: {"message":"โมเดลล่ม"}\n\n', [])).fn)));
 const sr404 = await failMsg(all(streamRun("http://x", "t", "demo", {}, ["values"], fakeFetch(() => new Response("ไม่พบ thread", { status: 404 })).fn)));
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

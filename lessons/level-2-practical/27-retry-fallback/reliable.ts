@@ -20,12 +20,29 @@ const backup = RunnableLambda.from((_input: string) => {
 });
 
 // 👉 ข้อ 1 ให้ primary ลองรวมได้ 2 ครั้ง แล้วใช้ backup ถ้ายังล้มเหลว
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const reliable: Runnable<string, AIMessage> = primary
+//     .withRetry({ stopAfterAttempt: 2 })
+//     .withFallbacks({ fallbacks: [backup] });
 const reliable: Runnable<string, AIMessage> = todo(1);
 
 const reply = await reliable.invoke("ทักทายหนึ่งประโยค");
 console.log(JSON.stringify({ calls, answer: reply.text }));
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "ลองตัวหลัก 2 ครั้งแล้วเรียกตัวสำรอง",
   calls.join(",") === "primary,primary,backup" && reply.text === "ตอบจากตัวสำรอง",

@@ -22,11 +22,26 @@ for (const { threadId, text } of turns) {
   const result = await graph.invoke(
     { messages: [new HumanMessage(text)] },
     // 👉 ข้อ 1 ระบุ thread_id ของรอบนี้ใน config
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   { configurable: { thread_id: threadId } },
     todo(1),
   );
   counts.push(result.messages.length);
   console.log(threadId, result.messages.length);
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("แต่ละห้องเก็บประวัติของตัวเอง", counts.join(",") === "2,2,4", "ใช้ thread_id เดิมเมื่อต้องการคุยต่อ");

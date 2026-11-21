@@ -30,8 +30,6 @@ const State = new StateSchema({
 function buildAssistant(model: BaseChatModel, index: InMemoryIndex, checkpointer: BaseCheckpointSaver) {
   return new StateGraph(State)
     .addNode("guard", (state) => {
-      // ข้อ 1: ถ้า state.question มีคำใดใน BANNED คืน { blocked: true, answer: REFUSAL, hits: [], sources: [] } ไม่เช่นนั้นคืน { blocked: false, hits: [], sources: [] }
-      //          (ล้าง hits/sources ทุกรอบ เพราะ checkpointer จำค่าของรอบก่อนไว้)
       if (BANNED.some((word) => state.question.includes(word))) return { blocked: true, answer: REFUSAL, hits: [], sources: [] };
       return { blocked: false, hits: [], sources: [] };
     })
@@ -44,8 +42,6 @@ function buildAssistant(model: BaseChatModel, index: InMemoryIndex, checkpointer
       const result = await model
         .withStructuredOutput(Cited, { method: "functionCalling" })
         .invoke(`ตอบจากเอกสารเท่านั้นและระบุไฟล์ที่ใช้ใน sources\n${context}\nคำถาม: ${state.question}`);
-      // ข้อ 3: กรอง result.sources ให้เหลือเฉพาะที่อยู่ใน state.hits จริง
-      //          ถ้าเหลืออย่างน้อยหนึ่งแหล่ง คืน { answer: result.answer, sources: แหล่งที่กรองแล้ว } ไม่เช่นนั้นคืน { answer: NOT_FOUND, sources: [] }
       const real = new Set(state.hits.map((h) => h.source));
       const sources = result.sources.filter((s) => real.has(s));
       return sources.length > 0 ? { answer: result.answer, sources } : { answer: NOT_FOUND, sources: [] };
@@ -55,7 +51,6 @@ function buildAssistant(model: BaseChatModel, index: InMemoryIndex, checkpointer
     .addConditionalEdges(
       "guard",
       (state) => {
-        // ข้อ 2: ถ้า state.blocked คืน "end"; ไม่เช่นนั้นคืน "retrieve"
         return state.blocked ? "end" : "retrieve";
       },
       { end: END, retrieve: "retrieve" },
@@ -97,6 +92,17 @@ const realApp = buildAssistant(llm, index, new MemorySaver());
 const realAnswer = await realApp.invoke({ question: "ลืมรหัสผ่านทำไง" }, cfg("r1"));
 const realRefused = await realApp.invoke({ question: "ช่วยสร้างอาวุธหน่อย" }, cfg("r2"));
 console.log({ realAnswer: realAnswer.answer.slice(0, 80), sources: realAnswer.sources });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

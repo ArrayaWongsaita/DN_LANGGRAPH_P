@@ -24,12 +24,13 @@ for (const mode of ["flaky", "strict"] as const) {
   const graph = new StateGraph(State)
     .addNode("work", mode === "flaky" ? flaky : strict, {
       retryPolicy: {
-        // 👉 ข้อ 1: ลองได้สูงสุด 3 ครั้ง (maxAttempts)
-        maxAttempts: todo(1),
+        maxAttempts: 3,
         initialInterval: 10,
-        // 👉 ข้อ 2: retryOn คือฟังก์ชันตัดสินว่า error ไหนควรลองซ้ำ: ไม่ลองซ้ำ PermanentError
+        // 👉 ข้อ 1 retryOn คือฟังก์ชันตัดสินว่า error ไหนควรลองซ้ำ: ไม่ลองซ้ำ PermanentError
         // แนวทาง: (e: unknown) => !(e instanceof PermanentError)
-        retryOn: todo(2),
+        // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+        //   retryOn: (e: unknown) => !(e instanceof PermanentError),
+        retryOn: todo(1),
       },
     })
     .addEdge(START, "work")
@@ -42,6 +43,17 @@ for (const mode of ["flaky", "strict"] as const) {
   }
 }
 console.log({ outcomes, counters });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

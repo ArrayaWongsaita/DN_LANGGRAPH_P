@@ -10,6 +10,8 @@
 pnpm lesson 2-03
 ```
 
+ในไฟล์ข้อ 1 มี **แนวทาง** เป็นโค้ดที่คอมเมนต์ไว้ เอา `//` ออกแล้วแทนที่ `todo(1)` ได้เลย แต่ลองอ่านก่อนว่าแต่ละบรรทัดทำอะไร
+
 ```ts
 const turns = [
   { threadId: "mali:งาน", text: "ส่งรายงานแล้ว" },
@@ -43,6 +45,12 @@ mali:งาน 4
 | `graph.getState(config)` | `{ configurable: { thread_id: "mali:งาน" } }` | อ่าน State ของห้องงานมาลี |
 
 เครื่องหมาย `:` เป็นส่วนหนึ่งของรหัสตัวอย่าง เราเลือกใช้เพื่อให้อ่านชื่อผู้ใช้และหัวข้อได้ง่าย Checkpointer ใช้รหัสทั้งสตริงเป็นคีย์
+
+ถ้า graph ใช้ checkpointer แล้วไม่ส่ง `thread_id` จะโยน error ทันที เพราะไม่รู้ว่าจะเก็บ checkpoint ไว้ห้องไหน
+
+```text
+Error: Failed to put checkpoint. The passed RunnableConfig is missing a required "thread_id" field in its "configurable" property.
+```
 
 ## 3. ลองเปลี่ยนรหัสของรอบที่สาม
 

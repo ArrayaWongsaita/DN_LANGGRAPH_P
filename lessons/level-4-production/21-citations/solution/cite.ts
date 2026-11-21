@@ -19,18 +19,14 @@ interface CheckedAnswer {
 }
 
 async function answerWithCitations(model: BaseChatModel, question: string, hits: Hit[]): Promise<CheckedAnswer> {
-  // ข้อ 1: context = hits ทุกชิ้นเป็นบรรทัด `[${source}] ${text}` ต่อกันด้วย "\n"
-  //          แล้วเรียก model.withStructuredOutput(CitedAnswer, { method: "functionCalling" }).invoke(`ตอบจากเอกสารเท่านั้นและระบุไฟล์ที่ใช้ใน sources\n${context}\nคำถาม: ${question}`)
   const context = hits.map((h) => `[${h.source}] ${h.text}`).join("\n");
   const result: z.infer<typeof CitedAnswer> = await model
     .withStructuredOutput(CitedAnswer, { method: "functionCalling" })
     .invoke(`ตอบจากเอกสารเท่านั้นและระบุไฟล์ที่ใช้ใน sources\n${context}\nคำถาม: ${question}`);
 
-  // ข้อ 2: กรอง result.sources ให้เหลือเฉพาะที่ตรงกับ source ของ hits จริง (กันการอ้างไฟล์ที่ไม่เคยได้รับ)
   const real = new Set(hits.map((h) => h.source));
   const sources: string[] = result.sources.filter((s) => real.has(s));
 
-  // ข้อ 3: grounded เป็นจริงเมื่อเหลือแหล่งที่ถูกต้องอย่างน้อยหนึ่งแหล่ง
   const grounded: boolean = sources.length > 0;
 
   return { answer: result.answer, sources, grounded };
@@ -57,6 +53,17 @@ for (const cited of [["it"], ["md"], [".md"], [""]]) {
 // ส่วนที่ 2: โมเดลจริง
 const real = await answerWithCitations(llm, "ลืมรหัสผ่านต้องทำอย่างไร", hits);
 console.log(real);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -17,8 +17,6 @@ interface Table {
 }
 
 function chunkId(docId: string, text: string): string {
-  // ข้อ 1: คืน `${docId}:${hash}` โดย hash คือ 16 ตัวแรกของ sha256 (hex) ของ text
-  //          ใช้ createHash("sha256").update(text).digest("hex").slice(0, 16)
   return `${docId}:${createHash("sha256").update(text).digest("hex").slice(0, 16)}`;
 }
 
@@ -30,8 +28,6 @@ interface Plan {
 
 // เทียบ id ที่มีอยู่ในตารางกับแถวที่ต้องการให้มี
 function planSync(existingIds: string[], wanted: Row[]): Plan {
-  // ข้อ 2: toAdd = แถวใน wanted ที่ id ยังไม่มีใน existingIds
-  //          toRemove = id ใน existingIds ที่ไม่มีใน wanted  unchanged = จำนวนแถวใน wanted ที่ id มีอยู่แล้ว
   const existing = new Set(existingIds);
   const wantedIds = new Set(wanted.map((r) => r.id));
   return {
@@ -47,11 +43,6 @@ async function ingestDoc(
   docId: string,
   chunks: string[],
 ): Promise<{ added: number; removed: number; unchanged: number }> {
-  // ข้อ 3: wanted = chunks แปลงเป็น Row (id จาก chunkId) โดยข้อความซ้ำในเอกสารเดียวกันเก็บแถวเดียว
-  //          existing = await table.idsForDoc(docId); plan = planSync(existing, wanted)
-  //          ถ้า plan.toAdd ไม่ว่าง: vectors = await embeddings.embedDocuments(ข้อความของ toAdd) แล้ว table.upsert
-  //          ถ้า plan.toRemove ไม่ว่าง: await table.remove(plan.toRemove)   (ไม่มีอะไรต้องเพิ่ม = ไม่เรียก embedding)
-  //          คืน { added: จำนวน toAdd, removed: จำนวน toRemove, unchanged }
   const unique = new Map<string, Row>();
   for (const text of chunks) unique.set(chunkId(docId, text), { id: chunkId(docId, text), docId, text });
   const wanted = [...unique.values()];
@@ -128,6 +119,17 @@ const wanted: Row[] = [
   { id: "a", docId: "d", text: "A" },
   { id: "b", docId: "d", text: "B" },
 ];
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

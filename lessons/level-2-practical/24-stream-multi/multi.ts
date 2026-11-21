@@ -18,6 +18,8 @@ const graph = new StateGraph(State)
   .compile();
 
 // 👉 ข้อ 1 ขอทั้ง updates และ custom ในอาร์เรย์เดียว
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const streamMode: StreamMode[] = ["updates", "custom"];
 const streamMode: StreamMode[] = todo(1);
 const stream = await graph.stream({ pages: 2 }, { streamMode });
 const timeline = [];
@@ -26,7 +28,20 @@ for await (const [mode, data] of stream) {
   console.log(JSON.stringify([mode, data]));
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "ได้ custom ตามด้วย updates ของ crawl",
   JSON.stringify(timeline) === '[["custom",{"page":1}],["custom",{"page":2}],["updates",{"crawl":{"done":"ครบ 2 หน้า"}}]]',

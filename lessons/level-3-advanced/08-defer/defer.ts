@@ -20,7 +20,9 @@ const graph = new StateGraph(State)
   .addNode(
     "final",
     () => ({ log: "final" }),
-    // 👉 ข้อ 1: ทำให้ final รอทุกสายเสร็จ ด้วย options { defer: true }
+    // 👉 ข้อ 1 ทำให้ final รอทุกสายเสร็จ ด้วย options { defer: true }
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   { defer: true },
     todo(1),
   )
   .addEdge(START, "a")
@@ -34,6 +36,17 @@ const graph = new StateGraph(State)
 
 const result = await graph.invoke({});
 console.log(result.log);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

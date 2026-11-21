@@ -33,7 +33,20 @@ for (const [threadId, answer] of [["edit", edited], ["keep", ""]] as const) {
   outcomes.push({ request, draft: finished.draft, final: finished.final });
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("หยุดพร้อมร่างให้ตรวจทั้งสองรอบ", outcomes.every(({ request, draft }) =>
   draft.length > 0 && JSON.stringify(request) === JSON.stringify({ draft })));
 check("ส่งฉบับแก้แล้วได้ฉบับนั้นใน final", outcomes[0].final === edited);

@@ -7,13 +7,28 @@ const history = [new HumanMessage("ฉันชื่อมาลี ชอบ�
 const question = new HumanMessage("ฉันชื่ออะไร และชอบอะไร");
 
 // 👉 ข้อ 1 วาง system ก่อน ตามด้วยข้อความใน history และปิดท้ายด้วย question
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const messages = [system, ...history, question];
 const messages: (SystemMessage | HumanMessage | AIMessage)[] = todo(1);
 const withoutHistory = [system, question];
 
 console.log("มีประวัติ", messages.map(({ type, text }) => [type, text]));
 console.log("ประวัติว่าง", withoutHistory.map(({ type, text }) => [type, text]));
 
-// ส่วนตรวจคำตอบ ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "ส่งคำสั่ง ประวัติ และคำถามตามลำดับ",
   messages.length === history.length + 2 &&

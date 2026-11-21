@@ -23,6 +23,8 @@ const State = new StateSchema({
 
 function pickRoute({ category }: { category: string }): "smallTalk" | "respond" {
   // 👉 ข้อ 2 เลือก smallTalk สำหรับ greeting และ respond สำหรับ question
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(2) ได้เลย):
+  //   return category === "greeting" ? "smallTalk" : "respond";
   return todo(2);
 }
 
@@ -30,12 +32,16 @@ const graph = new StateGraph(State)
   .addNode("classify", async ({ question }) => {
     const result = await classifier.invoke(`จัดประเภทข้อความนี้: ${question}`);
     // 👉 ข้อ 1 เขียนค่า category ที่โมเดลจัดประเภทลง State
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   return { category: result.category };
     return todo(1);
   })
   .addNode("smallTalk", () => ({ answer: "สวัสดีค่ะ มีอะไรให้ช่วยไหมคะ" }))
   .addNode("respond", async ({ question }) => {
     const reply = await model.invoke(question);
     // 👉 ข้อ 3 เขียนข้อความตอบกลับของโมเดลลง answer
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(3) ได้เลย):
+    //   return { answer: reply.text };
     return todo(3);
   })
   .addEdge(START, "classify")
@@ -51,6 +57,19 @@ for (const question of ["สวัสดี", "LangGraph ใช้ทำอะ�
   console.log(JSON.stringify({ question, category, answer }));
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("ข้อความทักทายได้คำตอบจาก smallTalk", outputs[0].category === "greeting" && outputs[0].answer === "สวัสดีค่ะ มีอะไรให้ช่วยไหมคะ");
 check("คำถามได้คำตอบจาก respond", outputs[1].category === "question" && outputs[1].answer.trim().length > 0);

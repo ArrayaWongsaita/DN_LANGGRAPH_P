@@ -9,13 +9,28 @@ const prompt = ChatPromptTemplate.fromMessages([
 
 const input = { language: "อังกฤษ", text: "วันนี้อากาศดีจัง" };
 // 👉 ข้อ 1 เติมค่า input ลงในแม่แบบด้วย prompt.formatMessages แล้วรอผลลัพธ์
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const messages = await prompt.formatMessages(input);
 const messages: Awaited<ReturnType<typeof prompt.formatMessages>> = todo(1);
 
 for (const message of messages) {
   console.log(message.type, message.text);
 }
 
-// ส่วนตรวจคำตอบ ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "เติม language ในข้อความ system",
   messages[0]?.type === "system" && messages[0].text === `แปลข้อความของผู้ใช้เป็นภาษา${input.language}`,

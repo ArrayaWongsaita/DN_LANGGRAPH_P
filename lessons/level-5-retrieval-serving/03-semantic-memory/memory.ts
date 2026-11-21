@@ -24,19 +24,22 @@ if (!url) {
 }
 
 function memoryNamespace(userId: string): string[] {
-  // 👉 ข้อ 1: คืน [userId, "memories"] (แยกผู้ใช้ด้วย namespace)
-  return todo(1);
+  return [userId, "memories"];
 }
 
 async function remember(store: BaseStore, userId: string, text: string): Promise<string> {
-  // 👉 ข้อ 2: key = randomUUID() แล้ว await store.put(memoryNamespace(userId), key, { text }) และคืน key
-  return todo(2);
+  const key = randomUUID();
+  await store.put(memoryNamespace(userId), key, { text });
+  return key;
 }
 
 async function recall(store: BaseStore, userId: string, query: string, k = 3, minScore = 0.3): Promise<string[]> {
-  // 👉 ข้อ 3: hits = await store.search(memoryNamespace(userId), { query, limit: k })
+  // 👉 ข้อ 1 hits = await store.search(memoryNamespace(userId), { query, limit: k })
   //          เก็บเฉพาะที่ (score ?? 0) >= minScore แล้วคืน text ของแต่ละอัน (hit.value.text เป็น string)
-  return todo(3);
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const hits = await store.search(memoryNamespace(userId), { query, limit: k });
+  //   return hits.filter((h) => (h.score ?? 0) >= minScore).map((h) => String(h.value.text));
+  return todo(1);
 }
 
 const State = new StateSchema({
@@ -106,6 +109,17 @@ try {
   for (const k of keys) await real.delete(memoryNamespace(userId), k); // ลบข้อมูลทดลองทิ้ง
   await real.stop();
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

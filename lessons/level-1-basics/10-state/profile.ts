@@ -6,6 +6,8 @@ import { check } from "@src/check";
 const ProfileState = new StateSchema({
   name: z.string(),
   // 👉 ข้อ 1 แทนค่าหลัง age ทั้งหมดด้วย schema ตัวเลขที่มีค่าเริ่มต้น 0
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   age: z.number().default(0),
   age: todo(1) as z.ZodDefault<z.ZodNumber>,
   city: z.string().default(""),
 });
@@ -21,8 +23,19 @@ const withDetails = await app.invoke({ name: "มาลี", age: 30, city: "เ
 console.log(onlyName);
 console.log(withDetails);
 
+
+
+
+
+
+
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
 let rejected = false;
 try {

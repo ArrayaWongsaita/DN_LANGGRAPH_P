@@ -37,13 +37,6 @@ const FORBIDDEN = [
 
 // คืนเหตุผลที่ปฏิเสธ หรือ null ถ้าผ่าน
 function checkStatement(sql: string): string | null {
-  // ข้อ 1: ให้ s = stripLiterals(sql).trim() แล้วตรวจตามลำดับ (คืนข้อความไทยที่อธิบายได้ข้อใดข้อหนึ่ง):
-  //   - ว่างเปล่า
-  //   - เหลือเครื่องหมาย ' ใน s (string ไม่ปิด)
-  //   - มี "--" หรือ "/*" (คอมเมนต์) หรือ " (ชื่อในเครื่องหมายคำพูดคู่)
-  //   - มี ";" ที่ไม่ใช่ตัวสุดท้ายของ s (หลายคำสั่ง)
-  //   - ไม่ได้ขึ้นต้นด้วย select (ไม่สนตัวพิมพ์) เช่น /^select\b/i (ข้อความต้องมีคำว่า SELECT)
-  //   ผ่านทุกข้อคืน null
   const s = stripLiterals(sql).trim();
   if (s === "") return "คำสั่งว่างเปล่า";
   if (s.includes("'")) return "string ไม่ปิดเครื่องหมายคำพูด";
@@ -56,18 +49,12 @@ function checkStatement(sql: string): string | null {
 }
 
 function checkKeywords(sql: string): string | null {
-  // ข้อ 2: s = stripLiterals(sql).toLowerCase() ถ้ามีคำใน FORBIDDEN ปรากฏเป็น "คำเต็ม" (ขอบคำ \b) ให้คืนข้อความที่บอกคำนั้น (เป็นตัวพิมพ์ใหญ่ เช่น INTO) ไม่งั้น null
   const s = stripLiterals(sql).toLowerCase();
   for (const word of FORBIDDEN) if (new RegExp(`\\b${word}\\b`).test(s)) return `ห้ามใช้คำ ${word.toUpperCase()}`;
   return null;
 }
 
 function checkTables(sql: string, allowedTables: string[]): string | null {
-  // ข้อ 3: s = stripLiterals(sql).toLowerCase(); วนหา /\b(?:from|join)\s+([a-z_][\w.]*)\s*(\()?/g
-  //   - ถ้ามี "(" ต่อท้ายชื่อ (เรียกฟังก์ชัน) → คืนเหตุผล
-  //   - ถ้าชื่อไม่อยู่ใน allowedTables (เทียบตัวพิมพ์เล็ก) → คืนเหตุผลที่บอกชื่อตาราง (ชื่อมีจุด เช่น pg_catalog.x ก็ไม่อยู่ในรายการ)
-  //   - นอกจากนี้ ถ้าตรงกับ /\bfrom\s+[\w.]+(?:\s+(?:as\s+)?\w+)?\s*,/ (คั่นหลายตารางด้วยจุลภาค) → คืนเหตุผลให้ใช้ JOIN
-  //   ผ่านหมดคืน null
   const s = stripLiterals(sql).toLowerCase();
   const allowed = allowedTables.map((t) => t.toLowerCase());
   for (const match of s.matchAll(/\b(?:from|join)\s+([a-z_][\w.]*)\s*(\()?/g)) {
@@ -80,8 +67,6 @@ function checkTables(sql: string, allowedTables: string[]): string | null {
 
 // ตัด ; ท้าย แล้วให้มี LIMIT ที่ไม่เกิน maxRows
 function applyLimit(sql: string, maxRows: number): string {
-  // ข้อ 4: q = sql.trim() ตัด ";" ท้ายออก; ถ้าท้ายคำสั่งเป็น /\blimit\s+(\d+)\s*$/i
-  //          ให้แทนเลขด้วย min(เลขเดิม, maxRows) (เขียน LIMIT ตัวใหญ่) ไม่มีก็ต่อท้าย ` LIMIT ${maxRows}` แล้วคืน q
   const q = sql.trim().replace(/;\s*$/, "").trim();
   const match = /\blimit\s+(\d+)\s*$/i.exec(q);
   if (match) return q.replace(/\blimit\s+\d+\s*$/i, `LIMIT ${Math.min(Number(match[1]), maxRows)}`);
@@ -96,10 +81,6 @@ function validateSql(sql: string, options: Options): Validation {
 
 // รันในธุรกรรมอ่านอย่างเดียวพร้อม timeout (ชั้นที่ 2) ต้องใช้ client ตัวเดียว (pool.connect())
 async function runReadOnly(db: Db, sql: string, timeoutMs: number): Promise<Record<string, unknown>[]> {
-  // ข้อ 5: ถ้า timeoutMs ไม่ใช่จำนวนเต็มบวก throw new Error("timeout ต้องเป็นจำนวนเต็มบวก") ก่อนแตะฐานข้อมูล
-  //   ลำดับ: db.query("BEGIN READ ONLY"); db.query(`SET LOCAL statement_timeout = ${timeoutMs}`) (SET ใช้พารามิเตอร์ไม่ได้ จึงต้องตรวจเลขก่อน);
-  //   rows = (await db.query(sql)).rows; คืน rows
-  //   ไม่ว่าสำเร็จหรือล้ม ต้องจบด้วย db.query("ROLLBACK") เสมอ (ไม่ COMMIT: ไม่มีอะไรให้บันทึก)
   if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) throw new Error("timeout ต้องเป็นจำนวนเต็มบวก");
   await db.query("BEGIN READ ONLY");
   try {
@@ -175,6 +156,17 @@ try {
   await pool.query("DROP TABLE IF EXISTS demo_orders; DROP TABLE IF EXISTS demo_customers; DROP TABLE IF EXISTS demo_secrets");
   await pool.end();
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

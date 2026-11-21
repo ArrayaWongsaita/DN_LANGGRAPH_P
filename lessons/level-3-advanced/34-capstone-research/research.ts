@@ -25,8 +25,12 @@ const State = new StateSchema({
 
 const graph = new StateGraph(State)
   .addNode("plan", async (state) => {
-    // 👉 ข้อ 1: ใช้ llm.withStructuredOutput(z.object({ topics: z.array(z.string()) }), { method: "functionCalling" }) invoke ด้วย
+    // 👉 ข้อ 1 ใช้ llm.withStructuredOutput(z.object({ topics: z.array(z.string()) }), { method: "functionCalling" }) invoke ด้วย
     //        `แตกคำถามเป็นหัวข้อย่อยสั้น ๆ: ${state.question}` แล้วคืน { topics: ผล.topics.slice(0, MAX_TOPICS) }
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const structured = llm.withStructuredOutput(z.object({ topics: z.array(z.string()) }), { method: "functionCalling" });
+    //   const out = await structured.invoke(`แตกคำถามเป็นหัวข้อย่อยสั้น ๆ: ${state.question}`);
+    //   return { topics: out.topics.slice(0, MAX_TOPICS) };
     return todo(1);
   })
   .addNode("researchTask", async (input: unknown) => {
@@ -34,10 +38,11 @@ const graph = new StateGraph(State)
     return { notes: (await llm.invoke(`ค้นคว้าหัวข้อนี้ ตอบสั้น ๆ: ${topic}`)).text };
   })
   .addNode("write", async (state) => {
-    // 👉 ข้อ 3: prompt = `เขียนรายงานสั้น ๆ ตอบ "${state.question}" จากโน้ต: ${state.notes.join("; ")}`
-    //        ถ้ามี state.feedback ต่อท้ายด้วย `\nแก้ตามข้อติ: ${state.feedback}`
-    //        เรียก llm.invoke(prompt) แล้วคืน { report: .text, round: state.round + 1 }
-    return todo(3);
+    const prompt =
+      `เขียนรายงานสั้น ๆ ตอบ "${state.question}" จากโน้ต: ${state.notes.join("; ")}` +
+      (state.feedback ? `\nแก้ตามข้อติ: ${state.feedback}` : "");
+    const reply = await llm.invoke(prompt);
+    return { report: reply.text, round: state.round + 1 };
   })
   .addNode("review", async (state) => {
     const verdict = await llm
@@ -49,7 +54,9 @@ const graph = new StateGraph(State)
   .addConditionalEdges(
     "plan",
     (state) => {
-      // 👉 ข้อ 2: คืนรายการ Send หนึ่งอันต่อหนึ่งหัวข้อ: new Send("researchTask", { topic })
+      // 👉 ข้อ 2 คืนรายการ Send หนึ่งอันต่อหนึ่งหัวข้อ: new Send("researchTask", { topic })
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(2) ได้เลย):
+      //   return state.topics.map((topic) => new Send("researchTask", { topic }));
       return todo(2);
     },
     ["researchTask"],
@@ -59,8 +66,10 @@ const graph = new StateGraph(State)
   .addConditionalEdges(
     "review",
     (state) => {
-      // 👉 ข้อ 4: คืน END ถ้า state.approved หรือ state.round >= MAX_ROUNDS ไม่เช่นนั้นคืน "write"
-      return todo(4);
+      // 👉 ข้อ 3 คืน END ถ้า state.approved หรือ state.round >= MAX_ROUNDS ไม่เช่นนั้นคืน "write"
+      // แนวทาง (เอา // ออกแล้วแทนที่ todo(3) ได้เลย):
+      //   return state.approved || state.round >= MAX_ROUNDS ? END : "write";
+      return todo(3);
     },
     ["write", END],
   )
@@ -69,6 +78,17 @@ const graph = new StateGraph(State)
 const result = await graph.invoke({ question: "ทำไมการนอนหลับเพียงพอจึงสำคัญต่อสุขภาพ" });
 console.log("หัวข้อ:", result.topics);
 console.log(`วน ${result.round} รอบ อนุมัติ=${result.approved}\n${result.report}`);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -11,6 +11,8 @@ type TextState = typeof State.State;
 
 function clean(state: TextState): Partial<TextState> {
   // 👉 ข้อ 1 คืน object ที่มีเฉพาะ text ซึ่งตัดช่องว่างหัวท้ายแล้ว
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return { text: state.text.trim() };
   return todo(1);
 }
 
@@ -25,8 +27,19 @@ const app = new StateGraph(State)
 const result = await app.invoke({ text: "   abc   " });
 console.log(result);
 
+
+
+
+
+
+
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
 const original = { text: "  สวัสดี  ", length: 42 };
 const update = clean(original);

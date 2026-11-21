@@ -25,8 +25,19 @@ const long = await app.invoke({ question: "ช่วยอธิบายเร�
 console.log(`"${short.question}" (${short.question.length}) -> ${short.path}`);
 console.log(`"${long.question}" (${long.question.length}) -> ${long.path}`);
 
+
+
+
+
+
+
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
 check("คำถามสั้นไปทาง short", short.path === "short", "ต่อ conditional edge จาก START");
 check("คำถามยาวไปทาง long", long.path === "long");

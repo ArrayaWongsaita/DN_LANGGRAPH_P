@@ -46,35 +46,59 @@ interface BlobRow {
 
 // คืน checkpoint ที่ "ควรลบ": เก็บ id ใหม่สุด `keep` อันต่อ namespace (id เรียงตามตัวอักษร = เรียงตามเวลา)
 function planPrune(rows: CheckpointRow[], keep: number): CheckpointRow[] {
-  // 👉 ข้อ 1: keep < 1 ให้ throw new Error("ต้องเก็บอย่างน้อย 1 checkpoint")
-  //          แยกกลุ่มตาม ns, เรียง id มากไปน้อยในแต่ละกลุ่ม, ข้าม `keep` อันแรก ที่เหลือคือที่ต้องลบ (rows อาจมาในลำดับใดก็ได้)
-  return todo(1);
+  if (keep < 1) throw new Error("ต้องเก็บอย่างน้อย 1 checkpoint");
+  const byNs = new Map<string, CheckpointRow[]>();
+  for (const row of rows) byNs.set(row.ns, [...(byNs.get(row.ns) ?? []), row]);
+  const doomed: CheckpointRow[] = [];
+  for (const group of byNs.values()) {
+    const sorted = [...group].sort((a, b) => (a.id < b.id ? 1 : -1));
+    doomed.push(...sorted.slice(keep));
+  }
+  return doomed;
 }
 
 // blob ที่ไม่มี checkpoint ที่เหลืออยู่อ้างถึง: checkpoint อ้าง blob เมื่อ channel_versions[channel] เท่ากับ version (เทียบเป็นสตริง) ใน ns เดียวกัน
 function findOrphanBlobs(blobs: BlobRow[], kept: { ns: string; channel_versions: Record<string, string | number> }[]): BlobRow[] {
-  // 👉 ข้อ 2: สร้างเซตของ `${ns}|${channel}|${version}` จาก kept แล้วคืน blob ที่ไม่อยู่ในเซตนั้น
-  return todo(2);
+  // 👉 ข้อ 1 สร้างเซตของ `${ns}|${channel}|${version}` จาก kept แล้วคืน blob ที่ไม่อยู่ในเซตนั้น
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const used = new Set<string>();
+  //   for (const cp of kept) for (const [channel, version] of Object.entries(cp.channel_versions)) used.add(`${cp.ns}|${channel}|${version}`);
+  //   return blobs.filter((b) => !used.has(`${b.ns}|${b.channel}|${b.version}`));
+  return todo(1);
 }
 
 // ลบ checkpoint เก่าของ thread ในธุรกรรมเดียว คืนจำนวนที่ลบ
 async function pruneThread(db: Db, threadId: string, keep: number): Promise<{ checkpoints: number; blobs: number }> {
-  // 👉 ข้อ 3: ลำดับ: (ตรวจ keep ก่อนแตะฐานข้อมูล: เรียก planPrune ที่ให้ rows ว่างก็ได้ หรือ throw เองถ้า keep < 1)
-  //   1) db.query("BEGIN")
-  //   2) rows = (await db.query(SQL.listCheckpoints, [threadId])).rows; doomed = planPrune(rows, keep)
-  //      ถ้า doomed ว่าง: COMMIT แล้วคืน { checkpoints: 0, blobs: 0 }
-  //   3) ids = doomed.map(d => d.id): query SQL.deleteWrites แล้ว SQL.deleteCheckpoints ด้วย [threadId, ids]
-  //   4) kept = rows ที่ id ไม่อยู่ใน ids; blobs = (await db.query(SQL.listBlobs, [threadId])).rows
-  //      orphans = findOrphanBlobs(blobs, kept); ถ้ามี: query SQL.deleteBlobs ด้วย [threadId, orphans.map(ns), orphans.map(channel), orphans.map(version)]
-  //   5) db.query("COMMIT") แล้วคืน { checkpoints: doomed.length, blobs: orphans.length }
-  //   ถ้าขั้นใดโยน error หลัง BEGIN: db.query("ROLLBACK") แล้ว throw ต่อ (ห้าม COMMIT)
-  return todo(3);
+  planPrune([], keep); // ตรวจ keep ก่อนแตะฐานข้อมูล
+  await db.query("BEGIN");
+  try {
+    const rows = (await db.query(SQL.listCheckpoints, [threadId])).rows as (CheckpointRow & { channel_versions: Record<string, string | number> })[];
+    const doomed = planPrune(rows, keep);
+    if (doomed.length === 0) {
+      await db.query("COMMIT");
+      return { checkpoints: 0, blobs: 0 };
+    }
+    const ids = doomed.map((d) => d.id);
+    await db.query(SQL.deleteWrites, [threadId, ids]);
+    await db.query(SQL.deleteCheckpoints, [threadId, ids]);
+    const kept = rows.filter((r) => !ids.includes(r.id));
+    const blobs = (await db.query(SQL.listBlobs, [threadId])).rows as BlobRow[];
+    const orphans = findOrphanBlobs(blobs, kept);
+    if (orphans.length > 0) {
+      await db.query(SQL.deleteBlobs, [threadId, orphans.map((o) => o.ns), orphans.map((o) => o.channel), orphans.map((o) => o.version)]);
+    }
+    await db.query("COMMIT");
+    return { checkpoints: doomed.length, blobs: orphans.length };
+  } catch (error) {
+    await db.query("ROLLBACK");
+    throw error;
+  }
 }
 
 // thread ที่ไม่มีความเคลื่อนไหวนานกว่า maxAgeDays วัน (เก่ากว่าเกณฑ์จริง ๆ: เท่ากับเกณฑ์ยังไม่ถือว่าเก่า)
 function staleThreads(threads: { threadId: string; lastActivity: Date }[], now: Date, maxAgeDays: number): string[] {
-  // 👉 ข้อ 4: คืน threadId ของ thread ที่ now - lastActivity > maxAgeDays * 24 ชั่วโมง คงลำดับเดิม
-  return todo(4);
+  const limit = maxAgeDays * 24 * 60 * 60 * 1000;
+  return threads.filter((t) => now.getTime() - t.lastActivity.getTime() > limit).map((t) => t.threadId);
 }
 
 // ส่วนที่ 1: ฐานข้อมูลปลอมในหน่วยความจำที่ทำงานตาม SQL ใน SQL.* และจดคำสั่งทั้งหมด
@@ -201,6 +225,17 @@ try {
   await saver.deleteThread(thread); // ลบข้อมูลทดลองทิ้ง
   await pool.end();
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -15,6 +15,9 @@ const State = new StateSchema({
 
 async function ask(state: typeof State.State): Promise<{ answer: string }> {
   // 👉 ข้อ 1 รอให้ llm.invoke(state.question) ตอบ แล้วคืนข้อความจาก reply.text ลง answer
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const reply = await llm.invoke(state.question);
+  //   return { answer: reply.text };
   return todo(1);
 }
 
@@ -28,8 +31,19 @@ const question = "LangGraph ใช้ทำอะไร";
 const result = await app.invoke({ question });
 console.log(result);
 
+
+
+
+
+
+
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
 check("node ส่งคำถามจาก State ให้โมเดลหนึ่งครั้ง", llm.calls.length === 1 && llm.calls[0]?.[0]?.text === question, "ส่ง state.question ให้ llm.invoke()");
 check("คำตอบจากโมเดลอยู่ใน State", result.answer === "LangGraph ใช้ต่อขั้นตอนที่อ่านและอัปเดต State ร่วมกัน", "รอผลด้วย await แล้วคืน { answer: reply.text }");

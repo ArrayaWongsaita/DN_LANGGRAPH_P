@@ -27,6 +27,8 @@ const graph = new StateGraph(State)
   .addNode("tools", new ToolNode([makeAddTool()]))
   .addEdge(START, "agent")
   // 👉 ข้อ 1 ใส่ฟังก์ชันที่เลือก tools หรือ END จากข้อความล่าสุด
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   .addConditionalEdges("agent", toolsCondition, ["tools", END])
   .addConditionalEdges("agent", todo(1), ["tools", END])
   .addEdge("tools", "agent")
   .compile();
@@ -39,6 +41,19 @@ for (const message of result.messages) {
   console.log(`[${message.type}]`, message.text || `ขอเรียก ${toolNames}`);
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("ได้ผลบวกจาก tool ใน State", result.messages[2]?.type === "tool" && result.messages[2].text === "42");
 check("agent อ่านผลแล้วตอบ", result.messages.at(-1)?.text === "ผลบวกคือ 42");

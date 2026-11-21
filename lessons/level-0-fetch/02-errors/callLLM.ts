@@ -22,6 +22,8 @@ for (const [label, reply] of replies) {
     result = "เชื่อมต่อไม่ได้ ตรวจอินเทอร์เน็ตและ URL";
   } else {
     // 👉 ข้อ 1 อ่านค่าที่บอกว่า HTTP status อยู่ในช่วง 200–299 หรือไม่
+    // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+    //   const succeeded = response.ok;
     const succeeded: boolean = todo(1);
     if (succeeded) {
       const data = await response.json();
@@ -53,8 +55,19 @@ for (const [label, reply] of replies) {
   console.log(`[${label}] ${result}`);
 }
 
+
+
+
+
+
+
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
 // ─────────────────────────────────────────────────────────────
 const [success, unauthorized, notFound, limited, unavailable, network] = results;
 check("อ่านคำตอบเมื่อได้สถานะในช่วง 2xx", success === "สวัสดี");

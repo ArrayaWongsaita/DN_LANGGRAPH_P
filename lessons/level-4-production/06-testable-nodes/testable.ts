@@ -15,23 +15,29 @@ const State = new StateSchema({
 
 // ตรรกะล้วน ๆ (ไม่เรียกโมเดล): ตัดช่องว่างหัวท้าย และยุบช่องว่างซ้อนให้เหลือช่องเดียว
 function cleanText(text: string): string {
-  // 👉 ข้อ 1: คืน text.trim().replace(/\s+/g, " ")
-  return todo(1);
+  return text.trim().replace(/\s+/g, " ");
 }
 
 // node ที่รับโมเดลเข้ามา (ไม่ import โมเดลตายตัว)
 function makeSummarizeNode(model: BaseChatModel) {
   return async (state: { text: string }) => {
-    // 👉 ข้อ 2: เรียก model.invoke(`สรุปสั้น ๆ: ${state.text}`) แล้วคืน { summary: ผล.text }
-    return todo(2);
+    const reply = await model.invoke(`สรุปสั้น ๆ: ${state.text}`);
+    return { summary: reply.text };
   };
 }
 
 function buildPipeline(model: BaseChatModel) {
   const builder = new StateGraph(State).addNode("clean", (state) => ({ text: cleanText(state.text) }));
-  // 👉 ข้อ 3: เพิ่ม node "summarize" ด้วย makeSummarizeNode(model) แล้วต่อ START → clean → summarize → END
+  // 👉 ข้อ 1 เพิ่ม node "summarize" ด้วย makeSummarizeNode(model) แล้วต่อ START → clean → summarize → END
   //          จากนั้นคืน builder.compile()
-  return todo(3);
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return builder
+  //     .addNode("summarize", makeSummarizeNode(model))
+  //     .addEdge(START, "clean")
+  //     .addEdge("clean", "summarize")
+  //     .addEdge("summarize", END)
+  //     .compile();
+  return todo(1);
 }
 
 // ทดสอบสามชั้นด้วยโมเดลปลอมที่ตอบตามสคริปต์ (เร็ว ฟรี ผลเหมือนเดิมทุกครั้ง)
@@ -43,6 +49,17 @@ const graphResult = await buildPipeline(graphModel).invoke({ text: "  a   b  " }
 // แล้วค่อยใช้โมเดลจริงกับ graph เดียวกัน
 const real = await buildPipeline(llm).invoke({ text: "  LangGraph   เป็นไลบรารี  สำหรับสร้าง agent \n เป็นกราฟ  " });
 console.log("โมเดลจริงสรุป:", real.summary);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

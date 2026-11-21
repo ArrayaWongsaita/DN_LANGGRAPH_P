@@ -7,13 +7,26 @@ import { check } from "@src/check";
 const store = new InMemoryStore();
 const profile = { name: "มาลี", lang: "th" };
 
-// 👉 ข้อ 1: เก็บโปรไฟล์: await store.put(["profiles"], "mali", profile)  (namespace ["profiles"], key "mali")
+// 👉 ข้อ 1 เก็บโปรไฟล์: await store.put(["profiles"], "mali", profile)  (namespace ["profiles"], key "mali")
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   await store.put(["profiles"], "mali", profile);
 todo(1);
 
-// 👉 ข้อ 2: อ่านกลับ: const item = await store.get(["profiles"], "mali") ได้ item (หรือ null ถ้าไม่มี) ใช้ item?.value
-const found: typeof profile | undefined = todo(2);
+const item = await store.get(["profiles"], "mali");
+const found = item?.value as typeof profile | undefined;
 const missing = await store.get(["profiles"], "ไม่มีคนนี้");
 console.log({ found, missing });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

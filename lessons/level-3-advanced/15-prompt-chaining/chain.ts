@@ -14,18 +14,20 @@ const State = new StateSchema({
 
 // ด่านตรวจ: ร่างยาวพอ (อย่างน้อย 10 ตัวอักษร) ไปขัดเกลาต่อ ไม่งั้นหยุด
 function gate(state: { draft: string }): "polish" | "tooShort" {
-  // 👉 ข้อ 1 (ด่านตรวจ): คืน "polish" ถ้า state.draft ยาวอย่างน้อย 10 ตัวอักษร ไม่เช่นนั้นคืน "tooShort"
+  // 👉 ข้อ 1 (ด่านตรวจ) คืน "polish" ถ้า state.draft ยาวอย่างน้อย 10 ตัวอักษร ไม่เช่นนั้นคืน "tooShort"
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   return state.draft.length >= 10 ? "polish" : "tooShort";
   return todo(1);
 }
 
 const graph = new StateGraph(State)
   .addNode("write", async (state) => {
-    // 👉 ข้อ 2: เรียก llm.invoke(`เขียนย่อหน้าเกี่ยวกับ ${state.topic}`) แล้วคืน { draft: ข้อความตอบ (.text) }
-    return todo(2);
+    const reply = await llm.invoke(`เขียนย่อหน้าเกี่ยวกับ ${state.topic}`);
+    return { draft: reply.text };
   })
   .addNode("polish", async (state) => {
-    // 👉 ข้อ 3: เรียก llm.invoke(`ขัดเกลาข้อความนี้ให้สละสลวย: ${state.draft}`) แล้วคืน { final: .text }
-    return todo(3);
+    const reply = await llm.invoke(`ขัดเกลาข้อความนี้ให้สละสลวย: ${state.draft}`);
+    return { final: reply.text };
   })
   .addNode("tooShort", () => ({ final: "ร่างสั้นเกินไป" }))
   .addEdge(START, "write")
@@ -37,6 +39,17 @@ const graph = new StateGraph(State)
 const result = await graph.invoke({ topic: "ประโยชน์ของการออกกำลังกาย" });
 console.log("--- ร่าง ---\n" + result.draft);
 console.log("\n--- ฉบับขัดเกลา ---\n" + result.final);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -20,7 +20,20 @@ for (const temperature of temperatures) {
   console.log(`temperature ${temperature}`, answers, `มี ${new Set(answers).size} ชื่อที่ต่างกัน`);
 }
 
-// ส่วนตรวจคำตอบ ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check(
   "ส่ง temperature ทั้งสองค่าให้โมเดล",
   results.every(({ model, temperature }) => model.getLsParams({}).ls_temperature === temperature),

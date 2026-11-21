@@ -9,14 +9,12 @@ import { check } from "@src/check";
 const tools = [makeAddTool()];
 const question = "ใช้ tool add บวก 1 กับ 2 ก่อน แล้วเอาผลที่ได้ไปใช้ tool add บวก 10 อีกครั้ง บอกผลสุดท้าย";
 
-// ข้อ 1: จำกัดจำนวนครั้งที่เรียกโมเดล: createAgent({ model: llm, tools, middleware: [modelCallLimitMiddleware({ runLimit: 1, exitBehavior: "end" })] })
 const modelLimited = createAgent({
   model: llm,
   tools,
   middleware: [modelCallLimitMiddleware({ runLimit: 1, exitBehavior: "end" })],
 });
 
-// ข้อ 2: จำกัดจำนวนครั้งที่เรียก tool: createAgent({ model: llm, tools, middleware: [toolCallLimitMiddleware({ runLimit: 1 })] })
 const toolLimited = createAgent({
   model: llm,
   tools,
@@ -27,6 +25,17 @@ const a = await modelLimited.invoke({ messages: [new HumanMessage(question)] });
 const b = await toolLimited.invoke({ messages: [new HumanMessage(question)] });
 const count = (r: { messages: { type: string }[] }, type: string) => r.messages.filter((m) => m.type === type).length;
 for (const r of [a, b]) console.log(r.messages.map((m) => `${m.type}: ${m.text.slice(0, 70)}`));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

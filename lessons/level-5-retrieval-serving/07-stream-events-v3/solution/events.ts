@@ -7,14 +7,12 @@ import { check } from "@src/check";
 
 // เหตุการณ์ทั้งหมดที่อยู่ในช่อง (method) ที่ระบุ ตามลำดับเดิม
 function onChannel(events: ProtocolEvent[], method: string): ProtocolEvent[] {
-  // ข้อ 1: คืนเฉพาะเหตุการณ์ที่ ev.method === method
   return events.filter((ev) => ev.method === method);
 }
 
 // ชื่อ node ที่ "เริ่มทำงาน" ตามลำดับ: เหตุการณ์ช่อง tasks ของกราฟหลัก (namespace ว่าง)
 // ที่ data มีคีย์ "input" (ตอนจบงานจะมี "result" แทน) คืนค่า data.name
 function startedNodes(events: ProtocolEvent[]): string[] {
-  // ข้อ 2: กรองช่อง tasks ที่ ev.params.namespace.length === 0 และ "input" in data แล้วคืนรายการ name
   return events
     .filter((ev) => ev.method === "tasks" && ev.params.namespace.length === 0)
     .map((ev) => ev.params.data as { name: string; input?: unknown })
@@ -30,9 +28,6 @@ interface ToolRun {
 
 // tool ที่ทำเสร็จแล้ว: จับคู่ tool-started (มีชื่อ) กับ tool-finished (มีผลลัพธ์) ด้วย tool_call_id
 function finishedTools(events: ProtocolEvent[]): ToolRun[] {
-  // ข้อ 3: อ่านช่อง tools ตามลำดับ จำ tool_name จาก tool-started (key = tool_call_id)
-  //          เมื่อเจอ tool-finished คืน { id: tool_call_id, name: ชื่อที่จำไว้, output: ข้อความของ ToolMessage }
-  //          ข้อความอยู่ที่ data.output.content (เป็น string) ถ้าไม่ใช่ string ให้ใช้ JSON.stringify(content)
   const names = new Map<string, string>();
   const runs: ToolRun[] = [];
   for (const ev of onChannel(events, "tools")) {
@@ -50,6 +45,17 @@ const events = await recordDemoEvents();
 console.log("ช่องที่เจอ:", [...new Set(events.map((ev) => ev.method))]);
 console.log("node ที่เริ่ม:", startedNodes(events));
 console.log("tool ที่เสร็จ:", finishedTools(events));
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

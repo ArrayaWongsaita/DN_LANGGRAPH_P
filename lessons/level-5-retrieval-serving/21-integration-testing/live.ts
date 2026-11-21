@@ -14,41 +14,54 @@ interface LiveStatus {
 }
 
 function liveStatus(env: Record<string, string | undefined>): LiveStatus {
-  // 👉 ข้อ 1: ตรวจตามลำดับ:
-  //   env.RUN_LIVE !== "1" → { enabled: false, reason: "ข้าม: ตั้ง RUN_LIVE=1 เพื่อเปิด" }
-  //   provider = (env.LLM_PROVIDER || "groq") ไม่อยู่ใน KEY_VARS (ตรวจด้วย Object.hasOwn) → { enabled: false, reason: `ข้าม: ไม่รู้จัก provider ${provider}` }
-  //   key ของ provider (ตัวแปรชื่อใน KEY_VARS) ยาวน้อยกว่า MIN_KEY_LENGTH หลัง trim → { enabled: false, reason: `ข้าม: ไม่มี ${ชื่อตัวแปร}` }
-  //   ผ่านหมด → { enabled: true, reason: `เปิด: ${provider}` }
-  return todo(1);
+  if (env.RUN_LIVE !== "1") return { enabled: false, reason: "ข้าม: ตั้ง RUN_LIVE=1 เพื่อเปิด" };
+  const provider = env.LLM_PROVIDER || "groq";
+  if (!Object.hasOwn(KEY_VARS, provider)) return { enabled: false, reason: `ข้าม: ไม่รู้จัก provider ${provider}` };
+  const keyVar = KEY_VARS[provider];
+  if ((env[keyVar] ?? "").trim().length < MIN_KEY_LENGTH) return { enabled: false, reason: `ข้าม: ไม่มี ${keyVar}` };
+  return { enabled: true, reason: `เปิด: ${provider}` };
 }
 
 // ทำให้ข้อความเทียบกันได้ทนความต่างเล็กน้อย: ตัวพิมพ์เล็ก, ตัดช่องว่างและอักขระความกว้างศูนย์ทั้งหมด
 function normalize(text: string): string {
-  // 👉 ข้อ 2: text.normalize("NFC").toLowerCase() แล้วลบ \s และ ​-‍ และ ﻿ ทั้งหมด
-  return todo(2);
+  return text.normalize("NFC").toLowerCase().replace(/[\s​-‍﻿]/g, "");
 }
 
 function mentions(text: string, needles: string[], mode: "any" | "all" = "any"): boolean {
-  // 👉 ข้อ 3: เทียบด้วย normalize ทั้งสองฝั่ง ("any" = มีอย่างน้อยหนึ่งคำ, "all" = มีครบทุกคำ) needles ว่างคืน false; needle ที่ว่างหลัง normalize ให้ข้าม
-  return todo(3);
+  // 👉 ข้อ 1 เทียบด้วย normalize ทั้งสองฝั่ง ("any" = มีอย่างน้อยหนึ่งคำ, "all" = มีครบทุกคำ) needles ว่างคืน false; needle ที่ว่างหลัง normalize ให้ข้าม
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   const haystack = normalize(text);
+  //   const wanted = needles.map(normalize).filter((n) => n !== "");
+  //   if (wanted.length === 0) return false;
+  //   return mode === "all" ? wanted.every((n) => haystack.includes(n)) : wanted.some((n) => haystack.includes(n));
+  return todo(1);
 }
 
 type ErrorKind = "auth" | "rate-limit" | "transient" | "assertion";
 
 function classifyError(error: unknown): ErrorKind {
-  // 👉 ข้อ 4: อ่าน status จาก (error as { status?: number }).status และข้อความ error:
-  //   status 401/403 → "auth"; status 429 หรือข้อความตรง /rate.?limit|quota|too many requests/i → "rate-limit";
-  //   status >= 500 หรือข้อความตรง /ETIMEDOUT|ECONNRESET|fetch failed|timeout/i → "transient"; นอกนั้น → "assertion" (ผลตรวจไม่ผ่านเกณฑ์)
-  return todo(4);
+  const status = (error as { status?: number } | null | undefined)?.status;
+  const message = error instanceof Error ? error.message : "";
+  if (status === 401 || status === 403) return "auth";
+  if (status === 429 || /rate.?limit|quota|too many requests/i.test(message)) return "rate-limit";
+  if ((typeof status === "number" && status >= 500) || /ETIMEDOUT|ECONNRESET|fetch failed|timeout/i.test(message)) return "transient";
+  return "assertion";
 }
 
 async function eventually<T>(check: () => Promise<T>, options: { attempts?: number; delayMs?: number } = {}): Promise<T> {
   const attempts = options.attempts ?? 3;
   const delayMs = options.delayMs ?? 0;
-  // 👉 ข้อ 5: ลอง check() สูงสุด attempts ครั้ง สำเร็จคืนค่าทันที
-  //   ถ้าล้มและ classifyError เป็น "auth" ให้ throw error เดิมทันที (ไม่ลองซ้ำ ไม่เผาโควตา)
-  //   ล้มอย่างอื่นให้รอ delayMs แล้วลองใหม่ (ไม่รอหลังครั้งสุดท้าย) ครบแล้วยังล้ม → throw new Error(`ล้มเหลวทั้ง ${attempts} ครั้ง: ${ข้อความของครั้งสุดท้าย}`)
-  return todo(5);
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await check();
+    } catch (error) {
+      if (classifyError(error) === "auth") throw error;
+      last = error;
+      if (i < attempts - 1 && delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw new Error(`ล้มเหลวทั้ง ${attempts} ครั้ง: ${last instanceof Error ? last.message : String(last)}`);
 }
 
 // (ให้ไว้แล้ว) งบจำนวนครั้งการเรียกของจริง (กันลูปรั่วเงิน)
@@ -135,6 +148,17 @@ const overBudget = (() => {
     return (e as Error).message;
   }
 })();
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

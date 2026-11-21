@@ -8,12 +8,8 @@ import { check } from "@src/check";
 // รันด้วย: pnpm lesson 4-12
 // ข้อมูลส่วนตัว (PII) ต้องไม่ถึงโมเดล: ใช้ piiMiddleware ดักก่อนส่ง จะ redact (แทนที่) mask (ปิดบางส่วน) หรือ block (หยุดทันที) ก็ได้
 function buildPrivateAgent(model: BaseChatModel) {
-  // ข้อ 1: อีเมล: piiMiddleware("email", { strategy: "redact" })
   const email = piiMiddleware("email", { strategy: "redact" });
-  // ข้อ 2: บัตรเครดิต: piiMiddleware("credit_card", { strategy: "mask" })
   const card = piiMiddleware("credit_card", { strategy: "mask" });
-  // ข้อ 3: เลขบัตรประชาชน 13 หลัก: piiMiddleware("thai_id", { detector: /\d{13}/g, strategy: "redact" })
-  //          (detector ต้องมีแฟล็ก g)
   const thaiId = piiMiddleware("thai_id", { detector: /\d{13}/g, strategy: "redact" });
   return createAgent({ model, tools: [], middleware: [email, card, thaiId] });
 }
@@ -45,6 +41,17 @@ try {
 // โมเดลจริง: ส่งข้อความที่มีอีเมล ผ่าน middleware แล้วโมเดลยังตอบได้
 const real = await buildPrivateAgent(llm).invoke({ messages: [new HumanMessage("ฉันคือ somchai@example.com ทักทายฉันหน่อย")] });
 console.log("โมเดลจริงตอบ:", real.messages.at(-1)?.text);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

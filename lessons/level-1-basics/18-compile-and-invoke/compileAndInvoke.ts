@@ -11,6 +11,8 @@ const builder = new StateGraph(State)
   .addConditionalEdges("increment", ({ n, target }) => n < target ? "increment" : END, ["increment", END]);
 
 // 👉 ข้อ 1 compile builder ให้เป็น graph ที่เรียก invoke ได้
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const graph = builder.compile();
 const graph: ReturnType<typeof builder.compile> = todo(1);
 
 const outcomes: string[] = [];
@@ -27,6 +29,19 @@ for (const [target, recursionLimit] of [[3, 5], [10, 3], [10, 12]]) {
   }
 }
 
-// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้
+
+
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
+// ─────────────────────────────────────────────────────────────
 check("compile ครั้งเดียวแล้ว invoke ด้วยอินพุตหลายชุดได้", outcomes[0] === "3" && outcomes[2] === "10");
 check("รับ GraphRecursionError เมื่องบไม่พอ", outcomes[1] === "GraphRecursionError");

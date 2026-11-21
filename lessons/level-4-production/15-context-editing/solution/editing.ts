@@ -7,9 +7,7 @@ import { check } from "@src/check";
 
 // รันด้วย: pnpm lesson 4-15
 // context editing: ผลลัพธ์ tool เก่า ๆ กินบริบทไปเรื่อย ๆ ล้างของเก่าทิ้งเหลือแค่ล่าสุด (ใส่ placeholder แทน) โดยข้อความของผู้ใช้ไม่ถูกแตะ
-// ข้อ 1: const edit = new ClearToolUsesEdit({ trigger: { tokens: 1 }, keep: { messages: 1 }, placeholder: "[ล้างแล้ว]" })
 const edit = new ClearToolUsesEdit({ trigger: { tokens: 1 }, keep: { messages: 1 }, placeholder: "[ล้างแล้ว]" });
-// ข้อ 2: const middleware = contextEditingMiddleware({ edits: [edit] })
 const middleware = contextEditingMiddleware({ edits: [edit] });
 
 // โมเดลปลอมที่เรียก tool add สามครั้งติดกันแล้วตอบ: ดูว่า "โมเดลเห็นอะไร" ในแต่ละรอบ
@@ -23,6 +21,17 @@ const real = await createAgent({ model: llm, tools: [makeAddTool()], middleware:
   messages: [new HumanMessage("ใช้ tool add บวก 1+1 แล้วเอาผลไปบวก 2 แล้วเอาผลไปบวก 3 ทีละครั้ง บอกผลสุดท้าย")],
 });
 console.log("โมเดลจริงตอบ:", real.messages.at(-1)?.text);
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

@@ -16,10 +16,11 @@ const flaky = (name: keyof typeof attempts, failTimes: number) => () => {
   return {};
 };
 
-// 👉 ข้อ 1: ค่าเริ่มต้นของทุก node: { retryPolicy: { maxAttempts: 3, initialInterval: 1 } }
+// 👉 ข้อ 1 ค่าเริ่มต้นของทุก node: { retryPolicy: { maxAttempts: 3, initialInterval: 1 } }
+// แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+//   const defaults = { retryPolicy: { maxAttempts: 3, initialInterval: 1 } };
 const defaults = todo(1);
-// 👉 ข้อ 2: ค่าเฉพาะของ strict ที่ทับค่าเริ่มต้น: { retryPolicy: { maxAttempts: 1 } }
-const strictOptions = todo(2);
+const strictOptions = { retryPolicy: { maxAttempts: 1 } };
 
 const app = new StateGraph(State)
   .setNodeDefaults(defaults as never)
@@ -40,6 +41,17 @@ try {
   failure = (e as Error).message;
 }
 console.log({ attempts, failure });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

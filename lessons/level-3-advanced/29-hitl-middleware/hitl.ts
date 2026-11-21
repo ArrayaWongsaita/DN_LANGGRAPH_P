@@ -22,7 +22,9 @@ const agent = createAgent({
   model: llm,
   tools: [sendEmail],
   checkpointer: new MemorySaver(),
-  // 👉 ข้อ 1: ใส่ middleware: [humanInTheLoopMiddleware({ interruptOn: { sendEmail: true } })]
+  // 👉 ข้อ 1 ใส่ middleware: [humanInTheLoopMiddleware({ interruptOn: { sendEmail: true } })]
+  // แนวทาง (เอา // ออกแล้วแทนที่ todo(1) ได้เลย):
+  //   middleware: [humanInTheLoopMiddleware({ interruptOn: { sendEmail: true } })],
   middleware: todo(1),
 });
 
@@ -32,13 +34,22 @@ for (const [threadId, approve, to] of [["a", true, "mali@example.com"], ["b", fa
   const config = { configurable: { thread_id: threadId } };
   const r1 = await agent.invoke({ messages: [new HumanMessage(`ส่งอีเมลถึง ${to} หน่อย ใช้ tool sendEmail ได้เลย`)] }, config);
   paused.push(isInterrupted(r1));
-  // 👉 ข้อ 2: resume ด้วย new Command({ resume: { decisions: [คำตัดสินหนึ่งรายการ] } })
-  //        approve เป็นจริง = { type: "approve" } ไม่เช่นนั้น { type: "reject", message: "ไม่อนุมัติ" }
-  //        แล้วเอาข้อความสุดท้ายของ agent (.messages.at(-1).text) ใส่ finals
-  const r2: { messages: { text: string }[] } = todo(2);
+  const decision = approve ? { type: "approve" as const } : { type: "reject" as const, message: "ไม่อนุมัติ" };
+  const r2 = await agent.invoke(new Command({ resume: { decisions: [decision] } }), config);
   finals.push(r2.messages[r2.messages.length - 1].text);
 }
 console.log({ paused, sent, finals });
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)

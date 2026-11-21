@@ -14,11 +14,9 @@ const counter = { charge: 0 }; // นับจำนวนครั้งที�
 
 // handler ได้รับ state กับ error ของ node ที่ล้ม
 function onChargeFailed(_state: unknown, error: NodeError) {
-  // ข้อ 1: คืน new Command({ update: { status: `ชดเชยหลัง ${error.node}: ${error.error.message}` }, goto: "compensate" })
   return new Command({ update: { status: `ชดเชยหลัง ${error.node}: ${error.error.message}` }, goto: "compensate" });
 }
 
-// ข้อ 2: ตั้ง errorHandler ให้เป็นฟังก์ชัน onChargeFailed
 const errorHandler = onChargeFailed;
 
 const options = {
@@ -43,6 +41,17 @@ const checkout = new StateGraph(State)
 
 const result = await checkout.invoke({});
 console.log(result.log, "| charge ถูกรัน", counter.charge, "ครั้ง");
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // ส่วนตรวจคำตอบ: ไม่ต้องแก้ และไม่ต้องอ่านก็ได้ (ไม่ใช่เนื้อหาของบทนี้)
